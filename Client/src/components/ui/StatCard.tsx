@@ -55,7 +55,7 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         </div>
         {icon && (
           <div className="flex-shrink-0">
-            <div className="inline-flex rounded-lg bg-primary bg-opacity-10 p-3">
+            <div className="inline-flex rounded-lg bg-primary bg-primary/10 p-3">
               {icon}
             </div>
           </div>
