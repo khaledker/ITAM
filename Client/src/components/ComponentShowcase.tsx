@@ -7,7 +7,6 @@ import {
   Modal,
   StatCard,
   Table,
-  TopBar,
   useToast,
 } from '@/components'
 import { Bell, Server } from 'lucide-react'
@@ -48,22 +47,7 @@ export function ComponentShowcase() {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <TopBar
-        userName="IT Admin"
-        userInitials="IA"
-        notificationCount={3}
-        onNotificationClick={() =>
-          addToast({
-            variant: 'info',
-            title: 'Notifications',
-            message: '3 maintenance alerts pending review.',
-          })
-        }
-      >
-        <p className="text-sm font-medium text-neutral-700">ITAM Minimal Showcase</p>
-      </TopBar>
-
+    <div className="bg-neutral-50">
       <main className="mx-auto max-w-5xl space-y-6 p-6">
         <Alert
           variant="info"
