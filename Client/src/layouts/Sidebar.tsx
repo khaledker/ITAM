@@ -1,10 +1,14 @@
 import {
+  BarChart2,
+  BrainCircuit,
   LayoutDashboard,
+  Menu,
   Server,
   Settings as SettingsIcon,
   Users,
   Wrench,
 } from "lucide-react";
+import { useState } from "react";
 
 type NavItem = {
   label: string;
@@ -16,6 +20,8 @@ const primaryNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard },
   { label: "Assets", icon: Server, active: true },
   { label: "Maintenance", icon: Wrench },
+  { label: "Predictions", icon: BrainCircuit },
+  { label: "Reports", icon: BarChart2 },
   { label: "Users", icon: Users },
 ];
 
@@ -23,17 +29,30 @@ const settingsItem: NavItem = { label: "Settings", icon: SettingsIcon };
 
 const getItemClassName = (active?: boolean) => {
   if (active) {
-    return "border-l-4 border-[#E3001B] bg-red-50 text-[#E3001B]";
+    return "border-l-4 border-[#E3001B] bg-red-50 text-[#E3001B] hover:bg-red-100";
   }
 
-  return "border-l-4 border-transparent text-slate-700";
+  return "border-l-4 border-transparent text-slate-700 hover:bg-slate-50 hover:text-slate-900";
 };
 
 export default function Sidebar() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
-    <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
-      <div className="px-6 py-7">
-        <p className="text-2xl font-bold tracking-tight text-[#E3001B]">ITAM</p>
+    <aside
+      className={`flex h-full flex-col border-r border-slate-200 bg-white transition-all duration-300 ${
+        isCollapsed ? "w-16" : "w-60"
+      }`}
+    >
+      <div className={`pb-3 pt-4 ${isCollapsed ? "px-2" : "px-4"}`}>
+        <button
+          type="button"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          className="flex w-full items-center justify-center rounded-md py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
       </div>
 
       <nav className="flex flex-1 flex-col pb-5">
@@ -45,10 +64,12 @@ export default function Sidebar() {
               <li key={item.label}>
                 <div
                   aria-current={item.active ? "page" : undefined}
-                  className={`flex items-center gap-3 py-3 pl-5 pr-6 text-sm font-medium transition-colors ${getItemClassName(item.active)}`}
+                  className={`flex items-center py-3 text-sm font-medium transition-colors ${
+                    isCollapsed ? "justify-center px-0" : "gap-3 pl-5 pr-6"
+                  } ${getItemClassName(item.active)}`}
                 >
                   <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  {!isCollapsed && <span>{item.label}</span>}
                 </div>
               </li>
             );
@@ -58,12 +79,12 @@ export default function Sidebar() {
         <ul className="mt-auto px-0">
           <li>
             <div
-              className={`flex items-center gap-3 py-3 pl-5 pr-6 text-sm font-medium transition-colors ${getItemClassName(
-                settingsItem.active,
-              )}`}
+              className={`flex items-center py-3 text-sm font-medium transition-colors ${
+                isCollapsed ? "justify-center px-0" : "gap-3 pl-5 pr-6"
+              } ${getItemClassName(settingsItem.active)}`}
             >
               <settingsItem.icon className="h-4 w-4" />
-              <span>{settingsItem.label}</span>
+              {!isCollapsed && <span>{settingsItem.label}</span>}
             </div>
           </li>
         </ul>
