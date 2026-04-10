@@ -9,26 +9,27 @@ import {
   Wrench,
 } from "lucide-react";
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 
 type NavItem = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  active?: boolean;
+  to: string;
 };
 
 const primaryNav: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard },
-  { label: "Assets", icon: Server, active: true },
-  { label: "Maintenance", icon: Wrench },
-  { label: "Predictions", icon: BrainCircuit },
-  { label: "Reports", icon: BarChart2 },
-  { label: "Users", icon: Users },
+  { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
+  { label: "Assets", icon: Server, to: "/assets" },
+  { label: "Maintenance", icon: Wrench, to: "/maintenance" },
+  { label: "Predictions", icon: BrainCircuit, to: "/predictions" },
+  { label: "Reports", icon: BarChart2, to: "/reports" },
+  { label: "Users", icon: Users, to: "/users" },
 ];
 
-const settingsItem: NavItem = { label: "Settings", icon: SettingsIcon };
+const settingsItem: NavItem = { label: "Settings", icon: SettingsIcon, to: "/settings" };
 
-const getItemClassName = (active?: boolean) => {
-  if (active) {
+const getItemClassName = (isActive: boolean) => {
+  if (isActive) {
     return "border-l-4 border-[#E3001B] bg-red-50 text-[#E3001B] hover:bg-red-100";
   }
 
@@ -62,15 +63,17 @@ export default function Sidebar() {
 
             return (
               <li key={item.label}>
-                <div
-                  aria-current={item.active ? "page" : undefined}
-                  className={`flex items-center py-3 text-sm font-medium transition-colors ${
-                    isCollapsed ? "justify-center px-0" : "gap-3 pl-5 pr-6"
-                  } ${getItemClassName(item.active)}`}
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center py-3 text-sm font-medium transition-colors ${
+                      isCollapsed ? "justify-center px-0" : "gap-3 pl-5 pr-6"
+                    } ${getItemClassName(isActive)}`
+                  }
                 >
                   <Icon className="h-4 w-4" />
                   {!isCollapsed && <span>{item.label}</span>}
-                </div>
+                </NavLink>
               </li>
             );
           })}
@@ -78,14 +81,17 @@ export default function Sidebar() {
 
         <ul className="mt-auto px-0">
           <li>
-            <div
-              className={`flex items-center py-3 text-sm font-medium transition-colors ${
-                isCollapsed ? "justify-center px-0" : "gap-3 pl-5 pr-6"
-              } ${getItemClassName(settingsItem.active)}`}
+            <NavLink
+              to={settingsItem.to}
+              className={({ isActive }) =>
+                `flex items-center py-3 text-sm font-medium transition-colors ${
+                  isCollapsed ? "justify-center px-0" : "gap-3 pl-5 pr-6"
+                } ${getItemClassName(isActive)}`
+              }
             >
               <settingsItem.icon className="h-4 w-4" />
               {!isCollapsed && <span>{settingsItem.label}</span>}
-            </div>
+            </NavLink>
           </li>
         </ul>
       </nav>

@@ -1,7 +1,13 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { ToastProvider } from '@/components'
-import { ComponentShowcase } from './components/ComponentShowcase'
 import { TopBar } from './components/layout/TopBar'
 import Sidebar from './layouts/Sidebar'
+import DashboardPage from './pages/DashboardPage'
+import AssetsPage from './pages/AssetsPage'
+import MaintenancePage from './pages/MaintenancePage'
+import PredictionsPage from './pages/PredictionsPage'
+import ReportsPage from './pages/ReportsPage'
+import UsersPage from './pages/UsersPage'
 import './App.css'
 
 function App() {
@@ -16,7 +22,15 @@ function App() {
           <Sidebar />
 
           <main className="flex-1 overflow-y-auto p-6">
-            <ComponentShowcase />
+            <Routes>
+              <Route path="/" element={<Navigate to="/assets" replace />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/assets" element={<AssetsPage />} />
+              <Route path="/maintenance" element={<MaintenancePage />} />
+              <Route path="/predictions" element={<PredictionsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/users" element={<UsersPage />} />
+            </Routes>
           </main>
         </div>
       </div>
