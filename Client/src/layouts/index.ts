@@ -1,7 +1,7 @@
 // Layout Components
 export {
   AppShell,
-  Sidebar,
+  Sidebar as AppShellSidebar,
   Header,
   Breadcrumbs,
   type AppShellProps,
@@ -18,3 +18,5 @@ export {
   type UserAvatarProps,
   type NotificationBellProps,
 } from './TopBar'
+
+export { default as Sidebar } from './Sidebar'
