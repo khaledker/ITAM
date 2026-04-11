@@ -1,13 +1,14 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ToastProvider } from '@/components'
-import { TopBar } from './components/layout/TopBar'
-import Sidebar from './layouts/Sidebar'
+import { TopBar } from './layouts/TopBar'
+import { Sidebar } from './layouts'
 import DashboardPage from './pages/DashboardPage'
 import AssetsPage from './pages/AssetsPage'
 import MaintenancePage from './pages/MaintenancePage'
 import PredictionsPage from './pages/PredictionsPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
+import ReceptionPage from './pages/ReceptionPage'
 import './App.css'
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
               <Route path="/predictions" element={<PredictionsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/users" element={<UsersPage />} />
+              <Route path="/reception" element={<ReceptionPage />} />
             </Routes>
           </main>
         </div>

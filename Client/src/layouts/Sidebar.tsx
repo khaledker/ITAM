@@ -3,6 +3,7 @@ import {
   BrainCircuit,
   LayoutDashboard,
   Menu,
+  PackageCheck,
   Server,
   Settings as SettingsIcon,
   Users,
@@ -20,6 +21,7 @@ type NavItem = {
 const primaryNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { label: "Assets", icon: Server, to: "/assets" },
+  { label: "Reception", icon: PackageCheck, to: "/reception" },
   { label: "Maintenance", icon: Wrench, to: "/maintenance" },
   { label: "Predictions", icon: BrainCircuit, to: "/predictions" },
   { label: "Reports", icon: BarChart2, to: "/reports" },
