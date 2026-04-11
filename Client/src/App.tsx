@@ -9,6 +9,7 @@ import PredictionsPage from './pages/PredictionsPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
 import ReceptionPage from './pages/ReceptionPage'
+import TransferPage from './pages/TransferPage'
 import './App.css'
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/reception" element={<ReceptionPage />} />
+              <Route path="/transfer" element={<TransferPage />} />
             </Routes>
           </main>
         </div>
