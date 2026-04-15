@@ -5,6 +5,7 @@ import {
   Menu,
   PackageCheck,
   ArrowRightLeft,
+  UserCheck,
   Server,
   Settings as SettingsIcon,
   Users,
@@ -22,6 +23,7 @@ type NavItem = {
 const primaryNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { label: "Assets", icon: Server, to: "/assets" },
+  { label: "Affectation", icon: UserCheck, to: "/affectation" },
   { label: "Reception", icon: PackageCheck, to: "/reception" },
   { label: "Transfer", icon: ArrowRightLeft, to: "/transfer" },
   { label: "Maintenance", icon: Wrench, to: "/maintenance" },
