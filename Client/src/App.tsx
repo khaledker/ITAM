@@ -11,6 +11,7 @@ import UsersPage from './pages/UsersPage'
 import ReceptionPage from './pages/ReceptionPage'
 import TransferPage from './pages/TransferPage'
 import AffectationPage from './pages/AffectationPage'
+import RetourPage from './pages/RetourPage'
 import './App.css'
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
               <Route path="/reception" element={<ReceptionPage />} />
               <Route path="/transfer" element={<TransferPage />} />
               <Route path="/affectation" element={<AffectationPage />} />
+              <Route path="/retour" element={<RetourPage />} />
             </Routes>
           </main>
         </div>
