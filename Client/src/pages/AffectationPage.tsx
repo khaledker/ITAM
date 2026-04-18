@@ -57,7 +57,7 @@ export default function AffectationPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="bg-red-100 min-h-screen p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 ">
           Affectation
@@ -65,7 +65,7 @@ export default function AffectationPage() {
         <p className="text-gray-500 ">Assign assets to users and locations</p>
       </div>
 
-      <div className="bg-white  border border-gray-200  rounded-xl p-6 shadow-sm space-y-6">
+      <div className="bg-gray-100  border border-gray-200  rounded-xl p-6 shadow-sm space-y-6">
         <h2 className="text-xl font-semibold text-gray-900  mb-4">
           Affectation Details
         </h2>
@@ -168,7 +168,7 @@ export default function AffectationPage() {
         </form>
       </div>
 
-      <div className="bg-white  border border-gray-200  rounded-xl p-6 shadow-sm space-y-4">
+      <div className="bg-gray-100  border border-gray-200  rounded-xl p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-4 border-b border-gray-100 ">
           <h2 className="text-xl font-semibold text-gray-900 ">
             Assets to Assign

@@ -7,10 +7,10 @@ export interface SelectProps
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, ...props }, ref) => (
-    <div className="relative inline-flex w-full">
+    <div className="relative inline-flex w-full mt-1.5">
       <select
         className={cn(
-          'flex h-10 w-full appearance-none rounded-lg border border-neutral-300 bg-white px-3 py-2 pr-10 text-base placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500',
+          'flex h-11 w-full appearance-none rounded-lg border border-neutral-300 bg-white px-4 py-2 pr-10 text-base transition-all duration-200 hover:border-neutral-400 placeholder:text-neutral-500 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500',
           className
         )}
         ref={ref}
