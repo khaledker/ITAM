@@ -10,6 +10,7 @@ import {
   Settings as SettingsIcon,
   Users,
   Wrench,
+  RotateCcw,
 } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -26,6 +27,7 @@ const primaryNav: NavItem[] = [
   { label: "Affectation", icon: UserCheck, to: "/affectation" },
   { label: "Reception", icon: PackageCheck, to: "/reception" },
   { label: "Transfer", icon: ArrowRightLeft, to: "/transfer" },
+  { label: "Retour", icon: RotateCcw, to: "/retour" },
   { label: "Maintenance", icon: Wrench, to: "/maintenance" },
   { label: "Predictions", icon: BrainCircuit, to: "/predictions" },
   { label: "Reports", icon: BarChart2, to: "/reports" },
