@@ -1,33 +1,29 @@
+import express from 'express';
 import mysql from 'mysql2';
+import dotenv from 'dotenv';
+dotenv.config();    
+import { getassets } from './database.js';
 
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-}).promise()
+
+const app = express();
 
 
-const getassets = async () => {
- const [rows] = await pool.query('SELECT * FROM Asset'); 
- console.log(rows);
-}
 
-const asset = getassets();
-console.log(asset);
+app.get('/assets', async (req, res) => {
+    const assets = await getassets();
+    res.send(assets);
+});
 
 
-/*
-const express = require('express');
- const app = express();
 
 
-    app.get('/api', (req, res) => {
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
-        res.json({asset : 'pc', price : '10000 DZD'});
-    });
 
-    app.listen(5000, () => {
-        console.log('Server is running on port 5000');
-    });*/
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
