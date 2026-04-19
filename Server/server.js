@@ -8,6 +8,13 @@ const pool = mysql.createPool({
     database: 'itam',
 }).promise()
 
+
+
+ const [rows] = await pool.query('SELECT * FROM Asset'); 
+ console.log(rows);
+
+
+
 /*
 const express = require('express');
  const app = express();
