@@ -1,29 +1,8 @@
-import express from 'express';
-import mysql from 'mysql2';
-import dotenv from 'dotenv';
-dotenv.config();    
-import { getassets } from './database.js';
+require('dotenv').config();
+const app = require('./src/app');
 
+const PORT = process.env.PORT || 3000;
 
-
-const app = express();
-
-
-
-app.get('/assets', async (req, res) => {
-    const assets = await getassets();
-    res.send(assets);
-});
-
-
-
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-
-
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

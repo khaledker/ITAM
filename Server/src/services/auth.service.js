@@ -1,0 +1,45 @@
+const db   = require('../config/db');
+const bcrypt = require('bcryptjs');
+const jwt    = require('jsonwebtoken');
+
+const login = async (user_name, password) => {
+  const [rows] = await db.query(
+    'SELECT * FROM Employee WHERE user_name = ? AND actif = TRUE',
+    [user_name]
+  );
+
+  if (rows.length === 0) {
+    const err = new Error('Invalid credentials.');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const employee = rows[0];
+  const isMatch  = await bcrypt.compare(password, employee.password);
+
+  if (!isMatch) {
+    const err = new Error('Invalid credentials.');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const token = jwt.sign(
+    { id: employee.id, user_name: employee.user_name, email: employee.email },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+  );
+
+  const { password: _, ...employeeData } = employee;
+  return { token, employee: employeeData };
+};
+
+const register = async ({ user_name, full_name, email, password, department_id }) => {
+  const hashed = await bcrypt.hash(password, 10);
+  const [result] = await db.query(
+    'INSERT INTO Employee (user_name, full_name, email, password, department_id) VALUES (?, ?, ?, ?, ?)',
+    [user_name, full_name, email, hashed, department_id || null]
+  );
+  return { id: result.insertId, user_name, full_name, email };
+};
+
+module.exports = { login, register };
