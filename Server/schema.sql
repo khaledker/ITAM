@@ -1,9 +1,13 @@
--- --------------------------------------------------------
--- ENUMS (as VARCHAR with CHECK constraints)
--- --------------------------------------------------------
+-- ============================================================
+-- ASSET MANAGEMENT - FULL DATABASE SETUP
+-- Run this once in MySQL Workbench to set everything up
+-- ============================================================
+
+CREATE DATABASE IF NOT EXISTS asset_management;
+USE asset_management;
 
 -- --------------------------------------------------------
--- INDEPENDENT TABLES (no foreign keys)
+-- INDEPENDENT TABLES
 -- --------------------------------------------------------
 
 CREATE TABLE Employee (
@@ -11,6 +15,7 @@ CREATE TABLE Employee (
     user_name VARCHAR(100) NOT NULL UNIQUE,
     full_name VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL DEFAULT '',
     actif BOOLEAN DEFAULT TRUE
 );
 
@@ -72,7 +77,7 @@ ALTER TABLE Employee
     ADD FOREIGN KEY (department_id) REFERENCES Department(id);
 
 -- --------------------------------------------------------
--- ASSET MOVEMENTS (base table + subtypes)
+-- ASSET MOVEMENTS
 -- --------------------------------------------------------
 
 CREATE TABLE AssetMovement (
@@ -123,3 +128,7 @@ CREATE TABLE AssetReturn (
     FOREIGN KEY (id) REFERENCES AssetMovement(id),
     FOREIGN KEY (returned_to) REFERENCES Location(id)
 );
+
+-- ============================================================
+-- DONE! All tables created successfully.
+-- ============================================================
