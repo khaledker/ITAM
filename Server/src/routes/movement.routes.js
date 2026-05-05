@@ -1,21 +1,21 @@
 const router = require('express').Router();
 const ctrl   = require('../controllers/movement.controller');
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
 router.use(protect);
 
-// List all movements (filterable by ?type=Reception&status=Draft&asset_id=5)
+// All roles can view
 router.get('/',                      ctrl.getAll);
 router.get('/:id',                   ctrl.getOne);
 
-// Create movements by type
-router.post('/reception',            ctrl.createReception);
-router.post('/assignment',           ctrl.createAssignment);
-router.post('/transfer',             ctrl.createTransfer);
-router.post('/return',               ctrl.createReturn);
+// All roles can create draft movements
+router.post('/reception',            authorize('Admin', 'Manager'), ctrl.createReception);
+router.post('/assignment',           authorize('Admin', 'Manager'), ctrl.createAssignment);
+router.post('/transfer',             authorize('Admin', 'Manager'), ctrl.createTransfer);
+router.post('/return',               ctrl.createReturn);  // All roles can return
 
-// Approve / Reject (also updates Asset.status automatically)
-router.patch('/:id/approve',         ctrl.approve);
-router.patch('/:id/reject',          ctrl.reject);
+// Only Admin + Manager can approve or reject
+router.patch('/:id/approve',         authorize('Admin', 'Manager'), ctrl.approve);
+router.patch('/:id/reject',          authorize('Admin', 'Manager'), ctrl.reject);
 
 module.exports = router;

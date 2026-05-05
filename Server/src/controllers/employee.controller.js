@@ -45,4 +45,14 @@ const getAssets = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getAll, getOne, create, update, remove, getAssets };
+const updateRole = async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    if (!role) return res.status(400).json({ message: 'role is required.' });
+    const emp = await svc.findById(req.params.id);
+    if (!emp) return res.status(404).json({ message: 'Employee not found.' });
+    res.json(await svc.updateRole(req.params.id, role));
+  } catch (err) { next(err); }
+};
+
+module.exports = { getAll, getOne, create, update, remove, getAssets, updateRole };

@@ -129,6 +129,9 @@ CREATE TABLE AssetReturn (
     FOREIGN KEY (returned_to) REFERENCES Location(id)
 );
 
+ALTER TABLE Employee
+  ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT 'Employee'
+    CHECK (role IN ('Admin', 'Manager', 'Employee')) AFTER password;
 -- ============================================================
 -- DONE! All tables created successfully.
 -- ============================================================

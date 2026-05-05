@@ -61,4 +61,15 @@ const getAssignedAssets = async (employeeId) => {
   return rows;
 };
 
-module.exports = { findAll, findById, create, update, remove, getAssignedAssets };
+const updateRole = async (id, role) => {
+  const validRoles = ['Admin', 'Manager', 'Employee'];
+  if (!validRoles.includes(role)) {
+    const err = new Error(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
+    err.statusCode = 400;
+    throw err;
+  }
+  await db.query('UPDATE Employee SET role = ? WHERE id = ?', [role, id]);
+  return findById(id);
+};
+
+module.exports = { findAll, findById, create, update, remove, getAssignedAssets, updateRole };
