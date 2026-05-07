@@ -12,12 +12,23 @@ const BASE_SELECT = `
   LEFT JOIN Location l ON a.location_id = l.id
 `;
 
+const normalizeAssetStatus = (status) => {
+  const normalized = String(status || '').toLowerCase();
+
+  if (['active', 'assigned', 'available', 'inuse'].includes(normalized)) return 'active';
+  if (['maintenance', 'inmaintenance', 'in_maintenance'].includes(normalized)) return 'maintenance';
+  if (['warning'].includes(normalized)) return 'warning';
+  if (['critical'].includes(normalized)) return 'critical';
+
+  return 'inactive';
+};
+
 // ── Format asset response to match UI schema ──────────────
 const formatAsset = (row) => ({
   id: row.id,
   tag: row.tag,
   partNum: row.part_number,
-  etat: row.status,
+  etat: normalizeAssetStatus(row.status),
   createdAt: row.date_acq,
   modele: {
     nom: row.model_name,

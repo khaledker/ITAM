@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Eye, Plus, Search, RotateCcw } from 'lucide-react'
-import { Button, Input, Select, Badge, Table, type TableColumn, type SortConfig } from '@/components'
+import { Button, Input, Select, Badge, EmptyState, Table, type TableColumn, type SortConfig } from '@/components'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,90 +19,16 @@ interface Asset {
   }
 }
 
-// ── Mock data ────────────────────────────────────────────────────────────────
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
 
-const MOCK_ASSETS: Asset[] = [
-  {
-    id: 1,
-    tag: 'AST-001',
-    partNum: 'CR-7750-SR',
-    etat: 'active',
-    createdAt: '2024-11-15',
-    modele: { nom: 'Core Router', marque: 'Cisco', categorie: 'Network' },
-  },
-  {
-    id: 2,
-    tag: 'AST-002',
-    partNum: 'FS-4820-GX',
-    etat: 'active',
-    createdAt: '2024-09-03',
-    modele: { nom: 'Fiber Switch', marque: 'Juniper', categorie: 'Network' },
-  },
-  {
-    id: 3,
-    tag: 'AST-003',
-    partNum: 'UPS-3000-RM',
-    etat: 'warning',
-    createdAt: '2023-06-20',
-    modele: { nom: 'UPS Unit', marque: 'APC', categorie: 'UPS' },
-  },
-  {
-    id: 4,
-    tag: 'AST-004',
-    partNum: 'AP-930-AX',
-    etat: 'maintenance',
-    createdAt: '2025-01-10',
-    modele: { nom: 'Access Point', marque: 'Aruba', categorie: 'Network' },
-  },
-  {
-    id: 5,
-    tag: 'AST-005',
-    partNum: 'RS-DL380-G10',
-    etat: 'active',
-    createdAt: '2024-03-28',
-    modele: { nom: 'Rack Server', marque: 'HPE', categorie: 'Server' },
-  },
-  {
-    id: 6,
-    tag: 'AST-006',
-    partNum: 'FW-PA-850',
-    etat: 'critical',
-    createdAt: '2023-12-05',
-    modele: { nom: 'Firewall', marque: 'Palo Alto', categorie: 'Network' },
-  },
-  {
-    id: 7,
-    tag: 'AST-007',
-    partNum: 'PP-48P-CAT6',
-    etat: 'inactive',
-    createdAt: '2022-08-14',
-    modele: { nom: 'Patch Panel', marque: 'Panduit', categorie: 'Network' },
-  },
-  {
-    id: 8,
-    tag: 'AST-008',
-    partNum: 'NS-2960X-48',
-    etat: 'maintenance',
-    createdAt: '2024-07-22',
-    modele: { nom: 'Network Switch', marque: 'Cisco', categorie: 'Network' },
-  },
-  {
-    id: 9,
-    tag: 'AST-009',
-    partNum: 'SRV-R740-XD',
-    etat: 'active',
-    createdAt: '2025-02-17',
-    modele: { nom: 'Rack Server', marque: 'Dell', categorie: 'Server' },
-  },
-  {
-    id: 10,
-    tag: 'AST-010',
-    partNum: 'PRN-M455-DN',
-    etat: 'warning',
-    createdAt: '2024-05-09',
-    modele: { nom: 'LaserJet Printer', marque: 'HP', categorie: 'Printer' },
-  },
-]
+function getAuthToken(): string {
+  return (
+    localStorage.getItem('itam_token') ||
+    localStorage.getItem('token') ||
+    localStorage.getItem('authToken') ||
+    ''
+  )
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -205,10 +131,44 @@ const columns: TableColumn<Asset>[] = [
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function AssetsPage() {
+  const [assets, setAssets] = useState<Asset[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [sortConfig, setSortConfig] = useState<SortConfig | undefined>(undefined)
+
+  const loadAssets = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setLoadError(null)
+
+      const token = getAuthToken()
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
+      const response = await fetch(`${API_BASE_URL}/api/assets`, { headers })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized. Login first and store JWT in localStorage as itam_token.')
+        }
+        throw new Error(`Failed to load assets (${response.status})`)
+      }
+
+      const data = await response.json()
+      setAssets(Array.isArray(data) ? data : [])
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load assets.'
+      setLoadError(message)
+      setAssets([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadAssets()
+  }, [loadAssets])
 
   const hasActiveFilters = search !== '' || statusFilter !== 'All' || categoryFilter !== 'All'
 
@@ -219,7 +179,7 @@ export default function AssetsPage() {
   }
 
   const filteredAndSorted = useMemo(() => {
-    let result = MOCK_ASSETS
+    let result = assets
 
     // Search
     if (search) {
@@ -257,7 +217,7 @@ export default function AssetsPage() {
     }
 
     return result
-  }, [search, statusFilter, categoryFilter, sortConfig])
+  }, [assets, search, statusFilter, categoryFilter, sortConfig])
 
   return (
     <div className="space-y-6">
@@ -329,12 +289,21 @@ export default function AssetsPage() {
       </div>
 
       {/* Table */}
+      {loadError && (
+        <EmptyState
+          title="Unable to load assets"
+          description={loadError}
+          action={{ label: 'Retry', onClick: loadAssets }}
+        />
+      )}
+
       <Table<Asset>
         columns={columns}
         rows={filteredAndSorted}
         rowKey="id"
         sortConfig={sortConfig}
         onSort={setSortConfig}
+        loading={isLoading}
         hoverable
         striped
       />
