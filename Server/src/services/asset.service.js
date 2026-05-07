@@ -12,6 +12,20 @@ const BASE_SELECT = `
   LEFT JOIN Location l ON a.location_id = l.id
 `;
 
+// ── Format asset response to match UI schema ──────────────
+const formatAsset = (row) => ({
+  id: row.id,
+  tag: row.tag,
+  partNum: row.part_number,
+  etat: row.status,
+  createdAt: row.date_acq,
+  modele: {
+    nom: row.model_name,
+    marque: row.brand,
+    categorie: row.category,
+  },
+});
+
 const findAll = async ({ status, category, location_id } = {}) => {
   let query = BASE_SELECT + ' WHERE 1=1';
   const params = [];
@@ -20,12 +34,12 @@ const findAll = async ({ status, category, location_id } = {}) => {
   if (location_id) { query += ' AND a.location_id = ?'; params.push(location_id); }
   query += ' ORDER BY a.tag';
   const [rows] = await db.query(query, params);
-  return rows;
+  return rows.map(formatAsset);
 };
 
 const findById = async (id) => {
   const [rows] = await db.query(BASE_SELECT + ' WHERE a.id = ?', [id]);
-  return rows[0] || null;
+  return rows[0] ? formatAsset(rows[0]) : null;
 };
 
 const create = async ({ serial_number, tag, status, date_acq, description, model_id, location_id }) => {
