@@ -8,8 +8,9 @@ INSERT INTO Department (id, code, libelle) VALUES
 (1, 'IT', 'IT Department'),
 (2, 'HR', 'Human Resources');
 
+-- Admin account is created via POST /api/auth/register (requires an existing Admin token)
+-- Seed only non-admin employees here
 INSERT INTO Employee (id, user_name, full_name, email, actif, department_id) VALUES
-(1, 'admin.itam', 'Admin ITAM', 'admin@itam.local', TRUE, 1),
 (2, 'm.belkacem', 'Mohamed Belkacem', 'm.belkacem@itam.local', TRUE, 1),
 (3, 's.rahmani', 'Sofia Rahmani', 's.rahmani@itam.local', TRUE, 2),
 (4, 'k.haddad', 'Karim Haddad', 'k.haddad@itam.local', TRUE, 1);

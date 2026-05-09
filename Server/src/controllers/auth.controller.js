@@ -13,11 +13,11 @@ const login = async (req, res, next) => {
 
 const register = async (req, res, next) => {
   try {
-    const { user_name, full_name, email, password, department_id } = req.body;
+    const { user_name, full_name, email, password, department_id, role } = req.body;
     if (!user_name || !full_name || !email || !password)
       return res.status(400).json({ message: 'user_name, full_name, email, password are required.' });
 
-    const employee = await authService.register({ user_name, full_name, email, password, department_id });
+    const employee = await authService.register({ user_name, full_name, email, password, department_id, role });
     res.status(201).json(employee);
   } catch (err) { next(err); }
 };
