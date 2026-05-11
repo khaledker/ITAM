@@ -25,6 +25,11 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const data = await res.json();
 
   if (!res.ok) {
+    // If the token expired mid-session, clear it so the next page load forces re-login
+    if (res.status === 401) {
+      localStorage.removeItem('itam_token');
+      localStorage.removeItem('itam_user');
+    }
     // Throw the server's error message so callers can display it
     throw new Error(data.message || 'Something went wrong.');
   }

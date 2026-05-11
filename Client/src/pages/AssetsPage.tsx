@@ -1,34 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Eye, Plus, Search, RotateCcw } from 'lucide-react'
 import { Button, Input, Select, Badge, EmptyState, Table, type TableColumn, type SortConfig } from '@/components'
+import { assetsApi, type Asset } from '@/lib/api'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type AssetStatus = 'active' | 'maintenance' | 'warning' | 'critical' | 'inactive'
-
-interface Asset {
-  id: number
-  tag: string
-  partNum: string
-  etat: AssetStatus
-  createdAt: string
-  modele: {
-    nom: string
-    marque: string
-    categorie: string
-  }
-}
-
-const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
-
-function getAuthToken(): string {
-  return (
-    localStorage.getItem('itam_token') ||
-    localStorage.getItem('token') ||
-    localStorage.getItem('authToken') ||
-    ''
-  )
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -72,13 +49,13 @@ const columns: TableColumn<Asset>[] = [
     label: 'Model Name',
     sortable: true,
     width: 'w-[16%]',
-    render: (_value: any, row: Asset) => row.modele.nom,
+    render: (_value: any, row: Asset) => row.modele?.nom ?? '—',
   },
   {
     key: 'modele.marque',
     label: 'Brand',
     width: 'w-[12%]',
-    render: (_value: any, row: Asset) => row.modele.marque,
+    render: (_value: any, row: Asset) => row.modele?.marque ?? '—',
   },
   {
     key: 'modele.categorie',
@@ -86,7 +63,7 @@ const columns: TableColumn<Asset>[] = [
     width: 'w-[12%]',
     render: (_value: any, row: Asset) => (
       <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
-        {row.modele.categorie}
+        {row.modele?.categorie ?? '—'}
       </span>
     ),
   },
@@ -95,7 +72,7 @@ const columns: TableColumn<Asset>[] = [
     label: 'Part Number',
     width: 'w-[14%]',
     render: (value: string) => (
-      <span className="font-mono text-xs text-neutral-600">{value}</span>
+      <span className="font-mono text-xs text-neutral-600">{value ?? '—'}</span>
     ),
   },
   {
@@ -103,14 +80,14 @@ const columns: TableColumn<Asset>[] = [
     label: 'Status',
     width: 'w-[12%]',
     render: (value: AssetStatus) => (
-      <Badge variant={value}>{statusLabel[value]}</Badge>
+      <Badge variant={value}>{statusLabel[value] ?? value}</Badge>
     ),
   },
   {
     key: 'createdAt',
     label: 'Created At',
     width: 'w-[12%]',
-    render: (value: string) => formatDate(value),
+    render: (value: string) => value ? formatDate(value) : '—',
   },
   {
     key: 'actions',
@@ -144,18 +121,7 @@ export default function AssetsPage() {
       setIsLoading(true)
       setLoadError(null)
 
-      const token = getAuthToken()
-      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
-      const response = await fetch(`${API_BASE_URL}/api/assets`, { headers })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Unauthorized. Login first and store JWT in localStorage as itam_token.')
-        }
-        throw new Error(`Failed to load assets (${response.status})`)
-      }
-
-      const data = await response.json()
+      const data = await assetsApi.getAll()
       setAssets(Array.isArray(data) ? data : [])
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to load assets.'
