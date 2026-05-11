@@ -86,50 +86,9 @@ const movementColumns: TableColumn<RecentMovement>[] = [
   },
 ]
 
-const flaggedColumns: TableColumn<FlaggedAsset>[] = [
-  {
-    key: 'assetTag',
-    label: 'Tag',
-    width: '10%',
-    render: (v: string) => <span className="font-semibold text-neutral-800">{v}</span>,
-  },
-  {
-    key: 'assetName',
-    label: 'Model',
-    width: '22%',
-  },
-  {
-    key: 'category',
-    label: 'Category',
-    width: '14%',
-    render: (v: string) => (
-      <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{v}</span>
-    ),
-  },
-  {
-    key: 'rule',
-    label: 'Rule Triggered',
-    width: '28%',
-  },
-  {
-    key: 'riskLevel',
-    label: 'Risk',
-    width: '12%',
-    render: (v: FlaggedAsset['riskLevel']) => (
-      <Badge variant={RISK_VARIANT[v] ?? 'inactive'}>
-        {v.charAt(0).toUpperCase() + v.slice(1)}
-      </Badge>
-    ),
-  },
-  {
-    key: 'ageDays',
-    label: 'Age (days)',
-    width: '12%',
-    render: (v: number) => <span className="text-sm text-neutral-600">{v} d</span>,
-  },
-]
 
 // ── Skeleton loaders ──────────────────────────────────────────────────────────
+
 
 function StatSkeleton() {
   return (
