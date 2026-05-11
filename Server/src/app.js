@@ -11,6 +11,7 @@ const locationRoutes   = require('./routes/location.routes');
 const assetModelRoutes = require('./routes/assetModel.routes');
 const assetRoutes      = require('./routes/asset.routes');
 const movementRoutes   = require('./routes/movement.routes');
+const dashboardRoutes  = require('./routes/dashboard.routes');
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use('/api/locations',    locationRoutes);
 app.use('/api/asset-models', assetModelRoutes);
 app.use('/api/assets',       assetRoutes);
 app.use('/api/movements',    movementRoutes);
+app.use('/api/dashboard',    dashboardRoutes);
 
 // ── Health check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
