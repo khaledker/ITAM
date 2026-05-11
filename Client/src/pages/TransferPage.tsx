@@ -1,481 +1,292 @@
-import { useState } from 'react'
-import { Plus, Trash2, User, CalendarClock } from 'lucide-react'
-import { Button, Input, Textarea, Table, type TableColumn, Radio } from '@/components'
+import { useEffect, useState } from 'react'
+import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle } from 'lucide-react'
+import { Button, Textarea, Table, type TableColumn, Radio } from '@/components'
+import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
+import type { Asset, Employee, Location } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-interface TransferAsset {
+interface SelectedAsset {
   id: number
   tag: string
   modelName: string
   brand: string
   category: string
-  serialNumber: string
 }
 
-interface TransferForm {
-  transferType: 'stock' | 'pannes' | 'reformes'
-  sourceDept: string
-  sourceWarehouse: string
-  sourceUser: string
-  destDept: string
-  destWarehouse: string
-  destUser: string
-  receptionDate: string
-  destFloor: string
-  destRoom: string
-  transportName: string
-  transportContact: string
-  transportVehicle: string
-  observations: string
-}
+type TransferType = 'stock' | 'pannes' | 'reformes'
 
-// ── Initial mock data ────────────────────────────────────────────────────────
-
-let nextId = 3
-
-const INITIAL_ASSETS: TransferAsset[] = [
-  {
-    id: 1,
-    tag: 'AST-005',
-    modelName: 'Rack Server',
-    brand: 'HPE',
-    category: 'Server',
-    serialNumber: 'SN-RS-20250411-005',
-  },
-  {
-    id: 2,
-    tag: 'AST-008',
-    modelName: 'Network Switch',
-    brand: 'Cisco',
-    category: 'Network',
-    serialNumber: 'SN-NS-20250411-008',
-  },
-]
-
-const EMPTY_FORM: TransferForm = {
-  transferType: 'stock',
-  sourceDept: '',
-  sourceWarehouse: '',
-  sourceUser: '',
-  destDept: '',
-  destWarehouse: '',
-  destUser: '',
-  receptionDate: '',
-  destFloor: '',
-  destRoom: '',
-  transportName: '',
-  transportContact: '',
-  transportVehicle: '',
-  observations: '',
-}
-
-// ── Component ────────────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function TransferPage() {
-  const [form, setForm] = useState<TransferForm>(EMPTY_FORM)
-  const [assets, setAssets] = useState<TransferAsset[]>(INITIAL_ASSETS)
+  const { user } = useAuth()
 
-  // ── Form helpers ─────────────────────────────────────────────────────────
+  // ── Remote data ───────────────────────────────────────────────────────────
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [locations, setLocations] = useState<Location[]>([])
+  const [availableAssets, setAvailableAssets] = useState<Asset[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  const updateField = <K extends keyof TransferForm>(
-    key: K,
-    value: TransferForm[K],
-  ) => setForm((prev) => ({ ...prev, [key]: value }))
-
-  // ── Asset table helpers ──────────────────────────────────────────────────
-
-  const addAssetRow = () => {
-    setAssets((prev) => [
-      ...prev,
-      {
-        id: nextId++,
-        tag: '',
-        modelName: '',
-        brand: '',
-        category: '',
-        serialNumber: '',
-      },
+  useEffect(() => {
+    Promise.all([
+      employeesApi.getAll(),
+      locationsApi.getAll(),
+      assetsApi.getAll(),
     ])
+      .then(([emps, locs, assets]) => {
+        setEmployees(emps)
+        setLocations(locs)
+        setAvailableAssets(assets)
+      })
+      .catch(err => setLoadError(err instanceof Error ? err.message : 'Failed to load data.'))
+  }, [])
+
+  // ── Form state ────────────────────────────────────────────────────────────
+  const [transferType, setTransferType] = useState<TransferType>('stock')
+  const [sourceId, setSourceId] = useState('')
+  const [destinationId, setDestinationId] = useState('')
+  const [transferDate, setTransferDate] = useState('')
+  const [reference, setReference] = useState('')
+  const [transportName, setTransportName] = useState('')
+  const [transportContact, setTransportContact] = useState('')
+  const [observations, setObservations] = useState('')
+
+  // ── Asset picker ──────────────────────────────────────────────────────────
+  const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([])
+  const [assetPickValue, setAssetPickValue] = useState('')
+
+  const addAsset = () => {
+    if (!assetPickValue) return
+    const asset = availableAssets.find(a => String(a.id) === assetPickValue)
+    if (!asset || selectedAssets.some(a => a.id === asset.id)) return
+    setSelectedAssets(prev => [...prev, {
+      id: asset.id,
+      tag: asset.tag,
+      modelName: asset.modele?.nom ?? '—',
+      brand: asset.modele?.marque ?? '—',
+      category: asset.modele?.categorie ?? '—',
+    }])
+    setAssetPickValue('')
   }
 
-  const removeAssetRow = (id: number) => {
-    setAssets((prev) => prev.filter((a) => a.id !== id))
+  const removeAsset = (id: number) =>
+    setSelectedAssets(prev => prev.filter(a => a.id !== id))
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+  const [isSaving, setIsSaving] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+
+  const handleSave = async () => {
+    if (!destinationId || !user) {
+      setSubmitError('A destination location is required.')
+      return
+    }
+    if (selectedAssets.length === 0) {
+      setSubmitError('Select at least one asset to transfer.')
+      return
+    }
+    const today = transferDate || new Date().toISOString().split('T')[0]
+    setIsSaving(true)
+    setSubmitError(null)
+    try {
+      await Promise.all(selectedAssets.map(asset =>
+        movementsApi.createTransfer({
+          date: today,
+          asset_id: asset.id,
+          performed_by: user.id,
+          reference: reference || null,
+          source_id: sourceId ? Number(sourceId) : null,
+          destination_id: Number(destinationId),
+        })
+      ))
+      setSubmitSuccess(true)
+      setSelectedAssets([])
+      setSourceId(''); setDestinationId(''); setReference('')
+      setTransportName(''); setTransportContact(''); setObservations('')
+      // Refresh assets
+      assetsApi.getAll().then(setAvailableAssets)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to save transfer.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  const updateAsset = (
-    id: number,
-    key: keyof TransferAsset,
-    value: string,
-  ) => {
-    setAssets((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, [key]: value } : a)),
-    )
-  }
-
-  // ── Table columns ────────────────────────────────────────────────────────
-
-  const columns: TableColumn<TransferAsset>[] = [
-    {
-      key: 'tag',
-      label: 'Tag',
-      width: 'w-[14%]',
-      render: (_v: any, row: TransferAsset) => (
-        <Input
-          value={row.tag}
-          placeholder="AST-XXX"
-          onChange={(e) => updateAsset(row.id, 'tag', e.target.value)}
-          className="h-8 text-sm"
-        />
-      ),
-    },
-    {
-      key: 'modelName',
-      label: 'Model Name',
-      width: 'w-[20%]',
-      render: (_v: any, row: TransferAsset) => (
-        <Input
-          value={row.modelName}
-          placeholder="Model name"
-          onChange={(e) => updateAsset(row.id, 'modelName', e.target.value)}
-          className="h-8 text-sm"
-        />
-      ),
-    },
-    {
-      key: 'brand',
-      label: 'Brand',
-      width: 'w-[16%]',
-      render: (_v: any, row: TransferAsset) => (
-        <Input
-          value={row.brand}
-          placeholder="Brand"
-          onChange={(e) => updateAsset(row.id, 'brand', e.target.value)}
-          className="h-8 text-sm"
-        />
-      ),
-    },
-    {
-      key: 'category',
-      label: 'Category',
-      width: 'w-[16%]',
-      render: (_v: any, row: TransferAsset) => (
-        <Input
-          value={row.category}
-          placeholder="Category"
-          onChange={(e) => updateAsset(row.id, 'category', e.target.value)}
-          className="h-8 text-sm"
-        />
-      ),
-    },
-    {
-      key: 'serialNumber',
-      label: 'Serial Number',
-      width: 'w-[22%]',
-      render: (_v: any, row: TransferAsset) => (
-        <Input
-          value={row.serialNumber}
-          placeholder="Serial number"
-          onChange={(e) => updateAsset(row.id, 'serialNumber', e.target.value)}
-          className="h-8 text-sm"
-        />
-      ),
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      width: 'w-[8%]',
-      render: (_v: any, row: TransferAsset) => (
-        <button
-          type="button"
-          onClick={() => removeAssetRow(row.id)}
-          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-600"
-          aria-label="Remove asset"
-        >
+  // ── Table columns ─────────────────────────────────────────────────────────
+  const columns: TableColumn<SelectedAsset>[] = [
+    { key: 'tag', label: 'Tag', width: 'w-[14%]',
+      render: (v: string) => <span className="font-semibold text-neutral-900">{v}</span> },
+    { key: 'modelName', label: 'Model', width: 'w-[22%]' },
+    { key: 'brand', label: 'Brand', width: 'w-[18%]' },
+    { key: 'category', label: 'Category', width: 'w-[18%]',
+      render: (v: string) => (
+        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{v}</span>
+      ) },
+    { key: 'actions', label: '', width: 'w-[8%]',
+      render: (_v: any, row: SelectedAsset) => (
+        <button type="button" onClick={() => removeAsset(row.id)}
+          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors">
           <Trash2 className="h-4 w-4" />
         </button>
-      ),
-    },
+      ) },
   ]
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  // ── Shared select style ───────────────────────────────────────────────────
+  const selectCls = "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-          Transfer
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Move assets between locations or warehouses
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Transfer</h1>
+        <p className="mt-1 text-sm text-neutral-500">Move assets between locations or warehouses</p>
       </div>
 
-      {/* ── Form card ─────────────────────────────────────────────────────── */}
+      {loadError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</div>
+      )}
+      {submitSuccess && (
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <CheckCircle className="h-4 w-4 shrink-0" />
+          Transfer saved successfully as Draft.
+        </div>
+      )}
+      {submitError && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+          <XCircle className="h-4 w-4 shrink-0" />{submitError}
+        </div>
+      )}
+
+      {/* Form card */}
       <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-5 text-lg font-semibold text-neutral-900">
-          Transfer Details
-        </h2>
+        <h2 className="mb-5 text-lg font-semibold text-neutral-900">Transfer Details</h2>
 
         {/* Transfer Type */}
         <div className="mb-6 space-y-2">
           <span className="block text-sm font-medium text-neutral-700">Transfer Type</span>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Radio
-                name="transferType"
-                value="stock"
-                checked={form.transferType === 'stock'}
-                onChange={() => updateField('transferType', 'stock')}
-              />
-              <span className="text-sm text-neutral-900">Stock</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Radio
-                name="transferType"
-                value="pannes"
-                checked={form.transferType === 'pannes'}
-                onChange={() => updateField('transferType', 'pannes')}
-              />
-              <span className="text-sm text-neutral-900">Pannes (Faults)</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Radio
-                name="transferType"
-                value="reformes"
-                checked={form.transferType === 'reformes'}
-                onChange={() => updateField('transferType', 'reformes')}
-              />
-              <span className="text-sm text-neutral-900">Réformes (Decommissioned)</span>
-            </label>
+          <div className="flex gap-6">
+            {(['stock', 'pannes', 'reformes'] as TransferType[]).map(t => (
+              <label key={t} className="flex items-center gap-2 cursor-pointer">
+                <Radio name="transferType" value={t}
+                  checked={transferType === t} onChange={() => setTransferType(t)} />
+                <span className="text-sm text-neutral-900 capitalize">
+                  {t === 'pannes' ? 'Pannes (Faults)' : t === 'reformes' ? 'Réformes (Decommissioned)' : 'Stock'}
+                </span>
+              </label>
+            ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-2">
-          {/* Source Section */}
+        <div className="grid grid-cols-1 gap-x-8 gap-y-4 lg:grid-cols-2">
+          {/* Source */}
           <div className="space-y-4">
-            <h3 className="text-md font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Source</h3>
+            <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Source</h3>
             <div className="space-y-1.5">
-              <label htmlFor="source-dept" className="block text-sm font-medium text-neutral-700">
-                Department
-              </label>
-              <Input
-                id="source-dept"
-                placeholder="Source department"
-                value={form.sourceDept}
-                onChange={(e) => updateField('sourceDept', e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="source-warehouse" className="block text-sm font-medium text-neutral-700">
-                Warehouse / Entrepôt <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="source-warehouse"
-                placeholder="Source warehouse"
-                value={form.sourceWarehouse}
-                onChange={(e) => updateField('sourceWarehouse', e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="source-user" className="block text-sm font-medium text-neutral-700">
-                User
-              </label>
-              <Input
-                id="source-user"
-                placeholder="Source user"
-                value={form.sourceUser}
-                onChange={(e) => updateField('sourceUser', e.target.value)}
-              />
+              <label htmlFor="tr-source" className="block text-sm font-medium text-neutral-700">Location</label>
+              <select id="tr-source" value={sourceId} onChange={e => setSourceId(e.target.value)} className={selectCls}>
+                <option value="">— Select source location —</option>
+                {locations.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+              </select>
             </div>
           </div>
 
-          {/* Destination Section */}
+          {/* Destination */}
           <div className="space-y-4">
-            <h3 className="text-md font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Destination</h3>
+            <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Destination</h3>
             <div className="space-y-1.5">
-              <label htmlFor="dest-dept" className="block text-sm font-medium text-neutral-700">
-                Department <span className="text-red-500">*</span>
+              <label htmlFor="tr-dest" className="block text-sm font-medium text-neutral-700">
+                Location <span className="text-red-500">*</span>
               </label>
-              <Input
-                id="dest-dept"
-                placeholder="Destination department"
-                value={form.destDept}
-                onChange={(e) => updateField('destDept', e.target.value)}
-                required
-              />
+              <select id="tr-dest" value={destinationId} onChange={e => setDestinationId(e.target.value)} className={selectCls} required>
+                <option value="">— Select destination —</option>
+                {locations.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+              </select>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="dest-warehouse" className="block text-sm font-medium text-neutral-700">
-                Warehouse / Entrepôt <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="dest-warehouse"
-                placeholder="Destination warehouse"
-                value={form.destWarehouse}
-                onChange={(e) => updateField('destWarehouse', e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="dest-user" className="block text-sm font-medium text-neutral-700">
-                User <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="dest-user"
-                placeholder="Destination user"
-                value={form.destUser}
-                onChange={(e) => updateField('destUser', e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="reception-date" className="block text-sm font-medium text-neutral-700">
-                Reception Date <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="reception-date"
-                type="date"
-                value={form.receptionDate}
-                onChange={(e) => updateField('receptionDate', e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="dest-floor" className="block text-sm font-medium text-neutral-700">
-                Floor / Etage
-              </label>
-              <Input
-                id="dest-floor"
-                placeholder="Destination floor"
-                value={form.destFloor}
-                onChange={(e) => updateField('destFloor', e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="dest-room" className="block text-sm font-medium text-neutral-700">
-                Room / Salle
-              </label>
-              <Input
-                id="dest-room"
-                placeholder="Destination room"
-                value={form.destRoom}
-                onChange={(e) => updateField('destRoom', e.target.value)}
-              />
+              <label htmlFor="tr-date" className="block text-sm font-medium text-neutral-700">Transfer Date</label>
+              <input id="tr-date" type="date" value={transferDate} onChange={e => setTransferDate(e.target.value)}
+                className={selectCls} />
             </div>
           </div>
         </div>
 
-        {/* Transport Section */}
-        <div className="mt-8 space-y-4">
-          <h3 className="text-md font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Transport</h3>
+        {/* Transport */}
+        <div className="mt-6 space-y-4">
+          <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Transport / Reference</h3>
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3">
             <div className="space-y-1.5">
-              <label htmlFor="transport-name" className="block text-sm font-medium text-neutral-700">
-                Name / Reason
-              </label>
-              <Input
-                id="transport-name"
-                placeholder="e.g. Relocation"
-                value={form.transportName}
-                onChange={(e) => updateField('transportName', e.target.value)}
-              />
+              <label htmlFor="tr-ref" className="block text-sm font-medium text-neutral-700">Reference</label>
+              <input id="tr-ref" type="text" placeholder="TR-2026-XXXX" value={reference}
+                onChange={e => setReference(e.target.value)} className={selectCls} />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="transport-contact" className="block text-sm font-medium text-neutral-700">
-                Contact
-              </label>
-              <Input
-                id="transport-contact"
-                placeholder="Logistics team"
-                value={form.transportContact}
-                onChange={(e) => updateField('transportContact', e.target.value)}
-              />
+              <label htmlFor="tr-transport" className="block text-sm font-medium text-neutral-700">Transport Name</label>
+              <input id="tr-transport" type="text" placeholder="e.g. Relocation"
+                value={transportName} onChange={e => setTransportName(e.target.value)} className={selectCls} />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="transport-vehicle" className="block text-sm font-medium text-neutral-700">
-                Vehicle
-              </label>
-              <Input
-                id="transport-vehicle"
-                placeholder="Vehicle details"
-                value={form.transportVehicle}
-                onChange={(e) => updateField('transportVehicle', e.target.value)}
-              />
+              <label htmlFor="tr-contact" className="block text-sm font-medium text-neutral-700">Contact</label>
+              <input id="tr-contact" type="text" placeholder="Logistics team"
+                value={transportContact} onChange={e => setTransportContact(e.target.value)} className={selectCls} />
             </div>
           </div>
         </div>
 
         {/* Observations */}
         <div className="mt-6 space-y-1.5">
-          <label htmlFor="transfer-observations" className="block text-sm font-medium text-neutral-700">
-            Observations
-          </label>
-          <Textarea
-            id="transfer-observations"
-            placeholder="Additional notes about this transfer…"
-            value={form.observations}
-            onChange={(e) => updateField('observations', e.target.value)}
-            rows={3}
-          />
+          <label htmlFor="tr-obs" className="block text-sm font-medium text-neutral-700">Observations</label>
+          <Textarea id="tr-obs" placeholder="Additional notes…" value={observations}
+            onChange={e => setObservations(e.target.value)} rows={2} />
         </div>
 
-        {/* Meta row — created by / created at */}
+        {/* Meta */}
         <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-100 pt-4">
           <div className="flex items-center gap-2 text-sm text-neutral-500">
             <User className="h-4 w-4" />
-            <span>
-              Created by: <span className="font-medium text-neutral-700">Admin</span>
-            </span>
+            <span>Created by: <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
           </div>
           <div className="flex items-center gap-2 text-sm text-neutral-500">
             <CalendarClock className="h-4 w-4" />
-            <span>
-              Created at: <span className="font-medium text-neutral-700">11/04/2025 21:05</span>
-            </span>
+            <span>Date: <span className="font-medium text-neutral-700">{new Date().toLocaleDateString('fr-DZ')}</span></span>
           </div>
         </div>
 
         {/* Actions */}
         <div className="mt-5 flex items-center gap-3">
-          <Button id="transfer-save-btn" variant="primary">
-            Save
+          <Button id="transfer-save-btn" variant="primary" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving…' : 'Save Transfer'}
           </Button>
-          <Button id="transfer-approve-btn" variant="secondary">
-            Approve
-          </Button>
-          <Button id="transfer-cancel-btn" variant="ghost">
-            Cancel
-          </Button>
+          <Button id="transfer-cancel-btn" variant="ghost" onClick={() => {
+            setSelectedAssets([]); setSourceId(''); setDestinationId('');
+            setReference(''); setTransportName(''); setTransportContact('');
+            setObservations(''); setSubmitSuccess(false); setSubmitError(null);
+          }}>Cancel</Button>
         </div>
       </div>
 
-      {/* ── Assets table ──────────────────────────────────────────────────── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900">
-            Assets to Transfer
-          </h2>
-          <Button
-            id="transfer-add-asset-btn"
-            variant="ghost"
-            size="sm"
-            onClick={addAssetRow}
-          >
-            <Plus className="h-4 w-4" />
-            Add Asset
+      {/* Asset picker */}
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Assets to Transfer</h2>
+        <div className="flex items-center gap-3">
+          <select value={assetPickValue} onChange={e => setAssetPickValue(e.target.value)} className={`flex-1 ${selectCls}`}>
+            <option value="">— Pick an asset —</option>
+            {availableAssets
+              .filter(a => !selectedAssets.some(s => s.id === a.id))
+              .map(a => (
+                <option key={a.id} value={a.id}>
+                  {a.tag} — {a.modele?.nom ?? ''} [{a.etat}]
+                </option>
+              ))}
+          </select>
+          <Button variant="ghost" size="sm" onClick={addAsset} disabled={!assetPickValue}>
+            <Plus className="h-4 w-4" /> Add
           </Button>
         </div>
-
-        <Table<TransferAsset>
-          columns={columns}
-          rows={assets}
-          rowKey="id"
-          hoverable={false}
-          striped
-        />
+        <Table<SelectedAsset> columns={columns} rows={selectedAssets} rowKey="id" hoverable={false} striped />
+        {selectedAssets.length === 0 && (
+          <p className="text-center text-sm text-neutral-400 py-4">No assets selected yet.</p>
+        )}
       </div>
     </div>
   )

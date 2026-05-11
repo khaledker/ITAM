@@ -1,242 +1,232 @@
-import { useState } from "react";
-import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
-import { Textarea } from "../components/ui/Textarea";
+import { useEffect, useState } from 'react'
+import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle } from 'lucide-react'
+import { Button, Textarea, Table, type TableColumn } from '@/components'
+import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
+import type { Asset, Employee, Location } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 
-interface Asset {
-  id: string;
-  tag: string;
-  modelName: string;
-  brand: string;
-  category: string;
-  serialNumber: string;
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface SelectedAsset {
+  id: number
+  tag: string
+  modelName: string
+  brand: string
+  category: string
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function RetourPage() {
-  const [client, setClient] = useState("");
-  const [location, setLocation] = useState("");
-  const [warehouse, setWarehouse] = useState("");
-  const [floor, setFloor] = useState("");
-  const [room, setRoom] = useState("");
-  const [observations, setObservations] = useState("");
+  const { user } = useAuth()
 
-  const [assets, setAssets] = useState<Asset[]>([
-    {
-      id: "1",
-      tag: "TAG-001",
-      modelName: "ThinkPad T14",
-      brand: "Lenovo",
-      category: "Laptop",
-      serialNumber: "SN-12345",
-    },
-    {
-      id: "2",
-      tag: "MON-002",
-      modelName: "UltraSharp 27",
-      brand: "Dell",
-      category: "Monitor",
-      serialNumber: "SN-67890",
-    },
-  ]);
+  // ── Remote data ───────────────────────────────────────────────────────────
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [locations, setLocations] = useState<Location[]>([])
+  const [assignedAssets, setAssignedAssets] = useState<Asset[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  const handleAddAsset = () => {
-    const newAsset: Asset = {
-      id: Date.now().toString(),
-      tag: `TAG-${Math.floor(Math.random() * 1000)
-        .toString()
-        .padStart(3, "0")}`,
-      modelName: "New Model",
-      brand: "New Brand",
-      category: "Uncategorized",
-      serialNumber: `SN-${Math.floor(Math.random() * 10000)}`,
-    };
-    setAssets([...assets, newAsset]);
-  };
+  useEffect(() => {
+    Promise.all([
+      employeesApi.getAll(),
+      locationsApi.getAll(),
+      assetsApi.getAll({ status: 'Assigned' }),
+    ])
+      .then(([emps, locs, assets]) => {
+        setEmployees(emps)
+        setLocations(locs)
+        setAssignedAssets(assets)
+      })
+      .catch(err => setLoadError(err instanceof Error ? err.message : 'Failed to load data.'))
+  }, [])
 
-  const handleRemoveAsset = (id: string) => {
-    setAssets(assets.filter((a) => a.id !== id));
-  };
+  // ── Form state ────────────────────────────────────────────────────────────
+  const [returnedToId, setReturnedToId] = useState('')   // location id
+  const [performedBy, setPerformedBy] = useState('')     // employee override
+  const [reason, setReason] = useState('')
 
+  // ── Asset picker ──────────────────────────────────────────────────────────
+  const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([])
+  const [assetPickValue, setAssetPickValue] = useState('')
+
+  const addAsset = () => {
+    if (!assetPickValue) return
+    const asset = assignedAssets.find(a => String(a.id) === assetPickValue)
+    if (!asset || selectedAssets.some(a => a.id === asset.id)) return
+    setSelectedAssets(prev => [...prev, {
+      id: asset.id,
+      tag: asset.tag,
+      modelName: asset.modele?.nom ?? '—',
+      brand: asset.modele?.marque ?? '—',
+      category: asset.modele?.categorie ?? '—',
+    }])
+    setAssetPickValue('')
+  }
+
+  const removeAsset = (id: number) =>
+    setSelectedAssets(prev => prev.filter(a => a.id !== id))
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+  const [isSaving, setIsSaving] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+
+  const handleSave = async () => {
+    const actorId = performedBy ? Number(performedBy) : user?.id
+    if (!actorId) { setSubmitError('Could not determine who is performing this return.'); return }
+    if (selectedAssets.length === 0) { setSubmitError('Select at least one asset to return.'); return }
+
+    const today = new Date().toISOString().split('T')[0]
+    setIsSaving(true)
+    setSubmitError(null)
+    try {
+      await Promise.all(selectedAssets.map(asset =>
+        movementsApi.createReturn({
+          date: today,
+          asset_id: asset.id,
+          performed_by: actorId,
+          reason: reason || null,
+          returned_to: returnedToId ? Number(returnedToId) : null,
+        })
+      ))
+      setSubmitSuccess(true)
+      setSelectedAssets([])
+      setReturnedToId(''); setPerformedBy(''); setReason('')
+      // Refresh assigned assets
+      assetsApi.getAll({ status: 'Assigned' }).then(setAssignedAssets)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to save return.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // ── Table columns ─────────────────────────────────────────────────────────
+  const selectCls = "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+
+  const columns: TableColumn<SelectedAsset>[] = [
+    { key: 'tag', label: 'Tag', width: 'w-[14%]',
+      render: (v: string) => <span className="font-semibold text-neutral-900">{v}</span> },
+    { key: 'modelName', label: 'Model', width: 'w-[24%]' },
+    { key: 'brand', label: 'Brand', width: 'w-[18%]' },
+    { key: 'category', label: 'Category', width: 'w-[18%]',
+      render: (v: string) => (
+        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{v}</span>
+      ) },
+    { key: 'actions', label: '', width: 'w-[8%]',
+      render: (_v: any, row: SelectedAsset) => (
+        <button type="button" onClick={() => removeAsset(row.id)}
+          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+          <Trash2 className="h-4 w-4" />
+        </button>
+      ) },
+  ]
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-red-50 min-h-screen p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Retour
-        </h1>
-        <p className="text-gray-500">Return assets from users back to warehouse</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Retour</h1>
+        <p className="mt-1 text-sm text-neutral-500">Return assigned assets back to a warehouse</p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Return Details
-        </h2>
+      {loadError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</div>
+      )}
+      {submitSuccess && (
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <CheckCircle className="h-4 w-4 shrink-0" />
+          Return saved as Draft. Approve it to mark assets as Available again.
+        </div>
+      )}
+      {submitError && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+          <XCircle className="h-4 w-4 shrink-0" />{submitError}
+        </div>
+      )}
 
-        <form className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Client / User <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={client}
-                onChange={(e) => setClient(e.target.value)}
-                placeholder="e.g. Ouiza YALA"
-                required
-              />
-            </div>
+      {/* Form card */}
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-5 text-lg font-semibold text-neutral-900">Return Details</h2>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Location / Localité <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. B6 DEB"
-                required
-              />
-            </div>
+        <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Warehouse / Entrepôt <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={warehouse}
-                onChange={(e) => setWarehouse(e.target.value)}
-                placeholder="e.g. Main Warehouse"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Floor / Etage
-              </label>
-              <Input
-                value={floor}
-                onChange={(e) => setFloor(e.target.value)}
-                placeholder="e.g. 2"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Room / Salle
-              </label>
-              <Input
-                value={room}
-                onChange={(e) => setRoom(e.target.value)}
-                placeholder="e.g. 12"
-              />
-            </div>
+          {/* Returned To (location) */}
+          <div className="space-y-1.5">
+            <label htmlFor="ret-location" className="block text-sm font-medium text-neutral-700">Return to (Warehouse)</label>
+            <select id="ret-location" value={returnedToId} onChange={e => setReturnedToId(e.target.value)} className={selectCls}>
+              <option value="">— Select location —</option>
+              {locations.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+            </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Observations
-            </label>
-            <Textarea
-              value={observations}
-              onChange={(e) => setObservations(e.target.value)}
-              placeholder="Any notes about the return..."
-              rows={3}
-            />
+          {/* Performed By */}
+          <div className="space-y-1.5">
+            <label htmlFor="ret-by" className="block text-sm font-medium text-neutral-700">Performed By</label>
+            <select id="ret-by" value={performedBy} onChange={e => setPerformedBy(e.target.value)} className={selectCls}>
+              <option value="">— Defaults to you —</option>
+              {employees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+            </select>
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 flex flex-col md:flex-row gap-4 md:gap-12">
-            <div className="flex gap-2 text-sm text-gray-600">
-              <span className="font-semibold text-gray-900">Created by:</span>{" "}
-              Ali BELLOUT
-            </div>
-            <div className="flex gap-2 text-sm text-gray-600">
-              <span className="font-semibold text-gray-900">Created at:</span>{" "}
-              22/02/2026 14:45
-            </div>
+          {/* Reason */}
+          <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
+            <label htmlFor="ret-reason" className="block text-sm font-medium text-neutral-700">Reason / Observations</label>
+            <Textarea id="ret-reason" placeholder="Why are these assets being returned?…"
+              value={reason} onChange={e => setReason(e.target.value)} rows={2} />
           </div>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-            <Button
-              type="button"
-              variant="primary"
-              className="bg-red-600 hover:bg-red-700 text-white border-transparent"
-            >
-              Save
-            </Button>
-            <Button type="button" variant="ghost">
-              Cancel
-            </Button>
+        {/* Meta */}
+        <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-100 pt-4">
+          <div className="flex items-center gap-2 text-sm text-neutral-500">
+            <User className="h-4 w-4" />
+            <span>Logged in as: <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
           </div>
-        </form>
+          <div className="flex items-center gap-2 text-sm text-neutral-500">
+            <CalendarClock className="h-4 w-4" />
+            <span>Date: <span className="font-medium text-neutral-700">{new Date().toLocaleDateString('fr-DZ')}</span></span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="mt-5 flex items-center gap-3">
+          <Button id="retour-save-btn" variant="primary" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving…' : 'Save Return'}
+          </Button>
+          <Button id="retour-cancel-btn" variant="ghost" onClick={() => {
+            setSelectedAssets([]); setReturnedToId(''); setPerformedBy('');
+            setReason(''); setSubmitSuccess(false); setSubmitError(null);
+          }}>Cancel</Button>
+        </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Assets to Return
-          </h2>
-          <Button variant="ghost" size="sm" onClick={handleAddAsset}>
-            Add Asset
+      {/* Asset picker */}
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Assets to Return</h2>
+        <p className="text-sm text-neutral-500">Only currently <strong>Assigned</strong> assets are listed.</p>
+
+        <div className="flex items-center gap-3">
+          <select value={assetPickValue} onChange={e => setAssetPickValue(e.target.value)} className={`flex-1 ${selectCls}`}>
+            <option value="">— Pick an assigned asset —</option>
+            {assignedAssets
+              .filter(a => !selectedAssets.some(s => s.id === a.id))
+              .map(a => (
+                <option key={a.id} value={a.id}>
+                  {a.tag} — {a.modele?.nom ?? ''} ({a.modele?.marque ?? ''})
+                </option>
+              ))}
+          </select>
+          <Button variant="ghost" size="sm" onClick={addAsset} disabled={!assetPickValue}>
+            <Plus className="h-4 w-4" /> Add
           </Button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-500">
-              <tr>
-                <th className="px-4 py-3 font-medium rounded-tl-lg">Tag</th>
-                <th className="px-4 py-3 font-medium">Model Name</th>
-                <th className="px-4 py-3 font-medium">Brand</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium">Serial Number</th>
-                <th className="px-4 py-3 font-medium rounded-tr-lg text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {assets.map((asset) => (
-                <tr
-                  key={asset.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    {asset.tag}
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {asset.modelName}
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">{asset.brand}</td>
-                  <td className="px-4 py-3 text-gray-700">{asset.category}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-600">
-                    {asset.serialNumber}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveAsset(asset.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 h-auto"
-                    >
-                      Remove
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-              {assets.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-8 text-center text-gray-500"
-                  >
-                    No assets to return.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table<SelectedAsset> columns={columns} rows={selectedAssets} rowKey="id" hoverable={false} striped />
+        {selectedAssets.length === 0 && (
+          <p className="text-center text-sm text-neutral-400 py-4">No assets selected. Pick from the dropdown above.</p>
+        )}
       </div>
     </div>
-  );
+  )
 }
