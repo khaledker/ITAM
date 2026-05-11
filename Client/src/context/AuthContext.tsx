@@ -26,24 +26,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: true, // true on mount while we check localStorage
   });
 
-  // On mount — restore session from localStorage if token exists
+  // On mount — validate token against the server before trusting localStorage.
+  // This catches expired tokens so the user isn't stuck in a broken half-logged-in state.
   useEffect(() => {
     const token = localStorage.getItem('itam_token');
     const userRaw = localStorage.getItem('itam_user');
 
-    if (token && userRaw) {
-      try {
-        const user = JSON.parse(userRaw) as Employee;
-        setState({ user, token, isAuthenticated: true, isLoading: false });
-      } catch {
-        // Corrupt data — clear it
+    if (!token || !userRaw) {
+      setState(s => ({ ...s, isLoading: false }));
+      return;
+    }
+
+    // Verify with the server — /auth/me returns 401 if token is expired
+    authApi.me()
+      .then((employee) => {
+        setState({ user: employee, token, isAuthenticated: true, isLoading: false });
+        // Refresh cached user in case role/data changed
+        localStorage.setItem('itam_user', JSON.stringify(employee));
+      })
+      .catch(() => {
+        // Token is invalid or expired — clear everything
         localStorage.removeItem('itam_token');
         localStorage.removeItem('itam_user');
-        setState(s => ({ ...s, isLoading: false }));
-      }
-    } else {
-      setState(s => ({ ...s, isLoading: false }));
-    }
+        setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
+      });
   }, []);
 
   const login = async (user_name: string, password: string) => {
