@@ -1,293 +1,276 @@
-import {
-  Server,
-  CheckCircle,
-  Wrench,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-} from "lucide-react";
-import { StatCard } from "../components/ui/StatCard";
-import { Badge } from "../components/ui/Badge";
-import { Button } from "../components/ui/Button";
-import { Table, type TableColumn } from "../components/ui/Table";
+import { useEffect, useState } from 'react'
+import { Server, CheckCircle, Wrench, Clock } from 'lucide-react'
+import { StatCard } from '../components/ui/StatCard'
+import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
+import { Table, type TableColumn } from '../components/ui/Table'
+import { dashboardApi, type RecentMovement, type FlaggedAsset, type DashboardSummary } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 
-interface RecentOperation {
-  id: string;
-  operationId: string;
-  type: "Reception" | "Transfer" | "Affectation" | "Retour";
-  assetTag: string;
-  performedBy: string;
-  date: string;
-  status: "approved" | "pending" | "rejected";
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatDateTime(iso: string): string {
+  const d = new Date(iso)
+  const dd   = String(d.getDate()).padStart(2, '0')
+  const mm   = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const hh   = String(d.getHours()).padStart(2, '0')
+  const min  = String(d.getMinutes()).padStart(2, '0')
+  return `${dd}/${mm}/${yyyy} ${hh}:${min}`
 }
 
-interface MaintenancePrediction {
-  id: string;
-  assetTag: string;
-  assetName: string;
-  rule: string;
-  riskLevel: "low" | "medium" | "high" | "critical";
+const TYPE_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critical' | 'maintenance'> = {
+  Reception:  'active',
+  Assignment: 'warning',
+  Transfer:   'inactive',
+  Return:     'maintenance',
 }
+
+const STATUS_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critical' | 'maintenance'> = {
+  Approved: 'active',
+  Draft:    'warning',
+  Rejected: 'critical',
+  Returned: 'maintenance',
+}
+
+const RISK_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critical' | 'maintenance'> = {
+  critical: 'critical',
+  high:     'warning',
+  medium:   'warning',
+  low:      'active',
+}
+
+// ── Table column definitions ──────────────────────────────────────────────────
+
+const movementColumns: TableColumn<RecentMovement>[] = [
+  {
+    key: 'id',
+    label: 'Operation ID',
+    width: '12%',
+    render: (value: number) => <span className="font-mono text-sm">OP-{String(value).padStart(3, '0')}</span>,
+  },
+  {
+    key: 'type',
+    label: 'Type',
+    width: '14%',
+    render: (value: string) => (
+      <Badge variant={TYPE_VARIANT[value] ?? 'inactive'}>{value ?? '—'}</Badge>
+    ),
+  },
+  {
+    key: 'asset_tag',
+    label: 'Asset Tag',
+    width: '14%',
+    render: (value: string) => <span className="font-semibold text-neutral-800">{value}</span>,
+  },
+  {
+    key: 'performed_by',
+    label: 'Performed By',
+    width: '22%',
+  },
+  {
+    key: 'date',
+    label: 'Date',
+    width: '20%',
+    render: (value: string) => formatDateTime(value),
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    width: '16%',
+    render: (value: string) => (
+      <Badge variant={STATUS_VARIANT[value] ?? 'inactive'}>
+        {value}
+      </Badge>
+    ),
+  },
+]
+
+const flaggedColumns: TableColumn<FlaggedAsset>[] = [
+  {
+    key: 'assetTag',
+    label: 'Tag',
+    width: '10%',
+    render: (v: string) => <span className="font-semibold text-neutral-800">{v}</span>,
+  },
+  {
+    key: 'assetName',
+    label: 'Model',
+    width: '22%',
+  },
+  {
+    key: 'category',
+    label: 'Category',
+    width: '14%',
+    render: (v: string) => (
+      <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{v}</span>
+    ),
+  },
+  {
+    key: 'rule',
+    label: 'Rule Triggered',
+    width: '28%',
+  },
+  {
+    key: 'riskLevel',
+    label: 'Risk',
+    width: '12%',
+    render: (v: FlaggedAsset['riskLevel']) => (
+      <Badge variant={RISK_VARIANT[v] ?? 'inactive'}>
+        {v.charAt(0).toUpperCase() + v.slice(1)}
+      </Badge>
+    ),
+  },
+  {
+    key: 'ageDays',
+    label: 'Age (days)',
+    width: '12%',
+    render: (v: number) => <span className="text-sm text-neutral-600">{v} d</span>,
+  },
+]
+
+// ── Skeleton loaders ──────────────────────────────────────────────────────────
+
+function StatSkeleton() {
+  return (
+    <div className="animate-pulse rounded-xl border border-neutral-200 bg-white p-5 space-y-3">
+      <div className="h-3 w-24 rounded bg-neutral-200" />
+      <div className="h-8 w-16 rounded bg-neutral-200" />
+    </div>
+  )
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const recentOperations: RecentOperation[] = [
-    {
-      id: "1",
-      operationId: "OP-001",
-      type: "Reception",
-      assetTag: "TAG-001",
-      performedBy: "Ali BELLOUT",
-      date: "22/02/2026 11:30",
-      status: "approved",
-    },
-    {
-      id: "2",
-      operationId: "OP-002",
-      type: "Transfer",
-      assetTag: "MON-002",
-      performedBy: "Ouiza YALA",
-      date: "22/02/2026 10:15",
-      status: "pending",
-    },
-    {
-      id: "3",
-      operationId: "OP-003",
-      type: "Affectation",
-      assetTag: "TAG-003",
-      performedBy: "Admin User",
-      date: "21/02/2026 15:45",
-      status: "approved",
-    },
-    {
-      id: "4",
-      operationId: "OP-004",
-      type: "Retour",
-      assetTag: "TAG-004",
-      performedBy: "Ali BELLOUT",
-      date: "21/02/2026 14:20",
-      status: "rejected",
-    },
-    {
-      id: "5",
-      operationId: "OP-005",
-      type: "Reception",
-      assetTag: "TAG-005",
-      performedBy: "Ouiza YALA",
-      date: "20/02/2026 09:00",
-      status: "approved",
-    },
-    {
-      id: "6",
-      operationId: "OP-006",
-      type: "Affectation",
-      assetTag: "MON-006",
-      performedBy: "System",
-      date: "20/02/2026 08:30",
-      status: "pending",
-    },
-  ];
+  const { user } = useAuth()
+  const [data, setData] = useState<DashboardSummary | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const maintenancePredictions: MaintenancePrediction[] = [
-    {
-      id: "1",
-      assetTag: "TAG-001",
-      assetName: "ThinkPad T14",
-      rule: "Age > 3 years",
-      riskLevel: "critical",
-    },
-    {
-      id: "2",
-      assetTag: "MON-002",
-      assetName: "UltraSharp 27",
-      rule: "No maintenance in 12 months",
-      riskLevel: "high",
-    },
-    {
-      id: "3",
-      assetTag: "TAG-003",
-      assetName: "Dell Desktop",
-      rule: "Battery health < 50%",
-      riskLevel: "medium",
-    },
-    {
-      id: "4",
-      assetTag: "TAG-004",
-      assetName: "HP Printer",
-      rule: "Usage hours > 5000",
-      riskLevel: "low",
-    },
-  ];
+  useEffect(() => {
+    dashboardApi.getSummary()
+      .then(setData)
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load dashboard.'))
+      .finally(() => setIsLoading(false))
+  }, [])
 
-  const operationColumns: TableColumn<RecentOperation>[] = [
-    {
-      key: "operationId",
-      label: "Operation ID",
-      width: "15%",
-    },
-    {
-      key: "type",
-      label: "Type",
-      width: "15%",
-      render: (value) => {
-        const typeVariantMap: Record<string, "active" | "inactive" | "warning" | "critical" | "maintenance"> = {
-          Reception: "active",
-          Transfer: "inactive",
-          Affectation: "warning",
-          Retour: "maintenance",
-        };
-        return (
-          <Badge variant={typeVariantMap[value] || "inactive"}>
-            {value}
-          </Badge>
-        );
-      },
-    },
-    {
-      key: "assetTag",
-      label: "Asset Tag",
-      width: "15%",
-    },
-    {
-      key: "performedBy",
-      label: "Performed By",
-      width: "20%",
-    },
-    {
-      key: "date",
-      label: "Date",
-      width: "18%",
-    },
-    {
-      key: "status",
-      label: "Status",
-      width: "15%",
-      render: (value) => {
-        const statusVariantMap: Record<string, "active" | "inactive" | "warning" | "critical" | "maintenance"> = {
-          approved: "active",
-          pending: "warning",
-          rejected: "critical",
-        };
-        return (
-          <Badge variant={statusVariantMap[value] || "inactive"}>
-            {value.charAt(0).toUpperCase() + value.slice(1)}
-          </Badge>
-        );
-      },
-    },
-  ];
-
-  const getRiskBadgeVariant = (
-    level: "low" | "medium" | "high" | "critical"
-  ): "active" | "inactive" | "warning" | "critical" | "maintenance" => {
-    switch (level) {
-      case "low":
-        return "active";
-      case "medium":
-        return "warning";
-      case "high":
-        return "critical";
-      case "critical":
-        return "critical";
-      default:
-        return "inactive";
-    }
-  };
+  const stats = data?.stats
+  const movements = data?.recentMovements ?? []
+  const flagged   = data?.flaggedAssets   ?? []
 
   return (
-    <div className="bg-red-50 min-h-screen p-6 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen p-6 max-w-7xl mx-auto space-y-8">
+
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-          Dashboard
-        </h1>
-        <p className="text-gray-500">Welcome back, IT Operations</p>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Dashboard</h1>
+        <p className="text-neutral-500">
+          Welcome back, <span className="font-medium text-neutral-700">{user?.full_name ?? 'IT Operations'}</span>
+        </p>
       </div>
 
-      {/* KPI Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          label="Total Assets"
-          value="2,547"
-          icon={<Server className="h-6 w-6 text-blue-500" />}
-          trend={{ value: 4, direction: "up" }}
-        />
-        <StatCard
-          label="Active Assets"
-          value="1,893"
-          icon={<CheckCircle className="h-6 w-6 text-green-500" />}
-          trend={{ value: 2, direction: "up" }}
-        />
-        <StatCard
-          label="Under Maintenance"
-          value="124"
-          icon={<Wrench className="h-6 w-6 text-orange-500" />}
-          trend={{ value: 1, direction: "down" }}
-        />
-        <StatCard
-          label="Critical Alerts"
-          value="18"
-          icon={<AlertTriangle className="h-6 w-6 text-red-500" />}
-          trend={{ value: 12, direction: "up" }}
-        />
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)
+        ) : error ? (
+          <div className="col-span-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+            {error}
+          </div>
+        ) : (
+          <>
+            <StatCard
+              label="Total Assets"
+              value={stats?.total ?? 0}
+              icon={<Server className="h-6 w-6 text-blue-500" />}
+            />
+            <StatCard
+              label="Available"
+              value={stats?.available ?? 0}
+              icon={<CheckCircle className="h-6 w-6 text-green-500" />}
+            />
+            <StatCard
+              label="Assigned"
+              value={stats?.assigned ?? 0}
+              icon={<Clock className="h-6 w-6 text-orange-500" />}
+            />
+            <StatCard
+              label="In Maintenance"
+              value={stats?.in_maintenance ?? 0}
+              icon={<Wrench className="h-6 w-6 text-red-500" />}
+            />
+          </>
+        )}
       </div>
 
-      {/* Recent Activity Section */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+      {/* Recent Operations */}
+      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+        <h2 className="text-xl font-semibold text-neutral-900">Recent Operations</h2>
+
+        {isLoading ? (
+          <div className="animate-pulse space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-10 rounded bg-neutral-100" />
+            ))}
+          </div>
+        ) : movements.length === 0 ? (
+          <p className="text-sm text-neutral-500 py-6 text-center">No operations recorded yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table<RecentMovement>
+              columns={movementColumns}
+              rows={movements}
+              rowKey="id"
+              hoverable
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Maintenance Predictions */}
+      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Recent Operations
-          </h2>
+          <h2 className="text-xl font-semibold text-neutral-900">Maintenance Predictions</h2>
+          <p className="text-sm text-neutral-500 mt-0.5">Assets flagged by the rule engine</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table<RecentOperation>
-            columns={operationColumns}
-            rows={recentOperations}
-            rowKey="id"
-            hoverable
-          />
-        </div>
-      </div>
-
-      {/* Maintenance Predictions Section */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-6">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Maintenance Predictions
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Assets flagged by the rule engine
+        {isLoading ? (
+          <div className="animate-pulse grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-24 rounded-lg bg-neutral-100" />
+            ))}
+          </div>
+        ) : flagged.length === 0 ? (
+          <p className="text-sm text-neutral-500 py-6 text-center">
+            🎉 No assets currently flagged for maintenance.
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {maintenancePredictions.map((prediction) => (
-            <div
-              key={prediction.id}
-              className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between gap-4 mb-3">
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {prediction.assetTag}
-                  </p>
-                  <p className="text-sm text-gray-600">{prediction.assetName}</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {flagged.map(asset => (
+              <div
+                key={asset.id}
+                className="border border-neutral-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <div>
+                    <p className="font-semibold text-neutral-900">{asset.assetTag}</p>
+                    <p className="text-sm text-neutral-500">{asset.assetName}</p>
+                  </div>
+                  <Badge variant={RISK_VARIANT[asset.riskLevel] ?? 'inactive'}>
+                    {asset.riskLevel.charAt(0).toUpperCase() + asset.riskLevel.slice(1)}
+                  </Badge>
                 </div>
-                <Badge variant={getRiskBadgeVariant(prediction.riskLevel)}>
-                  {prediction.riskLevel.charAt(0).toUpperCase() +
-                    prediction.riskLevel.slice(1)}
-                </Badge>
+                <p className="text-sm text-neutral-600 mb-3">{asset.rule}</p>
+                <Button variant="ghost" size="sm" className="text-primary">
+                  View Asset
+                </Button>
               </div>
-
-              <p className="text-sm text-gray-600 mb-4">{prediction.rule}</p>
-
-              <Button variant="ghost" size="sm" className="text-primary">
-                View Asset
-              </Button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
     </div>
-  );
+  )
 }

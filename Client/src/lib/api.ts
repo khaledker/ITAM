@@ -107,6 +107,12 @@ export const assetModelsApi = {
   getAll: () => request<AssetModel[]>('/asset-models'),
 };
 
+// ── Dashboard ─────────────────────────────────────────────
+export const dashboardApi = {
+  getSummary: () => request<DashboardSummary>('/dashboard/summary'),
+};
+
+
 // ── Shared types ──────────────────────────────────────────
 export interface Employee {
   id: number;
@@ -176,3 +182,36 @@ export interface AssetModel {
   category?: string;
   part_number?: string;
 }
+
+export interface DashboardStats {
+  total: number;
+  available: number;
+  assigned: number;
+  in_maintenance: number;
+}
+
+export interface RecentMovement {
+  id: number;
+  date: string;
+  status: string;
+  asset_tag: string;
+  performed_by: string;
+  type: 'Reception' | 'Assignment' | 'Transfer' | 'Return' | null;
+}
+
+export interface FlaggedAsset {
+  id: number;
+  assetTag: string;
+  assetName: string;
+  category: string;
+  rule: string;
+  riskLevel: 'critical' | 'high' | 'medium' | 'low';
+  ageDays: number;
+}
+
+export interface DashboardSummary {
+  stats: DashboardStats;
+  recentMovements: RecentMovement[];
+  flaggedAssets: FlaggedAsset[];
+}
+
