@@ -82,6 +82,11 @@ export const movementsApi = {
 export const employeesApi = {
   getAll: () => request<Employee[]>('/employees'),
   getOne: (id: number) => request<Employee>(`/employees/${id}`),
+  getAssets: (id: number) => request<Asset[]>(`/employees/${id}/assets`),
+  create: (body: Partial<Employee>) => request<Employee>('/employees', { method: 'POST', body: JSON.stringify(body) }),
+  update: (id: number, body: Partial<Employee>) => request<Employee>(`/employees/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  remove: (id: number) => request<void>(`/employees/${id}`, { method: 'DELETE' }),
+  updateRole: (id: number, role: 'Admin' | 'Manager' | 'Employee') => request<Employee>(`/employees/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
 };
 
 // ── Departments ───────────────────────────────────────────
@@ -147,9 +152,11 @@ export interface AssetMovement {
   status: 'Draft' | 'Approved' | 'Returned' | 'Rejected';
   type: 'Reception' | 'Assignment' | 'Transfer' | 'Return';
   asset_id: number;
+  tag?: string;                   // joined from Asset
   performed_by: number;
-  performed_by_name: string;
+  performed_by_name?: string;     // joined from Employee
 }
+
 
 export interface Department {
   id: number;

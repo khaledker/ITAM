@@ -1,209 +1,58 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   AlertTriangle,
   ShieldAlert,
   ListChecks,
-  Eye,
 } from "lucide-react";
-import { StatCard } from "../components/ui/StatCard";
-import { Select } from "../components/ui/Select";
-import { Button } from "../components/ui/Button";
-import { Badge } from "../components/ui/Badge";
-import { Table, type TableColumn } from "../components/ui/Table";
-
-interface FlaggedAsset {
-  id: string;
-  assetTag: string;
-  assetName: string;
-  category: string;
-  ruleTriggered: string;
-  riskLevel: "critical" | "high" | "medium" | "low";
-  daysSinceLastMaintenance: number;
-  recommendedAction: string;
-}
-
-interface MaintenanceRule {
-  id: string;
-  name: string;
-  condition: string;
-  flaggedCount: number;
-  severity: "critical" | "high" | "medium" | "low";
-  enabled: boolean;
-}
+import { StatCard, Select, Button, Badge, Table, type TableColumn } from "@/components";
+import { dashboardApi, type FlaggedAsset } from "@/lib/api";
 
 export default function PredictionsPage() {
   const [filterRiskLevel, setFilterRiskLevel] = useState("all");
   const [filterRule, setFilterRule] = useState("all");
-  const [rules, setRules] = useState<MaintenanceRule[]>([
+  const [flaggedAssets, setFlaggedAssets] = useState<FlaggedAsset[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Hardcoded rules logic to toggle them on and off locally for the UI showcase
+  const [rules, setRules] = useState([
     {
       id: "1",
       name: "Age > 3 years",
       condition: "Asset age exceeds 3 years",
-      flaggedCount: 12,
       severity: "critical",
       enabled: true,
     },
     {
       id: "2",
-      name: "No maintenance in 12 months",
-      condition: "Asset hasn't received maintenance in over 12 months",
-      flaggedCount: 18,
+      name: "Age > 2 years",
+      condition: "Asset age exceeds 2 years",
       severity: "high",
       enabled: true,
     },
     {
       id: "3",
-      name: "Battery health < 50%",
-      condition: "Battery health falls below 50%",
-      flaggedCount: 8,
+      name: "Age > 1 year",
+      condition: "Asset age exceeds 1 year",
       severity: "medium",
       enabled: true,
     },
     {
       id: "4",
-      name: "Usage hours > 5000",
-      condition: "Device has exceeded 5000 operating hours",
-      flaggedCount: 5,
-      severity: "medium",
+      name: "Currently in maintenance",
+      condition: "Asset is currently undergoing maintenance",
+      severity: "high",
       enabled: true,
-    },
-    {
-      id: "5",
-      name: "Inactive > 6 months",
-      condition: "Asset has been inactive for more than 6 months",
-      flaggedCount: 4,
-      severity: "low",
-      enabled: false,
     },
   ]);
 
-  const flaggedAssets: FlaggedAsset[] = [
-    {
-      id: "1",
-      assetTag: "TAG-001",
-      assetName: "ThinkPad T14",
-      category: "Laptop",
-      ruleTriggered: "Age > 3 years",
-      riskLevel: "critical",
-      daysSinceLastMaintenance: 450,
-      recommendedAction: "Schedule replacement",
-    },
-    {
-      id: "2",
-      assetTag: "MON-002",
-      assetName: "UltraSharp 27",
-      category: "Monitor",
-      ruleTriggered: "No maintenance in 12 months",
-      riskLevel: "high",
-      daysSinceLastMaintenance: 380,
-      recommendedAction: "Schedule preventive maintenance",
-    },
-    {
-      id: "3",
-      assetTag: "TAG-003",
-      assetName: "Dell Desktop",
-      category: "Desktop",
-      ruleTriggered: "Usage hours > 5000",
-      riskLevel: "medium",
-      daysSinceLastMaintenance: 120,
-      recommendedAction: "Monitor performance",
-    },
-    {
-      id: "4",
-      assetTag: "KBD-004",
-      assetName: "Mechanical Keyboard",
-      category: "Peripherals",
-      ruleTriggered: "Age > 3 years",
-      riskLevel: "high",
-      daysSinceLastMaintenance: 200,
-      recommendedAction: "Consider replacement",
-    },
-    {
-      id: "5",
-      assetTag: "TAG-005",
-      assetName: "HP Printer",
-      category: "Printer",
-      ruleTriggered: "No maintenance in 12 months",
-      riskLevel: "critical",
-      daysSinceLastMaintenance: 420,
-      recommendedAction: "Schedule toner replacement",
-    },
-    {
-      id: "6",
-      assetTag: "TAG-006",
-      assetName: "MacBook Pro",
-      category: "Laptop",
-      ruleTriggered: "Battery health < 50%",
-      riskLevel: "medium",
-      daysSinceLastMaintenance: 90,
-      recommendedAction: "Battery replacement recommended",
-    },
-    {
-      id: "7",
-      assetTag: "MON-007",
-      assetName: "LG 34 Ultrawide",
-      category: "Monitor",
-      ruleTriggered: "Age > 3 years",
-      riskLevel: "low",
-      daysSinceLastMaintenance: 250,
-      recommendedAction: "Monitor condition",
-    },
-    {
-      id: "8",
-      assetTag: "TAG-008",
-      assetName: "Router Cisco",
-      category: "Network",
-      ruleTriggered: "Inactive > 6 months",
-      riskLevel: "medium",
-      daysSinceLastMaintenance: 300,
-      recommendedAction: "Verify status",
-    },
-    {
-      id: "9",
-      assetTag: "TAG-009",
-      assetName: "iPad Air",
-      category: "Mobile",
-      ruleTriggered: "No maintenance in 12 months",
-      riskLevel: "high",
-      daysSinceLastMaintenance: 365,
-      recommendedAction: "Software update needed",
-    },
-    {
-      id: "10",
-      assetTag: "TAG-010",
-      assetName: "Work Station",
-      category: "Desktop",
-      ruleTriggered: "Usage hours > 5000",
-      riskLevel: "critical",
-      daysSinceLastMaintenance: 200,
-      recommendedAction: "Schedule comprehensive maintenance",
-    },
-    {
-      id: "11",
-      assetTag: "TAG-011",
-      assetName: "USB Hub",
-      category: "Peripherals",
-      ruleTriggered: "Battery health < 50%",
-      riskLevel: "low",
-      daysSinceLastMaintenance: 80,
-      recommendedAction: "No action required",
-    },
-  ];
-
-  const filteredAssets = useMemo(() => {
-    return flaggedAssets.filter((asset) => {
-      const riskMatch =
-        filterRiskLevel === "all" || asset.riskLevel === filterRiskLevel;
-      const ruleMatch =
-        filterRule === "all" || asset.ruleTriggered === filterRule;
-      return riskMatch && ruleMatch;
-    });
-  }, [filterRiskLevel, filterRule]);
-
-  const handleResetFilters = () => {
-    setFilterRiskLevel("all");
-    setFilterRule("all");
-  };
+  useEffect(() => {
+    dashboardApi.getSummary()
+      .then((data) => {
+        setFlaggedAssets(data.flaggedAssets || []);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const handleToggleRule = (ruleId: string) => {
     setRules(
@@ -213,38 +62,38 @@ export default function PredictionsPage() {
     );
   };
 
+  // Filter out assets if their corresponding rule is toggled off
+  const enabledFlaggedAssets = useMemo(() => {
+    return flaggedAssets.filter(asset => {
+      const correspondingRule = rules.find(r => r.name === asset.rule);
+      return correspondingRule ? correspondingRule.enabled : true;
+    });
+  }, [flaggedAssets, rules]);
+
+  const filteredAssets = useMemo(() => {
+    return enabledFlaggedAssets.filter((asset) => {
+      const riskMatch = filterRiskLevel === "all" || asset.riskLevel === filterRiskLevel;
+      const ruleMatch = filterRule === "all" || asset.rule === filterRule;
+      return riskMatch && ruleMatch;
+    });
+  }, [filterRiskLevel, filterRule, enabledFlaggedAssets]);
+
+  const handleResetFilters = () => {
+    setFilterRiskLevel("all");
+    setFilterRule("all");
+  };
+
   const assetTableColumns: TableColumn<FlaggedAsset>[] = [
-    {
-      key: "assetTag",
-      label: "Asset Tag",
-      sortable: true,
-      width: "12%",
-    },
-    {
-      key: "assetName",
-      label: "Asset Name",
-      sortable: true,
-      width: "18%",
-    },
-    {
-      key: "category",
-      label: "Category",
-      width: "12%",
-    },
-    {
-      key: "ruleTriggered",
-      label: "Rule Triggered",
-      width: "18%",
-    },
+    { key: "assetTag", label: "Asset Tag", sortable: true, width: "15%" },
+    { key: "assetName", label: "Asset Model", sortable: true, width: "20%" },
+    { key: "category", label: "Category", width: "15%" },
+    { key: "rule", label: "Rule Triggered", width: "20%" },
     {
       key: "riskLevel",
       label: "Risk Level",
-      width: "12%",
+      width: "15%",
       render: (value) => {
-        const variantMap: Record<
-          string,
-          "active" | "inactive" | "warning" | "critical" | "maintenance"
-        > = {
+        const variantMap: Record<string, "active" | "inactive" | "warning" | "critical" | "maintenance"> = {
           critical: "critical",
           high: "warning",
           medium: "warning",
@@ -258,64 +107,38 @@ export default function PredictionsPage() {
       },
     },
     {
-      key: "daysSinceLastMaintenance",
-      label: "Days Since Last Maintenance",
-      width: "14%",
+      key: "ageDays",
+      label: "Age (Days)",
+      width: "15%",
       render: (value) => <span>{value} days</span>,
-    },
-    {
-      key: "recommendedAction",
-      label: "Recommended Action",
-      width: "18%",
-    },
-    {
-      key: "id",
-      label: "Actions",
-      width: "8%",
-      render: () => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-primary hover:text-primary-dark"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      ),
     },
   ];
 
   const getRiskBadgeVariant = (
-    level: "critical" | "high" | "medium" | "low"
+    level: string
   ): "active" | "inactive" | "warning" | "critical" | "maintenance" => {
     switch (level) {
-      case "critical":
-        return "critical";
-      case "high":
-        return "warning";
-      case "medium":
-        return "warning";
-      case "low":
-        return "active";
-      default:
-        return "inactive";
+      case "critical": return "critical";
+      case "high": return "warning";
+      case "medium": return "warning";
+      case "low": return "active";
+      default: return "inactive";
     }
   };
 
-  const totalFlaggedAssets = flaggedAssets.length;
-  const criticalCount = flaggedAssets.filter(
-    (a) => a.riskLevel === "critical"
-  ).length;
+  const totalFlaggedAssets = enabledFlaggedAssets.length;
+  const criticalCount = enabledFlaggedAssets.filter((a) => a.riskLevel === "critical").length;
   const activeRulesCount = rules.filter((r) => r.enabled).length;
 
   return (
-    <div className="bg-red-50 min-h-screen p-6 max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
           Predictions
         </h1>
-        <p className="text-gray-500">
-          Rule-based maintenance alerts generated by the system
+        <p className="text-neutral-500 text-sm">
+          Rule-based maintenance alerts generated by the system.
         </p>
       </div>
 
@@ -324,7 +147,7 @@ export default function PredictionsPage() {
         <StatCard
           label="Total Flagged Assets"
           value={totalFlaggedAssets}
-          icon={<AlertTriangle className="h-6 w-6 text-orange-500" />}
+          icon={<AlertTriangle className="h-6 w-6 text-amber-500" />}
         />
         <StatCard
           label="Critical Risk"
@@ -339,14 +162,15 @@ export default function PredictionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
-        <h2 className="text-sm font-semibold text-gray-900">Filters</h2>
+      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+        <h2 className="text-sm font-semibold text-neutral-900">Filters</h2>
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1 min-w-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
               Risk Level
             </label>
             <Select
+              id="risk-filter"
               value={filterRiskLevel}
               onChange={(e) => setFilterRiskLevel(e.target.value)}
             >
@@ -354,25 +178,21 @@ export default function PredictionsPage() {
               <option value="critical">Critical</option>
               <option value="high">High</option>
               <option value="medium">Medium</option>
-              <option value="low">Low</option>
             </Select>
           </div>
           <div className="flex-1 min-w-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
               Rule
             </label>
             <Select
+              id="rule-filter"
               value={filterRule}
               onChange={(e) => setFilterRule(e.target.value)}
             >
               <option value="all">All</option>
-              <option value="Age > 3 years">Age &gt; 3 years</option>
-              <option value="No maintenance in 12 months">
-                No maintenance in 12 months
-              </option>
-              <option value="Battery health < 50%">Battery health &lt; 50%</option>
-              <option value="Usage hours > 5000">Usage hours &gt; 5000</option>
-              <option value="Inactive > 6 months">Inactive &gt; 6 months</option>
+              {rules.map(r => (
+                <option key={r.id} value={r.name}>{r.name}</option>
+              ))}
             </Select>
           </div>
           <Button variant="ghost" onClick={handleResetFilters}>
@@ -382,9 +202,9 @@ export default function PredictionsPage() {
       </div>
 
       {/* Flagged Assets Table */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-neutral-900">
             Flagged Assets ({filteredAssets.length})
           </h2>
         </div>
@@ -394,55 +214,60 @@ export default function PredictionsPage() {
             columns={assetTableColumns}
             rows={filteredAssets}
             rowKey="id"
+            loading={isLoading}
             hoverable
           />
         </div>
       </div>
 
       {/* Active Rules */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-6">
+      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-neutral-900">
             Active Maintenance Rules
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {rules.map((rule) => (
-            <div
-              key={rule.id}
-              className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">{rule.name}</h3>
+          {rules.map((rule) => {
+            const flaggedCount = flaggedAssets.filter(a => a.rule === rule.name).length;
+            
+            return (
+              <div
+                key={rule.id}
+                className="border border-neutral-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-neutral-900">{rule.name}</h3>
+                    </div>
+                    <p className="text-sm text-neutral-600 mt-1">{rule.condition}</p>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">{rule.condition}</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={rule.enabled}
+                      onChange={() => handleToggleRule(rule.id)}
+                      className="h-4 w-4 rounded border-neutral-300 text-primary cursor-pointer"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={rule.enabled}
-                    onChange={() => handleToggleRule(rule.id)}
-                    className="h-4 w-4 rounded border-gray-300 text-primary cursor-pointer"
-                  />
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <div className="text-sm">
-                  <span className="font-semibold text-gray-900">
-                    {rule.flaggedCount}
-                  </span>
-                  <span className="text-gray-600"> assets flagged</span>
+                <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+                  <div className="text-sm">
+                    <span className="font-semibold text-neutral-900">
+                      {flaggedCount}
+                    </span>
+                    <span className="text-neutral-600"> assets flagged</span>
+                  </div>
+                  <Badge variant={getRiskBadgeVariant(rule.severity)}>
+                    {rule.severity.charAt(0).toUpperCase() + rule.severity.slice(1)}
+                  </Badge>
                 </div>
-                <Badge variant={getRiskBadgeVariant(rule.severity)}>
-                  {rule.severity.charAt(0).toUpperCase() + rule.severity.slice(1)}
-                </Badge>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>

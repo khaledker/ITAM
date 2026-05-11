@@ -9,7 +9,7 @@ import {
   Server,
   Settings as SettingsIcon,
   Users,
-  Wrench,
+  ClipboardList,
   RotateCcw,
 } from "lucide-react";
 import { useState } from "react";
@@ -28,7 +28,7 @@ const primaryNav: NavItem[] = [
   { label: "Reception", icon: PackageCheck, to: "/reception" },
   { label: "Transfer", icon: ArrowRightLeft, to: "/transfer" },
   { label: "Retour", icon: RotateCcw, to: "/retour" },
-  { label: "Maintenance", icon: Wrench, to: "/maintenance" },
+  { label: "Movements", icon: ClipboardList, to: "/maintenance" },
   { label: "Predictions", icon: BrainCircuit, to: "/predictions" },
   { label: "Reports", icon: BarChart2, to: "/reports" },
   { label: "Users", icon: Users, to: "/users" },
