@@ -199,78 +199,100 @@ function AddAssetModal({ models, locations, onClose, onSaved }: AddAssetModalPro
   )
 }
 
-// ── Columns ──────────────────────────────────────────────────────────────────
+// ── View Asset Modal (Details + History) ───────────────────────────────────────
 
-const columns: TableColumn<Asset>[] = [
-  {
-    key: 'tag',
-    label: 'Tag',
-    sortable: true,
-    width: 'w-[10%]',
-    render: (value: string) => (
-      <span className="font-semibold text-neutral-900">{value}</span>
-    ),
-  },
-  {
-    key: 'modele.nom',
-    label: 'Model Name',
-    sortable: true,
-    width: 'w-[16%]',
-    render: (_value: any, row: Asset) => row.modele?.nom ?? '—',
-  },
-  {
-    key: 'modele.marque',
-    label: 'Brand',
-    width: 'w-[12%]',
-    render: (_value: any, row: Asset) => row.modele?.marque ?? '—',
-  },
-  {
-    key: 'modele.categorie',
-    label: 'Category',
-    width: 'w-[12%]',
-    render: (_value: any, row: Asset) => (
-      <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
-        {row.modele?.categorie ?? '—'}
-      </span>
-    ),
-  },
-  {
-    key: 'partNum',
-    label: 'Part Number',
-    width: 'w-[14%]',
-    render: (value: string) => (
-      <span className="font-mono text-xs text-neutral-600">{value ?? '—'}</span>
-    ),
-  },
-  {
-    key: 'etat',
-    label: 'Status',
-    width: 'w-[12%]',
-    render: (value: AssetStatus) => (
-      <Badge variant={value}>{statusLabel[value] ?? value}</Badge>
-    ),
-  },
-  {
-    key: 'createdAt',
-    label: 'Created At',
-    width: 'w-[12%]',
-    render: (value: string) => value ? formatDate(value) : '—',
-  },
-  {
-    key: 'actions',
-    label: 'Actions',
-    width: 'w-[8%]',
-    render: () => (
-      <button
-        type="button"
-        className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
-        aria-label="View asset"
-      >
-        <Eye className="h-4 w-4" />
-      </button>
-    ),
-  },
-]
+interface ViewAssetModalProps {
+  asset: Asset
+  onClose: () => void
+}
+
+function ViewAssetModal({ asset, onClose }: ViewAssetModalProps) {
+  const [history, setHistory] = useState<AssetMovement[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    assetsApi.getHistory(asset.id)
+      .then(setHistory)
+      .finally(() => setIsLoading(false))
+  }, [asset.id])
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="w-[95vw] sm:w-[700px] max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-2xl flex flex-col">
+        <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-900">Asset Details: {asset.tag}</h2>
+            <p className="text-xs text-neutral-500">{asset.modele.marque} {asset.modele.nom}</p>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Top Summary */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Status</p>
+              <Badge variant={asset.etat}>{asset.etat}</Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Assigned To</p>
+              <p className="text-sm font-medium text-neutral-900">{asset.employee?.full_name ?? '—'}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Category</p>
+              <p className="text-sm font-medium text-neutral-900">{asset.modele.categorie}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Acquired On</p>
+              <p className="text-sm font-medium text-neutral-900">{asset.createdAt ? formatDate(asset.createdAt) : '—'}</p>
+            </div>
+          </div>
+
+          {/* History Timeline */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400">Movement History</h3>
+            
+            {isLoading ? (
+              <div className="space-y-3 animate-pulse">
+                {[1, 2].map(i => <div key={i} className="h-16 bg-neutral-50 rounded-lg" />)}
+              </div>
+            ) : history.length === 0 ? (
+              <p className="text-sm text-neutral-500 italic py-4 text-center border-2 border-dashed border-neutral-100 rounded-xl">No history records found for this asset.</p>
+            ) : (
+              <div className="relative space-y-4 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-neutral-100">
+                {history.map((mov) => (
+                  <div key={mov.id} className="relative flex items-center gap-4 pl-10">
+                    <span className={`absolute left-0 mt-1 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white bg-neutral-100 text-neutral-600 ring-1 ring-neutral-200`}>
+                      {mov.type === 'Reception' && <Plus className="h-4 w-4" />}
+                      {mov.type === 'Assignment' && <User className="h-4 w-4 text-blue-500" />}
+                      {mov.type === 'Transfer' && <RotateCcw className="h-4 w-4 text-orange-500" />}
+                      {mov.type === 'Return' && <CalendarClock className="h-4 w-4 text-green-500" />}
+                    </span>
+                    <div className="flex-1 rounded-xl border border-neutral-100 bg-neutral-50/50 p-3 shadow-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-bold text-neutral-900">{mov.type}</p>
+                        <Badge variant={mov.status === 'Approved' ? 'active' : 'warning'}>{mov.status}</Badge>
+                      </div>
+                      <p className="mt-0.5 text-xs text-neutral-500">
+                        {formatDate(mov.date)} • Performed by {mov.performed_by_name}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-end border-t border-neutral-100 p-4">
+          <Button variant="ghost" onClick={onClose}>Close</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -288,9 +310,91 @@ export default function AssetsPage() {
 
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
+
   const [models, setModels] = useState<AssetModel[]>([])
   const [locations, setLocations] = useState<Location[]>([])
   const [saveSuccess, setSaveSuccess] = useState(false)
+
+  const columns = useMemo<TableColumn<Asset>[]>(() => [
+    {
+      key: 'tag',
+      label: 'Tag',
+      sortable: true,
+      width: 'w-[10%]',
+      render: (value: string) => <span className="font-semibold text-neutral-900">{value}</span>,
+    },
+    {
+      key: 'modele.nom',
+      label: 'Model Name',
+      sortable: true,
+      width: 'w-[14%]',
+      render: (_value: any, row: Asset) => row.modele?.nom ?? '—',
+    },
+    {
+      key: 'modele.marque',
+      label: 'Brand',
+      width: 'w-[10%]',
+      render: (_value: any, row: Asset) => row.modele?.marque ?? '—',
+    },
+    {
+      key: 'modele.categorie',
+      label: 'Category',
+      width: 'w-[10%]',
+      render: (_value: any, row: Asset) => (
+        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+          {row.modele?.categorie ?? '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'employee.full_name',
+      label: 'Assigned To',
+      width: 'w-[14%]',
+      render: (_value: any, row: Asset) => (
+        <div className="flex items-center gap-2">
+          {row.employee ? (
+            <>
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                {row.employee.full_name.split(' ').map(n => n[0]).join('')}
+              </div>
+              <span className="text-sm font-medium text-neutral-700">{row.employee.full_name}</span>
+            </>
+          ) : (
+            <span className="text-xs italic text-neutral-400">Available</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'etat',
+      label: 'Status',
+      width: 'w-[10%]',
+      render: (value: AssetStatus) => <Badge variant={value}>{statusLabel[value] ?? value}</Badge>,
+    },
+    {
+      key: 'createdAt',
+      label: 'Created At',
+      width: 'w-[10%]',
+      render: (value: string) => value ? formatDate(value) : '—',
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      width: 'w-[6%]',
+      render: (_value: any, row: Asset) => (
+        <button
+          type="button"
+          onClick={() => { setSelectedAsset(row); setShowViewModal(true); }}
+          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+          aria-label="View asset history"
+        >
+          <Eye className="h-4 w-4" />
+        </button>
+      ),
+    },
+  ], [])
 
   const loadAssets = useCallback(async () => {
     try {
@@ -379,6 +483,13 @@ export default function AssetsPage() {
           locations={locations}
           onClose={() => setShowAddModal(false)}
           onSaved={handleAssetSaved}
+        />
+      )}
+
+      {showViewModal && selectedAsset && (
+        <ViewAssetModal
+          asset={selectedAsset}
+          onClose={() => { setShowViewModal(false); setSelectedAsset(null); }}
         />
       )}
 

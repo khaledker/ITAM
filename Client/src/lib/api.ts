@@ -136,6 +136,7 @@ export interface Asset {
   etat: 'active' | 'maintenance' | 'warning' | 'critical' | 'inactive';
   createdAt: string;
   modele: { nom: string; marque: string; categorie: string };
+  employee?: { id: number; full_name: string } | null;
 }
 
 export interface AssetStats {
