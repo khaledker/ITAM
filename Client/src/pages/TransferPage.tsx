@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle } from 'lucide-react'
 import { Button, Textarea, Table, type TableColumn, Radio } from '@/components'
 import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
-import type { Asset, Employee, Location } from '@/lib/api'
+import type { Asset, Location } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ export default function TransferPage() {
   const { user } = useAuth()
 
   // ── Remote data ───────────────────────────────────────────────────────────
-  const [employees, setEmployees] = useState<Employee[]>([])
+  // const [employees, setEmployees] = useState<Employee[]>([])
   const [locations, setLocations] = useState<Location[]>([])
   const [availableAssets, setAvailableAssets] = useState<Asset[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -34,8 +34,8 @@ export default function TransferPage() {
       locationsApi.getAll(),
       assetsApi.getAll(),
     ])
-      .then(([emps, locs, assets]) => {
-        setEmployees(emps)
+      .then(([_, locs, assets]) => {
+        // setEmployees(emps)
         setLocations(locs)
         setAvailableAssets(assets)
       })

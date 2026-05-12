@@ -31,11 +31,8 @@ function AppShell() {
   if (!isAuthenticated) return <Navigate to="/login" replace />
 
   const initials = user?.full_name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) ?? 'U'
+    ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'U'
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">

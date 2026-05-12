@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react'
-import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
+import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Upload } from 'lucide-react'
 import { Button, Input, Textarea, Table, type TableColumn } from '@/components'
-import { assetsApi, employeesApi, locationsApi, suppliersApi, movementsApi } from '@/lib/api'
-import type { Employee, Location, Supplier } from '@/lib/api'
+import { assetsApi, employeesApi, locationsApi, suppliersApi, movementsApi, assetModelsApi } from '@/lib/api'
+import type { Employee, Location, Supplier, AssetModel } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ReceptionRow {
-  id: number       // local key only
+  id: number
   tag: string
   serialNumber: string
-  modelId: string  // user types or we could add a picker
+  modelId: string
   description: string
 }
 
@@ -21,16 +21,28 @@ let rowCounter = 1
 
 export default function ReceptionPage() {
   const { user } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ── Remote data ───────────────────────────────────────────────────────────
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [locations, setLocations] = useState<Location[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [models, setModels] = useState<AssetModel[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([suppliersApi.getAll(), locationsApi.getAll(), employeesApi.getAll()])
-      .then(([s, l, e]) => { setSuppliers(s); setLocations(l); setEmployees(e) })
+    Promise.all([
+      suppliersApi.getAll(),
+      locationsApi.getAll(),
+      employeesApi.getAll(),
+      assetModelsApi.getAll()
+    ])
+      .then(([s, l, e, m]) => {
+        setSuppliers(s)
+        setLocations(l)
+        setEmployees(e)
+        setModels(m)
+      })
       .catch(err => setLoadError(err instanceof Error ? err.message : 'Failed to load data.'))
   }, [])
 
@@ -45,6 +57,7 @@ export default function ReceptionPage() {
 
   // ── Asset rows ────────────────────────────────────────────────────────────
   const [rows, setRows] = useState<ReceptionRow[]>([])
+  const [bulkModelId, setBulkModelId] = useState('')
 
   const addRow = () => setRows(prev => [...prev, {
     id: rowCounter++, tag: '', serialNumber: '', modelId: '', description: '',
@@ -54,6 +67,60 @@ export default function ReceptionPage() {
 
   const updateRow = (id: number, key: keyof ReceptionRow, value: string) =>
     setRows(prev => prev.map(r => r.id === id ? { ...r, [key]: value } : r))
+
+  const handleApplyBulkModel = () => {
+    if (!bulkModelId) return
+    setRows(prev => prev.map(r => ({ ...r, modelId: bulkModelId })))
+    setBulkModelId('')
+  }
+
+  // ── CSV Import ────────────────────────────────────────────────────────────
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const csv = event.target?.result as string
+      if (!csv) return
+
+      const lines = csv.split(/\r?\n/).filter(l => l.trim())
+      if (lines.length === 0) return
+
+      // Attempt to auto-detect header row
+      let startIndex = 0
+      const firstLineLower = lines[0].toLowerCase()
+      if (firstLineLower.includes('tag') || firstLineLower.includes('serial') || firstLineLower.includes('description')) {
+        startIndex = 1
+      }
+
+      const newRows: ReceptionRow[] = []
+      for (let i = startIndex; i < lines.length; i++) {
+        // Basic CSV split, ignores commas inside quotes but doesn't handle advanced CSV escaping
+        const columns = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''))
+        const tag = columns[0] || ''
+        const serialNumber = columns[1] || tag || ''
+        const description = columns[2] || ''
+
+        if (!tag && !serialNumber) continue
+
+        newRows.push({
+          id: rowCounter++,
+          tag,
+          serialNumber,
+          modelId: '',
+          description
+        })
+      }
+
+      setRows(prev => [...prev, ...newRows])
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+    reader.readAsText(file)
+  }
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false)
@@ -70,18 +137,22 @@ export default function ReceptionPage() {
       setSubmitError('Add at least one asset row before saving.')
       return
     }
+    
+    // Validate rows
     const missingTags = rows.some(r => !r.tag.trim())
     if (missingTags) {
       setSubmitError('Every asset row must have a Tag value.')
+      return
+    }
+    const missingModels = rows.some(r => !r.modelId)
+    if (missingModels) {
+      setSubmitError('Every asset row must have a Model assigned.')
       return
     }
 
     setIsSaving(true)
     setSubmitError(null)
     try {
-      // Note: the reception API expects asset_id — for new assets being received,
-      // they need to be created first. For now we create them inline using assetsApi.
-      // Each row: create asset → then create reception movement for it.
       for (const row of rows) {
         const newAsset = await assetsApi.create({
           tag: row.tag,
@@ -89,7 +160,7 @@ export default function ReceptionPage() {
           status: 'Available',
           date_acq: deliveryDate,
           description: row.description || null,
-          model_id: row.modelId ? Number(row.modelId) : 1, // fallback to model 1
+          model_id: Number(row.modelId),
           location_id: destinationId ? Number(destinationId) : null,
         } as any)
 
@@ -116,8 +187,6 @@ export default function ReceptionPage() {
   }
 
   // ── Table columns ─────────────────────────────────────────────────────────
-  const warehouseLocations = locations.filter(l => !l.type || l.type === 'Warehouse')
-
   const columns: TableColumn<ReceptionRow>[] = [
     {
       key: 'tag', label: 'Tag *', width: 'w-[16%]',
@@ -127,10 +196,25 @@ export default function ReceptionPage() {
       ),
     },
     {
-      key: 'serialNumber', label: 'Serial Number', width: 'w-[22%]',
+      key: 'serialNumber', label: 'Serial Number', width: 'w-[18%]',
       render: (_v: any, row: ReceptionRow) => (
         <Input value={row.serialNumber} placeholder="SN-XXXXX"
           onChange={e => updateRow(row.id, 'serialNumber', e.target.value)} className="h-8 text-sm" />
+      ),
+    },
+    {
+      key: 'modelId', label: 'Model *', width: 'w-[25%]',
+      render: (_v: any, row: ReceptionRow) => (
+        <select
+          value={row.modelId}
+          onChange={e => updateRow(row.id, 'modelId', e.target.value)}
+          className="h-8 w-full rounded-md border border-neutral-300 bg-white px-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          <option value="">— Select Model —</option>
+          {models.map(m => (
+            <option key={m.id} value={m.id}>{m.name} ({m.brand})</option>
+          ))}
+        </select>
       ),
     },
     {
@@ -268,26 +352,73 @@ export default function ReceptionPage() {
       </div>
 
       {/* Asset rows */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900">Assets in this Reception</h2>
-          <Button id="reception-add-asset-btn" variant="ghost" size="sm" onClick={addRow}>
-            <Plus className="h-4 w-4" /> Add Asset Row
-          </Button>
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-900">Assets in this Reception</h2>
+            <p className="text-sm text-neutral-500">Manually add rows or upload a CSV file (Format: Tag, Serial Number, Description).</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="file"
+              accept=".csv"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-white border-neutral-300 text-neutral-700 hover:bg-neutral-50"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Import CSV
+            </Button>
+            <Button id="reception-add-asset-btn" variant="ghost" size="sm" onClick={addRow}>
+              <Plus className="h-4 w-4 mr-1" /> Add Row
+            </Button>
+          </div>
         </div>
 
-        <Table<ReceptionRow>
-          columns={columns}
-          rows={rows}
-          rowKey="id"
-          hoverable={false}
-          striped
-        />
-        {rows.length === 0 && (
-          <p className="text-center text-sm text-neutral-400 py-6">
-            Click "Add Asset Row" to add assets being received.
-          </p>
+        {/* Bulk Model Assignment (shown only when rows exist) */}
+        {rows.length > 0 && (
+          <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm">
+            <span className="text-sm font-medium text-amber-800 whitespace-nowrap">Bulk Apply Model:</span>
+            <select
+              value={bulkModelId}
+              onChange={e => setBulkModelId(e.target.value)}
+              className="max-w-md w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm text-neutral-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            >
+              <option value="">— Select a model to apply to all rows below —</option>
+              {models.map(m => (
+                <option key={m.id} value={m.id}>{m.name} ({m.brand})</option>
+              ))}
+            </select>
+            <Button variant="primary" size="sm" onClick={handleApplyBulkModel} disabled={!bulkModelId}>
+              Apply
+            </Button>
+          </div>
         )}
+
+        <div className="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+          <Table<ReceptionRow>
+            columns={columns}
+            rows={rows}
+            rowKey="id"
+            hoverable={false}
+            striped
+          />
+          {rows.length === 0 && (
+            <div className="text-center py-12 px-4">
+              <Upload className="h-8 w-8 mx-auto text-neutral-300 mb-3" />
+              <p className="text-base font-medium text-neutral-900">No assets added yet</p>
+              <p className="mt-1 text-sm text-neutral-500">
+                Click "Import CSV" to upload a batch of assets, or add them manually one by one.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

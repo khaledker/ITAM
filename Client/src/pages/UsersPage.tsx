@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Plus, Trash2, Edit2, ShieldAlert, CheckCircle, XCircle } from 'lucide-react'
-import { Button, Input, Select, Badge, Table, type TableColumn } from '@/components'
+import { ShieldAlert, CheckCircle, XCircle } from 'lucide-react'
+import { Badge, Table, type TableColumn } from '@/components'
 import { employeesApi, type Employee } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
