@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 const findAll = async () => {
   const [rows] = await db.query(`
-    SELECT e.id, e.user_name, e.full_name, e.email, e.actif,
+    SELECT e.id, e.user_name, e.full_name, e.email, e.actif, e.role,
            d.id AS department_id, d.code AS department_code, d.libelle AS department_name
     FROM Employee e
     LEFT JOIN Department d ON e.department_id = d.id
@@ -13,7 +13,7 @@ const findAll = async () => {
 
 const findById = async (id) => {
   const [rows] = await db.query(`
-    SELECT e.id, e.user_name, e.full_name, e.email, e.actif,
+    SELECT e.id, e.user_name, e.full_name, e.email, e.actif, e.role,
            d.id AS department_id, d.code AS department_code, d.libelle AS department_name
     FROM Employee e
     LEFT JOIN Department d ON e.department_id = d.id

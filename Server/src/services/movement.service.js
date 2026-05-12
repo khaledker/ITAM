@@ -229,8 +229,8 @@ const updateStatus = async (id, newStatus) => {
         );
       } else if (mv.type === 'Assignment') {
         await conn.query(
-          'UPDATE Asset SET status = ? WHERE id = ?',
-          ['Assigned', mv.asset_id]
+          'UPDATE Asset SET status = ?, employee_id = ? WHERE id = ?',
+          ['Assigned', mv.assigned_to, mv.asset_id]
         );
       } else if (mv.type === 'Transfer') {
         await conn.query(
@@ -239,7 +239,7 @@ const updateStatus = async (id, newStatus) => {
         );
       } else if (mv.type === 'Return') {
         await conn.query(
-          'UPDATE Asset SET status = ?, location_id = ? WHERE id = ?',
+          'UPDATE Asset SET status = ?, location_id = ?, employee_id = NULL WHERE id = ?',
           ['Available', mv.returned_to, mv.asset_id]
         );
       }
