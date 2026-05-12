@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Eye, Plus, Search, RotateCcw, X, CheckCircle, XCircle } from 'lucide-react'
+import { Eye, Plus, Search, RotateCcw, X, CheckCircle, XCircle, User, CalendarClock } from 'lucide-react'
 import { Button, Input, Select, Badge, EmptyState, Table, type TableColumn, type SortConfig } from '@/components'
-import { assetsApi, assetModelsApi, locationsApi, type Asset, type AssetModel, type Location } from '@/lib/api'
+import { assetsApi, assetModelsApi, locationsApi, type Asset, type AssetModel, type Location, type AssetMovement } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
 // ── Types ────────────────────────────────────────────────────────────────────
