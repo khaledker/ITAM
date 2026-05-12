@@ -4,7 +4,7 @@ import { StatCard } from '../components/ui/StatCard'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Table, type TableColumn } from '../components/ui/Table'
-import { dashboardApi, type RecentMovement, type FlaggedAsset, type DashboardSummary } from '@/lib/api'
+import { dashboardApi, type RecentMovement, type DashboardSummary } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
