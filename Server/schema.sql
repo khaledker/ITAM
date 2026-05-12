@@ -3,8 +3,8 @@
 -- Matches UML Class Diagram exactly
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS asset_management;
-USE asset_management;
+CREATE DATABASE IF NOT EXISTS itam;
+USE itam;
 
 -- --------------------------------------------------------
 -- 1. DEPARTMENT

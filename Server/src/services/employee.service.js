@@ -43,10 +43,10 @@ const remove = async (id) => {
   return result.affectedRows > 0;
 };
 
-// Get all assets currently assigned to an employee
+// ── Get all assets currently assigned to an employee ──────
 const getAssignedAssets = async (employeeId) => {
   const [rows] = await db.query(`
-    SELECT a.id, a.serial_number, a.tag, a.status,
+    SELECT a.id, a.serial_number, a.tag, a.status, a.date_acq,
            am.name AS model_name, am.brand, am.category,
            asn.expected_return, asn.id AS assignment_id,
            mv.date AS assigned_date
@@ -58,7 +58,24 @@ const getAssignedAssets = async (employeeId) => {
       AND mv.status = 'Approved'
       AND a.status = 'Assigned'
   `, [employeeId]);
-  return rows;
+  
+  // Mapping to match the French/Specific naming expected by the frontend
+  return rows.map(row => ({
+    id:      row.id,
+    tag:     row.tag,
+    partNum: row.part_number || '—',
+    etat:    'active', // If it's assigned, it's active in the UI
+    createdAt: row.date_acq,
+    modele: {
+      nom:       row.model_name,
+      marque:    row.brand,
+      categorie: row.category,
+    },
+    // Meta fields
+    assignment_id: row.assignment_id,
+    expected_return: row.expected_return,
+    assigned_date: row.assigned_date,
+  }));
 };
 
 const updateRole = async (id, role) => {

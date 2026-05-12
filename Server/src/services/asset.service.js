@@ -14,22 +14,23 @@ const BASE_SELECT = `
   LEFT JOIN Employee emp ON a.employee_id  = emp.id
 `;
 
-// ── Format asset response to match UI schema ──────────────
+// ── Format asset response to match UI schema (French/Specific naming) ──────────────
 const formatAsset = (row) => ({
-  id:           row.id,
-  serial_number: row.serial_number,
-  tag:          row.tag,
-  status:       row.status,
-  date_acq:     row.date_acq,
-  description:  row.description,
-  model: {
-    id:          row.model_id,
-    name:        row.model_name,
-    code:        row.model_code,
-    brand:       row.brand,
-    category:    row.category,
-    part_number: row.part_number,
+  id:      row.id,
+  tag:     row.tag,
+  partNum: row.part_number || '—',
+  etat:    row.status?.toLowerCase() === 'assigned' ? 'active' : 
+           row.status?.toLowerCase() === 'inmaintenance' ? 'maintenance' : 
+           row.status?.toLowerCase() === 'retired' ? 'inactive' : 'active',
+  createdAt: row.date_acq,
+  modele: {
+    nom:       row.model_name,
+    marque:    row.brand,
+    categorie: row.category,
   },
+  // Keep original fields for logic if needed
+  serial_number: row.serial_number,
+  status:        row.status,
   location: row.location_id ? {
     id:    row.location_id,
     code:  row.location_code,
