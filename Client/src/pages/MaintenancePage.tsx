@@ -8,18 +8,18 @@ import { useAuth } from '@/context/AuthContext'
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 }
 
-const TYPE_VARIANT: Record<string, 'active'|'inactive'|'warning'|'critical'|'maintenance'> = {
-  Reception:  'active',
+const TYPE_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critical' | 'maintenance'> = {
+  Reception: 'active',
   Assignment: 'warning',
-  Transfer:   'inactive',
-  Return:     'maintenance',
+  Transfer: 'inactive',
+  Return: 'maintenance',
 }
 
-const STATUS_VARIANT: Record<string, 'active'|'inactive'|'warning'|'critical'|'maintenance'> = {
-  Draft:    'warning',
+const STATUS_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critical' | 'maintenance'> = {
+  Draft: 'warning',
   Approved: 'active',
   Rejected: 'critical',
   Returned: 'maintenance',
@@ -197,11 +197,10 @@ export default function MaintenancePage() {
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              filter === tab
-                ? 'border-primary text-primary'
-                : 'border-transparent text-neutral-500 hover:text-neutral-700'
-            }`}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${filter === tab
+              ? 'border-primary text-primary'
+              : 'border-transparent text-neutral-500 hover:text-neutral-700'
+              }`}
           >
             {tab === 'all' ? 'All' : tab}
             {tab === 'Draft' && draftCount > 0 && (
@@ -214,7 +213,7 @@ export default function MaintenancePage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-neutral-300 bg-white shadow-md overflow-hidden">
         <Table<AssetMovement>
           columns={columns}
           rows={filtered}
@@ -225,13 +224,13 @@ export default function MaintenancePage() {
         />
         {!isLoading && filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-neutral-400">
-            {filter === 'Draft' ? 'No pending movements. All caught up! ✅' : `No ${filter.toLowerCase()} movements.`}
+            {filter === 'Draft' ? 'No pending movements. All caught up! ' : `No ${filter.toLowerCase()} movements.`}
           </p>
         )}
       </div>
 
       {/* Explanation card */}
-      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5 space-y-3">
+      <div className="rounded-xl border border-neutral-300 bg-neutral-50 shadow-sm p-5 space-y-3">
         <h3 className="text-sm font-semibold text-neutral-800">How movements affect the database</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-neutral-600">
           <div className="flex gap-2">

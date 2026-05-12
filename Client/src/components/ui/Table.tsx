@@ -87,10 +87,10 @@ function Table<T = any>({
   const isSorted = (columnKey: string) => sortConfig?.key === columnKey
 
   return (
-    <div className={cn('overflow-x-auto rounded-lg border border-neutral-200', className)}>
+    <div className={cn('overflow-x-auto rounded-lg border border-neutral-300', className)}>
       <table className="w-full table-fixed">
         <thead>
-          <tr className="border-b border-neutral-200 bg-neutral-50">
+          <tr className="border-b border-neutral-300 bg-neutral-50">
             {selectable && (
               <th className="w-12 px-4 py-3">
                 <Checkbox
@@ -150,7 +150,7 @@ function Table<T = any>({
                 <tr
                   key={rowId}
                   className={cn(
-                    'border-b border-neutral-200 transition-colors',
+                    'border-b border-neutral-300 transition-colors',
                     striped && rowIndex % 2 === 1 && 'bg-neutral-50',
                     hoverable && 'hover:bg-neutral-100 cursor-pointer',
                     isSelected && 'bg-primary bg-opacity-5'
