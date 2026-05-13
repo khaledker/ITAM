@@ -65,7 +65,7 @@ export default function RetourPage() {
   // ── Submit ────────────────────────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitSuccessId, setSubmitSuccessId] = useState<number | null>(null)
 
   const handleSave = async () => {
     const actorId = performedBy ? Number(performedBy) : user?.id
@@ -75,16 +75,17 @@ export default function RetourPage() {
     const today = new Date().toISOString().split('T')[0]
     setIsSaving(true)
     setSubmitError(null)
+    setSubmitSuccessId(null)
     try {
       const assetIds = Array.from(selectedAssetIds).map(Number)
-      await movementsApi.createReturn({
+      const createdMv = await movementsApi.createReturn({
         date: today,
         asset_ids: assetIds,
         performed_by: actorId,
         reason: reason || null,
         returned_to: returnedToId ? Number(returnedToId) : null,
       })
-      setSubmitSuccess(true)
+      setSubmitSuccessId(createdMv.id)
       setSelectedAssetIds(new Set())
       setReturnedToId(''); setPerformedBy(''); setReason('')
       // Refresh assigned assets
@@ -127,10 +128,15 @@ export default function RetourPage() {
       {loadError && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</div>
       )}
-      {submitSuccess && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Return saved as Draft. Approve it to mark assets as Available again.
+      {submitSuccessId !== null && (
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>Return saved as Draft. Approve it to mark assets as Available again.</span>
+          </div>
+          <Button variant="outline" onClick={() => movementsApi.downloadTicket(submitSuccessId)}>
+            Download PDF Ticket
+          </Button>
         </div>
       )}
       {submitError && (
@@ -190,7 +196,7 @@ export default function RetourPage() {
           </Button>
           <Button id="retour-cancel-btn" variant="ghost" onClick={() => {
             setSelectedAssetIds(new Set()); setReturnedToId(''); setPerformedBy('');
-            setReason(''); setSubmitSuccess(false); setSubmitError(null);
+            setReason(''); setSubmitSuccessId(null); setSubmitError(null);
           }}>Cancel</Button>
         </div>
       </div>
