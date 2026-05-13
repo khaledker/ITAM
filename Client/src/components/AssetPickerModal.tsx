@@ -36,7 +36,7 @@ export function AssetPickerModal({
     const lowerTerm = searchTerm.toLowerCase();
     return availableAssets.filter((asset) => {
       const tagMatch = asset.tag?.toLowerCase().includes(lowerTerm);
-      const snMatch = asset.partNum?.toLowerCase().includes(lowerTerm);
+        const snMatch = asset.serial_number?.toLowerCase().includes(lowerTerm) || asset.partNum?.toLowerCase().includes(lowerTerm);
       const categoryMatch = asset.modele?.categorie?.toLowerCase().includes(lowerTerm);
       const brandMatch = asset.modele?.marque?.toLowerCase().includes(lowerTerm);
       const modelMatch = asset.modele?.nom?.toLowerCase().includes(lowerTerm);
@@ -148,7 +148,7 @@ export function AssetPickerModal({
                         />
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900">{asset.tag || '-'}</td>
-                      <td className="px-4 py-3 text-gray-500">{asset.partNum || '-'}</td>
+                        <td className="px-4 py-3 text-gray-500">{asset.serial_number || asset.partNum || '-'}</td>
                       <td className="px-4 py-3 text-gray-500">{asset.modele?.categorie || '-'}</td>
                       <td className="px-4 py-3 text-gray-500">{asset.modele?.marque || '-'}</td>
                       <td className="px-4 py-3 text-gray-500">{asset.modele?.nom || '-'}</td>

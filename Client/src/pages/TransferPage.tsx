@@ -61,7 +61,7 @@ export default function TransferPage() {
     const lowerTerm = searchTerm.toLowerCase();
     return availableAssets.filter((asset) => {
       const tagMatch = asset.tag?.toLowerCase().includes(lowerTerm);
-      const snMatch = asset.partNum?.toLowerCase().includes(lowerTerm);
+      const snMatch = asset.serial_number?.toLowerCase().includes(lowerTerm) || asset.partNum?.toLowerCase().includes(lowerTerm);
       const categoryMatch = asset.modele?.categorie?.toLowerCase().includes(lowerTerm);
       const brandMatch = asset.modele?.marque?.toLowerCase().includes(lowerTerm);
       const modelMatch = asset.modele?.nom?.toLowerCase().includes(lowerTerm);
@@ -115,8 +115,8 @@ export default function TransferPage() {
   const columns: TableColumn<Asset>[] = [
     { key: 'tag', label: 'Tag', width: 'w-[15%]',
       render: (v: string) => <span className="font-semibold text-neutral-900">{v || '-'}</span> },
-    { key: 'partNum', label: 'S/N', width: 'w-[15%]',
-      render: (v: string) => <span className="text-neutral-500">{v || '-'}</span> },
+    { key: 'serial_number', label: 'S/N', width: 'w-[15%]',
+      render: (_v: any, row: Asset) => <span className="text-neutral-500">{row.serial_number || row.partNum || '-'}</span> },
     { key: 'category', label: 'Category', width: 'w-[20%]',
       render: (_v: any, row: Asset) => (
         <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
