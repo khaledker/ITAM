@@ -1,6 +1,6 @@
 import {
   BarChart2,
-  BrainCircuit,
+  Activity,
   LayoutDashboard,
   Menu,
   PackageCheck,
@@ -29,7 +29,7 @@ const primaryNav: NavItem[] = [
   { label: "Transfer", icon: ArrowRightLeft, to: "/transfer" },
   { label: "Retour", icon: RotateCcw, to: "/retour" },
   { label: "Movements", icon: ClipboardList, to: "/maintenance" },
-  { label: "Predictions", icon: BrainCircuit, to: "/predictions" },
+  { label: "Monitoring", icon: Activity, to: "/monitoring" },
   { label: "Reports", icon: BarChart2, to: "/reports" },
   { label: "Users", icon: Users, to: "/users" },
 ];

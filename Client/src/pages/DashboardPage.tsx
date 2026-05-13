@@ -187,11 +187,11 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Maintenance Predictions */}
+      {/* Monitoring & Alerts */}
       <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
         <div>
-          <h2 className="text-xl font-semibold text-neutral-900">Maintenance Predictions</h2>
-          <p className="text-sm text-neutral-500 mt-0.5">Assets flagged by the rule engine</p>
+          <h2 className="text-xl font-semibold text-neutral-900">Monitoring & Alerts</h2>
+          <p className="text-sm text-neutral-500 mt-0.5">Assets flagged by the system monitoring engine</p>
         </div>
 
         {isLoading ? (

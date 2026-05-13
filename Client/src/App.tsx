@@ -7,7 +7,7 @@ import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import AssetsPage from './pages/AssetsPage'
 import MaintenancePage from './pages/MaintenancePage'
-import PredictionsPage from './pages/PredictionsPage'
+import MonitoringPage from './pages/MonitoringPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
 import ReceptionPage from './pages/ReceptionPage'
@@ -52,7 +52,7 @@ function AppShell() {
             <Route path="/dashboard"   element={<DashboardPage />} />
             <Route path="/assets"      element={<AssetsPage />} />
             <Route path="/maintenance" element={<MaintenancePage />} />
-            <Route path="/predictions" element={<PredictionsPage />} />
+            <Route path="/monitoring" element={<MonitoringPage />} />
             <Route path="/reports"     element={<ReportsPage />} />
             <Route path="/users"       element={<UsersPage />} />
             <Route path="/reception"   element={<ReceptionPage />} />
