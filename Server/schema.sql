@@ -3,7 +3,8 @@
 -- Matches UML Class Diagram exactly
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS itam;
+DROP DATABASE IF EXISTS itam;
+CREATE DATABASE itam;
 USE itam;
 
 -- --------------------------------------------------------

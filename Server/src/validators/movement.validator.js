@@ -6,9 +6,9 @@ const baseMovement = [
     .notEmpty().withMessage('date is required.')
     .isISO8601().withMessage('date must be a valid date (YYYY-MM-DD).'),
 
-  body('asset_id')
-    .notEmpty().withMessage('asset_id is required.')
-    .isInt({ min: 1 }).withMessage('asset_id must be a positive integer.'),
+  body('asset_ids')
+    .notEmpty().withMessage('asset_ids is required.')
+    .isArray({ min: 1 }).withMessage('asset_ids must be a non-empty array of IDs.'),
 
   body('performed_by')
     .notEmpty().withMessage('performed_by is required.')

@@ -7,7 +7,7 @@ const findById = async (id) => {
       mv.id, mv.date, mv.status, mv.performed_by,
       GROUP_CONCAT(a.id) AS asset_ids,
       GROUP_CONCAT(a.serial_number) AS serial_numbers,
-      a.tag,
+      GROUP_CONCAT(a.tag) AS tag,
       e.full_name AS performed_by_name,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
@@ -34,7 +34,7 @@ const findById = async (id) => {
 };
 
 const findAll = async ({ type, status, asset_id } = {}) => {
-  let query = \
+  let query = `
     SELECT
       mv.id, mv.date, mv.status, mv.performed_by,
       GROUP_CONCAT(a.id) AS asset_ids,
@@ -55,13 +55,13 @@ const findAll = async ({ type, status, asset_id } = {}) => {
     LEFT JOIN Transfer    t   ON t.id   = mv.id
     LEFT JOIN AssetReturn ar  ON ar.id  = mv.id
     WHERE 1=1
-  \;
+  `;
   const params = [];
   if (status)   { query += ' AND mv.status = ?';   params.push(status);   }
   if (asset_id) { query += ' AND mi.asset_id = ?'; params.push(asset_id); }
   if (type) {
     const typeMap = { Reception: 'r.id', Assignment: 'asn.id', Transfer: 't.id', Return: 'ar.id' };
-    if (typeMap[type]) query += \ AND \ + typeMap[type] + \ IS NOT NULL\;
+    if (typeMap[type]) query += ` AND ${typeMap[type]} IS NOT NULL`;
   }
   query += '\n    GROUP BY mv.id\n    ORDER BY mv.date DESC';
   const [rows] = await db.query(query, params);
