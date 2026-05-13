@@ -164,7 +164,7 @@ export default function ReceptionPage() {
   // ── Submit ────────────────────────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitSuccessId, setSubmitSuccessId] = useState<number | null>(null)
 
   const handleSave = async () => {
     const actorId = performedBy ? Number(performedBy) : user?.id
@@ -179,6 +179,7 @@ export default function ReceptionPage() {
     
     setIsSaving(true)
     setSubmitError(null)
+    setSubmitSuccessId(null)
     try {
       const createdAssetIds: number[] = []
       for (const row of rows) {
@@ -222,7 +223,7 @@ export default function ReceptionPage() {
         createdAssetIds.push(newAsset.id);
       }
 
-      await movementsApi.createReception({
+      const createdMv = await movementsApi.createReception({
         date: deliveryDate,
         asset_ids: createdAssetIds,
         performed_by: actorId,
@@ -232,7 +233,7 @@ export default function ReceptionPage() {
         destination_id: destinationId ? Number(destinationId) : null,
       })
 
-      setSubmitSuccess(true)
+      setSubmitSuccessId(createdMv.id)
       setRows([])
       setPoNumber(''); setBrNumber(''); setSupplierId('')
       setDeliveryDate(''); setDestinationId(''); setObservations('')
@@ -311,10 +312,15 @@ export default function ReceptionPage() {
       {loadError && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</div>
       )}
-      {submitSuccess && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Reception saved. Assets are now in the system with status <strong>Available</strong>.
+      {submitSuccessId !== null && (
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>Reception saved. Assets are now in the system with status <strong>Available</strong>.</span>
+          </div>
+          <Button variant="outline" onClick={() => movementsApi.downloadTicket(submitSuccessId)}>
+            Download PDF Ticket
+          </Button>
         </div>
       )}
       {submitError && (
@@ -409,7 +415,7 @@ export default function ReceptionPage() {
           <Button id="reception-cancel-btn" variant="ghost" onClick={() => {
             setRows([]); setPoNumber(''); setBrNumber(''); setSupplierId('');
             setDeliveryDate(''); setDestinationId(''); setObservations('');
-            setSubmitSuccess(false); setSubmitError(null);
+            setSubmitSuccessId(null); setSubmitError(null);
           }}>
             Cancel
           </Button>

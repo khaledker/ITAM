@@ -72,7 +72,7 @@ export default function TransferPage() {
   // ── Submit ────────────────────────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitSuccessId, setSubmitSuccessId] = useState<number | null>(null)
 
   const handleSave = async () => {
     if (!destinationId || !user) {
@@ -86,9 +86,10 @@ export default function TransferPage() {
     const today = transferDate || new Date().toISOString().split('T')[0]
     setIsSaving(true)
     setSubmitError(null)
+    setSubmitSuccessId(null)
     try {
       const assetIds = Array.from(selectedAssetIds).map(Number)
-      await movementsApi.createTransfer({
+      const createdMv = await movementsApi.createTransfer({
         date: today,
         asset_ids: assetIds,
         performed_by: user.id,
@@ -96,7 +97,7 @@ export default function TransferPage() {
         source_id: sourceId ? Number(sourceId) : null,
         destination_id: Number(destinationId),
       })
-      setSubmitSuccess(true)
+      setSubmitSuccessId(createdMv.id)
       setSelectedAssetIds(new Set())
       setSourceId(''); setDestinationId(''); setReference('')
       setTransportName(''); setTransportContact(''); setObservations('')
@@ -140,10 +141,15 @@ export default function TransferPage() {
       {loadError && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</div>
       )}
-      {submitSuccess && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Transfer saved successfully as Draft.
+      {submitSuccessId !== null && (
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>Transfer saved successfully as Draft.</span>
+          </div>
+          <Button variant="outline" onClick={() => movementsApi.downloadTicket(submitSuccessId)}>
+            Download PDF Ticket
+          </Button>
         </div>
       )}
       {submitError && (
@@ -254,7 +260,7 @@ export default function TransferPage() {
           <Button id="transfer-cancel-btn" variant="ghost" onClick={() => {
             setSelectedAssetIds(new Set()); setSourceId(''); setDestinationId('');
             setReference(''); setTransportName(''); setTransportContact('');
-            setObservations(''); setSubmitSuccess(false); setSubmitError(null);
+            setObservations(''); setSubmitSuccessId(null); setSubmitError(null);
           }}>Cancel</Button>
         </div>
       </div>
