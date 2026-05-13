@@ -4,8 +4,10 @@ const db = require('../config/db');
 const findById = async (id) => {
   const [rows] = await db.query(`
     SELECT
-      mv.id, mv.date, mv.status, mv.asset_id, mv.performed_by,
-      a.serial_number, a.tag,
+      mv.id, mv.date, mv.status, mv.performed_by,
+      GROUP_CONCAT(a.id) AS asset_ids,
+      GROUP_CONCAT(a.serial_number) AS serial_numbers,
+      GROUP_CONCAT(a.tag) AS tag,
       e.full_name AS performed_by_name,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
@@ -18,13 +20,15 @@ const findById = async (id) => {
       t.reference, t.source_id AS transfer_source_id, t.destination_id AS transfer_dest_id,
       ar.reason, ar.returned_to
     FROM AssetMovement mv
-    JOIN Asset a ON mv.asset_id = a.id
+    JOIN MovementItem mi ON mv.id = mi.movement_id
+    JOIN Asset a ON mi.asset_id = a.id
     JOIN Employee e ON mv.performed_by = e.id
     LEFT JOIN Reception   r   ON r.id   = mv.id
     LEFT JOIN Assignment  asn ON asn.id = mv.id
     LEFT JOIN Transfer    t   ON t.id   = mv.id
     LEFT JOIN AssetReturn ar  ON ar.id  = mv.id
     WHERE mv.id = ?
+    GROUP BY mv.id
   `, [id]);
   return rows[0] || null;
 };
@@ -32,8 +36,9 @@ const findById = async (id) => {
 const findAll = async ({ type, status, asset_id } = {}) => {
   let query = `
     SELECT
-      mv.id, mv.date, mv.status, mv.asset_id, mv.performed_by,
-      a.serial_number, a.tag,
+      mv.id, mv.date, mv.status, mv.performed_by,
+      GROUP_CONCAT(a.id) AS asset_ids,
+      GROUP_CONCAT(a.serial_number) AS serial_numbers,
       e.full_name AS performed_by_name,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
@@ -42,7 +47,8 @@ const findAll = async ({ type, status, asset_id } = {}) => {
         WHEN ar.id  IS NOT NULL THEN 'Return'
       END AS type
     FROM AssetMovement mv
-    JOIN Asset a ON mv.asset_id = a.id
+    JOIN MovementItem mi ON mv.id = mi.movement_id
+    JOIN Asset a ON mi.asset_id = a.id
     JOIN Employee e ON mv.performed_by = e.id
     LEFT JOIN Reception   r   ON r.id   = mv.id
     LEFT JOIN Assignment  asn ON asn.id = mv.id
@@ -52,19 +58,19 @@ const findAll = async ({ type, status, asset_id } = {}) => {
   `;
   const params = [];
   if (status)   { query += ' AND mv.status = ?';   params.push(status);   }
-  if (asset_id) { query += ' AND mv.asset_id = ?'; params.push(asset_id); }
+  if (asset_id) { query += ' AND mi.asset_id = ?'; params.push(asset_id); }
   if (type) {
     const typeMap = { Reception: 'r.id', Assignment: 'asn.id', Transfer: 't.id', Return: 'ar.id' };
     if (typeMap[type]) query += ` AND ${typeMap[type]} IS NOT NULL`;
   }
-  query += ' ORDER BY mv.date DESC';
+  query += '\n    GROUP BY mv.id\n    ORDER BY mv.date DESC';
   const [rows] = await db.query(query, params);
   return rows;
 };
 
 // ── Reception ─────────────────────────────────────────────
 const createReception = async ({
-  date, asset_id, performed_by,
+  date, asset_ids, performed_by,
   purchase_order_number, receipt_number, supplier_id, destination_id
 }) => {
   const conn = await db.getConnection();
@@ -72,10 +78,14 @@ const createReception = async ({
     await conn.beginTransaction();
 
     const [mv] = await conn.query(
-      'INSERT INTO AssetMovement (date, status, asset_id, performed_by) VALUES (?, ?, ?, ?)',
-      [date, 'Draft', asset_id, performed_by]
+      'INSERT INTO AssetMovement (date, status, performed_by) VALUES (?, ?, ?)',
+      [date, 'Draft', performed_by]
     );
     const movId = mv.insertId;
+    if (asset_ids && asset_ids.length > 0) {
+      const itemValues = asset_ids.map(id => [movId, id]);
+      await conn.query('INSERT INTO MovementItem (movement_id, asset_id) VALUES ?', [itemValues]);
+    }
 
     await conn.query(
       'INSERT INTO Reception (id, purchase_order_number, receipt_number, supplier_id, destination_id) VALUES (?, ?, ?, ?, ?)',
@@ -94,7 +104,7 @@ const createReception = async ({
 
 // ── Assignment ────────────────────────────────────────────
 const createAssignment = async ({
-  date, asset_id, performed_by,
+  date, asset_ids, performed_by,
   expected_return, assigned_to, source_id
 }) => {
   const conn = await db.getConnection();
@@ -102,10 +112,14 @@ const createAssignment = async ({
     await conn.beginTransaction();
 
     const [mv] = await conn.query(
-      'INSERT INTO AssetMovement (date, status, asset_id, performed_by) VALUES (?, ?, ?, ?)',
-      [date, 'Draft', asset_id, performed_by]
+      'INSERT INTO AssetMovement (date, status, performed_by) VALUES (?, ?, ?)',
+      [date, 'Draft', performed_by]
     );
     const movId = mv.insertId;
+    if (asset_ids && asset_ids.length > 0) {
+      const itemValues = asset_ids.map(id => [movId, id]);
+      await conn.query('INSERT INTO MovementItem (movement_id, asset_id) VALUES ?', [itemValues]);
+    }
 
     await conn.query(
       'INSERT INTO Assignment (id, expected_return, assigned_to, source_id) VALUES (?, ?, ?, ?)',
@@ -124,7 +138,7 @@ const createAssignment = async ({
 
 // ── Transfer ──────────────────────────────────────────────
 const createTransfer = async ({
-  date, asset_id, performed_by,
+  date, asset_ids, performed_by,
   reference, source_id, destination_id
 }) => {
   const conn = await db.getConnection();
@@ -132,10 +146,14 @@ const createTransfer = async ({
     await conn.beginTransaction();
 
     const [mv] = await conn.query(
-      'INSERT INTO AssetMovement (date, status, asset_id, performed_by) VALUES (?, ?, ?, ?)',
-      [date, 'Draft', asset_id, performed_by]
+      'INSERT INTO AssetMovement (date, status, performed_by) VALUES (?, ?, ?)',
+      [date, 'Draft', performed_by]
     );
     const movId = mv.insertId;
+    if (asset_ids && asset_ids.length > 0) {
+      const itemValues = asset_ids.map(id => [movId, id]);
+      await conn.query('INSERT INTO MovementItem (movement_id, asset_id) VALUES ?', [itemValues]);
+    }
 
     await conn.query(
       'INSERT INTO Transfer (id, reference, source_id, destination_id) VALUES (?, ?, ?, ?)',
@@ -154,7 +172,7 @@ const createTransfer = async ({
 
 // ── Return ────────────────────────────────────────────────
 const createReturn = async ({
-  date, asset_id, performed_by,
+  date, asset_ids, performed_by,
   reason, returned_to
 }) => {
   const conn = await db.getConnection();
@@ -162,10 +180,14 @@ const createReturn = async ({
     await conn.beginTransaction();
 
     const [mv] = await conn.query(
-      'INSERT INTO AssetMovement (date, status, asset_id, performed_by) VALUES (?, ?, ?, ?)',
-      [date, 'Draft', asset_id, performed_by]
+      'INSERT INTO AssetMovement (date, status, performed_by) VALUES (?, ?, ?)',
+      [date, 'Draft', performed_by]
     );
     const movId = mv.insertId;
+    if (asset_ids && asset_ids.length > 0) {
+      const itemValues = asset_ids.map(id => [movId, id]);
+      await conn.query('INSERT INTO MovementItem (movement_id, asset_id) VALUES ?', [itemValues]);
+    }
 
     await conn.query(
       'INSERT INTO AssetReturn (id, reason, returned_to) VALUES (?, ?, ?)',
@@ -190,7 +212,7 @@ const updateStatus = async (id, newStatus) => {
 
     // Get movement details
     const [mvRows] = await conn.query(`
-      SELECT mv.*, mv.asset_id,
+      SELECT mv.*,
         CASE
           WHEN r.id   IS NOT NULL THEN 'Reception'
           WHEN asn.id IS NOT NULL THEN 'Assignment'
@@ -216,31 +238,33 @@ const updateStatus = async (id, newStatus) => {
     }
 
     const mv = mvRows[0];
+    const [itemRows] = await conn.query('SELECT asset_id FROM MovementItem WHERE movement_id = ?', [id]);
+    const assetIds = itemRows.map(r => r.asset_id);
 
     // Update movement status
     await conn.query('UPDATE AssetMovement SET status = ? WHERE id = ?', [newStatus, id]);
 
     // If approved, update asset status + location based on movement type
-    if (newStatus === 'Approved') {
+    if (newStatus === 'Approved' && assetIds.length > 0) {
       if (mv.type === 'Reception') {
         await conn.query(
-          'UPDATE Asset SET status = ?, location_id = ? WHERE id = ?',
-          ['Available', mv.r_dest, mv.asset_id]
+          'UPDATE Asset SET status = ?, location_id = ? WHERE id IN (?)',
+          ['Available', mv.r_dest, assetIds]
         );
       } else if (mv.type === 'Assignment') {
         await conn.query(
-          'UPDATE Asset SET status = ?, employee_id = ? WHERE id = ?',
-          ['Assigned', mv.assigned_to, mv.asset_id]
+          'UPDATE Asset SET status = ?, employee_id = ? WHERE id IN (?)',
+          ['Assigned', mv.assigned_to, assetIds]
         );
       } else if (mv.type === 'Transfer') {
         await conn.query(
-          'UPDATE Asset SET location_id = ? WHERE id = ?',
-          [mv.t_dest, mv.asset_id]
+          'UPDATE Asset SET location_id = ? WHERE id IN (?)',
+          [mv.t_dest, assetIds]
         );
       } else if (mv.type === 'Return') {
         await conn.query(
-          'UPDATE Asset SET status = ?, location_id = ?, employee_id = NULL WHERE id = ?',
-          ['Available', mv.returned_to, mv.asset_id]
+          'UPDATE Asset SET status = ?, location_id = ?, employee_id = NULL WHERE id IN (?)',
+          ['Available', mv.returned_to, assetIds]
         );
       }
     }
@@ -260,3 +284,4 @@ module.exports = {
   createReception, createAssignment, createTransfer, createReturn,
   updateStatus,
 };
+

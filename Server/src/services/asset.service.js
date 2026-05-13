@@ -121,7 +121,7 @@ const getMovementHistory = async (assetId) => {
     LEFT JOIN Location    dest_t ON dest_t.id  = t.destination_id
     LEFT JOIN AssetReturn ar     ON ar.id      = mv.id
     LEFT JOIN Location    ret    ON ret.id     = ar.returned_to
-    WHERE mv.asset_id = ?
+    WHERE EXISTS (SELECT 1 FROM MovementItem mi WHERE mi.movement_id = mv.id AND mi.asset_id = ?)
     ORDER BY mv.date DESC
   `, [assetId]);
   return rows;

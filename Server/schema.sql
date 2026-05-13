@@ -3,7 +3,8 @@
 -- Matches UML Class Diagram exactly
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS itam;
+DROP DATABASE IF EXISTS itam;
+CREATE DATABASE itam;
 USE itam;
 
 -- --------------------------------------------------------
@@ -108,10 +109,16 @@ CREATE TABLE AssetMovement (
     date         DATE        NOT NULL,
     status       VARCHAR(50) DEFAULT 'Draft'
                      CHECK (status IN ('Draft', 'Approved', 'Returned', 'Rejected')),
-    asset_id     INT NOT NULL,
     performed_by INT NOT NULL,
-    FOREIGN KEY (asset_id)     REFERENCES Asset(id),
     FOREIGN KEY (performed_by) REFERENCES Employee(id)
+);
+
+CREATE TABLE MovementItem (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    movement_id INT NOT NULL,
+    asset_id    INT NOT NULL,
+    FOREIGN KEY (movement_id) REFERENCES AssetMovement(id) ON DELETE CASCADE,
+    FOREIGN KEY (asset_id)    REFERENCES Asset(id)
 );
 
 -- --------------------------------------------------------

@@ -21,7 +21,7 @@ const getRecentMovements = async () => {
       mv.id,
       mv.date,
       mv.status,
-      a.tag     AS asset_tag,
+      GROUP_CONCAT(a.tag) AS asset_tag,
       e.full_name AS performed_by,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
@@ -30,12 +30,14 @@ const getRecentMovements = async () => {
         WHEN ar.id  IS NOT NULL THEN 'Return'
       END AS type
     FROM AssetMovement mv
-    JOIN  Asset    a   ON a.id   = mv.asset_id
-    JOIN  Employee e   ON e.id   = mv.performed_by
+    JOIN MovementItem mi ON mi.movement_id = mv.id
+    JOIN Asset a ON a.id = mi.asset_id
+    JOIN Employee e ON e.id = mv.performed_by
     LEFT JOIN Reception   r   ON r.id   = mv.id
     LEFT JOIN Assignment  asn ON asn.id = mv.id
     LEFT JOIN Transfer    t   ON t.id   = mv.id
     LEFT JOIN AssetReturn ar  ON ar.id  = mv.id
+    GROUP BY mv.id
     ORDER BY mv.date DESC, mv.id DESC
     LIMIT 10
   `);

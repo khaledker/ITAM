@@ -134,6 +134,7 @@ export interface Asset {
   id: number;
   tag: string;
   partNum: string;
+  serial_number?: string;
   etat: 'active' | 'maintenance' | 'warning' | 'critical' | 'inactive';
   createdAt: string;
   modele: { nom: string; marque: string; categorie: string };

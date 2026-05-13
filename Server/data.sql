@@ -20,6 +20,7 @@ TRUNCATE TABLE AssetReturn;
 TRUNCATE TABLE Transfer;
 TRUNCATE TABLE Assignment;
 TRUNCATE TABLE Reception;
+TRUNCATE TABLE MovementItem;
 TRUNCATE TABLE AssetMovement;
 TRUNCATE TABLE Asset;
 TRUNCATE TABLE Employee;
@@ -125,23 +126,28 @@ INSERT INTO Asset (id, serial_number, tag, status, date_acq, description, model_
 --    Types: Reception(R), Assignment(A), Transfer(T), Return(Ret)
 --    Statuses: Approved, Draft, Returned, Rejected
 -- ────────────────────────────────────────────────────────
-INSERT INTO AssetMovement (id, date, status, asset_id, performed_by) VALUES
+INSERT INTO AssetMovement (id, date, status, performed_by) VALUES
 -- Receptions
-( 1, '2025-03-01', 'Approved', 1,  1),   -- A1 received → WH
-( 2, '2025-04-01', 'Approved', 2,  1),   -- A2 received → WH
-( 3, '2026-01-12', 'Approved', 3,  2),   -- A3 received → WH
-( 4, '2026-01-20', 'Approved', 4,  2),   -- A4 received → WH
-( 5, '2025-06-10', 'Approved', 5,  1),   -- A5 received → WH
-( 6, '2026-04-01', 'Draft',    8,  2),   -- A8 reception PENDING
+( 1, '2025-03-01', 'Approved', 1),   -- A1 received → WH
+( 2, '2025-04-01', 'Approved', 1),   -- A2 received → WH
+( 3, '2026-01-12', 'Approved', 2),   -- A3 received → WH
+( 4, '2026-01-20', 'Approved', 2),   -- A4 received → WH
+( 5, '2025-06-10', 'Approved', 1),   -- A5 received → WH
+( 6, '2026-04-01', 'Draft',    2),   -- A8 reception PENDING
 -- Assignments
-( 7, '2025-03-15', 'Approved', 1,  2),   -- A1 → Sofia (emp 3)
-( 8, '2025-04-10', 'Approved', 2,  2),   -- A2 → Karim (emp 4)
-( 9, '2025-09-01', 'Approved', 7,  2),   -- A7 → Amira (emp 5)
-(10, '2026-05-01', 'Draft',    3,  2),   -- A3 assignment PENDING (Draft)
+( 7, '2025-03-15', 'Approved', 2),   -- A1 → Sofia (emp 3)
+( 8, '2025-04-10', 'Approved', 2),   -- A2 → Karim (emp 4)
+( 9, '2025-09-01', 'Approved', 2),   -- A7 → Amira (emp 5)
+(10, '2026-05-01', 'Draft',    2),   -- A3 assignment PENDING (Draft)
 -- Transfer
-(11, '2025-08-15', 'Approved', 5,  1),   -- A5 transferred WH → Oran WH (before maintenance)
+(11, '2025-08-15', 'Approved', 1),   -- A5 transferred WH → Oran WH (before maintenance)
 -- Return
-(12, '2026-03-10', 'Draft',    2,  3);   -- Karim initiated return of A2 – not yet approved
+(12, '2026-03-10', 'Draft',    3);   -- Karim initiated return of A2 – not yet approved
+
+INSERT INTO MovementItem (movement_id, asset_id) VALUES
+(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 8),
+(7, 1), (8, 2), (9, 7), (10, 3),
+(11, 5), (12, 2);
 
 -- ────────────────────────────────────────────────────────
 -- 8. RECEPTION  (sub-type rows matching reception movements)
