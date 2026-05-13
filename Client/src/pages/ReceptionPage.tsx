@@ -12,6 +12,7 @@ interface ReceptionRow {
   tag: string
   serialNumber: string
   modelId: string
+  modelName: string
   description: string
 }
 
@@ -60,7 +61,7 @@ export default function ReceptionPage() {
   const [bulkModelId, setBulkModelId] = useState('')
 
   const addRow = () => setRows(prev => [...prev, {
-    id: rowCounter++, tag: '', serialNumber: '', modelId: '', description: '',
+    id: rowCounter++, tag: '', serialNumber: '', modelId: '', modelName: '', description: '',
   }])
 
   const removeRow = (id: number) => setRows(prev => prev.filter(r => r.id !== id))
@@ -96,20 +97,58 @@ export default function ReceptionPage() {
 
       const newRows: ReceptionRow[] = []
       for (let i = startIndex; i < lines.length; i++) {
-        // Basic CSV split, ignores commas inside quotes but doesn't handle advanced CSV escaping
-        const columns = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''))
+        // Handle both comma and semicolon separators; handles simple quotes
+        const columns = lines[i].split(/[,;]/).map(s => s.trim().replace(/^"|"$/g, ''))
+        
+        if (columns.length < 1) continue
+
         const tag = columns[0] || ''
-        const serialNumber = columns[1] || tag || ''
-        const description = columns[2] || ''
+        let serialNumber = columns[1] || ''
+        const modelName = columns[2] || ''
+        const description = columns[3] || ''
 
         if (!tag && !serialNumber) continue
 
+        // If SN is empty, try to extract it from the Tag (handles format: DJZ-2026-ISN-XXXX)
+        if (!serialNumber && tag.includes('ISN-')) {
+          serialNumber = tag.replace(/^.*ISN-/, 'SN-')
+        } else if (!serialNumber) {
+          serialNumber = tag
+        }
+
+        // Extract model name from column or Tag
+        let extractedModelName = modelName
+        if (!extractedModelName && tag) {
+          // Look for brand keywords in the tag
+          const brands = ['DELL', 'HP', 'LENOVO', 'CISCO', 'APPLE']
+          const foundBrand = brands.find(b => tag.toUpperCase().includes(b))
+          if (foundBrand) {
+            // Try to get something after the brand as the model name
+            const match = tag.match(new RegExp(`${foundBrand}[- ]?([^\\s,-]+)`, 'i'))
+            extractedModelName = match ? `${foundBrand} ${match[1]}` : foundBrand
+          }
+        }
+
+        // Auto-match model name if provided
+        let modelId = ''
+        if (extractedModelName) {
+          const mNameLower = extractedModelName.toLowerCase()
+          const matched = models.find(m => 
+            m.name.toLowerCase() === mNameLower ||
+            (m.brand && `${m.brand} ${m.name}`.toLowerCase() === mNameLower) ||
+            m.code.toLowerCase() === mNameLower ||
+            mNameLower.includes(m.name.toLowerCase())
+          )
+          if (matched) modelId = String(matched.id)
+        }
+
         newRows.push({
           id: rowCounter++,
-          tag,
+          tag: tag, 
           serialNumber,
-          modelId: '',
-          description
+          modelId,
+          modelName: extractedModelName || (modelId ? '' : 'Unknown Model'),
+          description: description || (modelId ? '' : extractedModelName)
         })
       }
 
@@ -138,29 +177,46 @@ export default function ReceptionPage() {
       return
     }
     
-    // Validate rows
-    const missingTags = rows.some(r => !r.tag.trim())
-    if (missingTags) {
-      setSubmitError('Every asset row must have a Tag value.')
-      return
-    }
-    const missingModels = rows.some(r => !r.modelId)
-    if (missingModels) {
-      setSubmitError('Every asset row must have a Model assigned.')
-      return
-    }
-
     setIsSaving(true)
     setSubmitError(null)
     try {
       for (const row of rows) {
+        let currentModelId = row.modelId;
+
+        // If model doesn't exist, create it automatically
+        if (!currentModelId && row.modelName) {
+          try {
+            // Basic extraction for Brand (first word) and Name (rest)
+            const parts = row.modelName.split(' ');
+            const brand = parts[0] || 'Unknown';
+            const name = parts.slice(1).join(' ') || brand;
+            const code = `AUTO-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+            const createdModel = await assetModelsApi.create({
+              name,
+              brand,
+              code,
+              category: 'Laptop' // Default category, user can change later
+            });
+            currentModelId = String(createdModel.id);
+          } catch (err) {
+            console.error('Failed to auto-create model:', row.modelName, err);
+            // Fallback or skip? Let's throw to stop the process and inform the user
+            throw new Error(`Failed to create missing model: ${row.modelName}`);
+          }
+        }
+
+        if (!currentModelId) {
+          throw new Error(`Row with tag ${row.tag} has no model assigned.`);
+        }
+
         const newAsset = await assetsApi.create({
           tag: row.tag,
           serial_number: row.serialNumber || row.tag,
           status: 'Available',
           date_acq: deliveryDate,
           description: row.description || null,
-          model_id: Number(row.modelId),
+          model_id: Number(currentModelId),
           location_id: destinationId ? Number(destinationId) : null,
         } as any)
 
@@ -204,18 +260,26 @@ export default function ReceptionPage() {
     },
     {
       key: 'modelId', label: 'Model *', width: 'w-[25%]',
-      render: (_v: any, row: ReceptionRow) => (
-        <select
-          value={row.modelId}
-          onChange={e => updateRow(row.id, 'modelId', e.target.value)}
-          className="h-8 w-full rounded-md border border-neutral-300 bg-white px-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-        >
-          <option value="">— Select Model —</option>
-          {models.map(m => (
-            <option key={m.id} value={m.id}>{m.name} ({m.brand})</option>
-          ))}
-        </select>
-      ),
+      render: (_v: any, row: ReceptionRow) => {
+        const model = models.find(m => String(m.id) === row.modelId)
+        return (
+          <div className="relative group">
+            <Input 
+              value={row.modelName || (model ? `${model.name} (${model.brand})` : '')} 
+              placeholder="Model Name"
+              readOnly
+              className={`h-8 text-sm bg-neutral-50 ${!row.modelId ? 'border-amber-500 focus:ring-amber-500' : ''}`}
+            />
+            {!row.modelId && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1 rounded border border-amber-200">
+                  NEW
+                </span>
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
       key: 'description', label: 'Description', width: 'w-[32%]',
