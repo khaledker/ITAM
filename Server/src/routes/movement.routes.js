@@ -9,6 +9,7 @@ router.use(protect);
 // All roles can view
 router.get('/',       ctrl.getAll);
 router.get('/:id',    ctrl.getOne);
+router.get('/:id/ticket', ctrl.downloadTicket);
 
 // Admin + Manager can create movements
 router.post('/reception',  authorize('Admin', 'Manager'), v.createReception,  validate, ctrl.createReception);

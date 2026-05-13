@@ -15,18 +15,28 @@ const findById = async (id) => {
         WHEN t.id   IS NOT NULL THEN 'Transfer'
         WHEN ar.id  IS NOT NULL THEN 'Return'
       END AS type,
-      r.purchase_order_number, r.receipt_number, r.supplier_id, r.destination_id,
-      asn.expected_return, asn.assigned_to, asn.source_id AS assignment_source_id,
-      t.reference, t.source_id AS transfer_source_id, t.destination_id AS transfer_dest_id,
-      ar.reason, ar.returned_to
+      r.purchase_order_number, r.receipt_number, r.supplier_id, sup.name AS supplier_name,
+      r.destination_id, loc_r.label AS reception_dest_name,
+      asn.expected_return, asn.assigned_to, e_asn.full_name AS assigned_to_name,
+      asn.source_id AS assignment_source_id, loc_asn.label AS assignment_source_name,
+      t.reference, t.source_id AS transfer_source_id, loc_tsrc.label AS transfer_source_name,
+      t.destination_id AS transfer_dest_id, loc_tdst.label AS transfer_dest_name,
+      ar.reason, ar.returned_to, loc_ar.label AS returned_to_name
     FROM AssetMovement mv
     JOIN MovementItem mi ON mv.id = mi.movement_id
     JOIN Asset a ON mi.asset_id = a.id
     JOIN Employee e ON mv.performed_by = e.id
     LEFT JOIN Reception   r   ON r.id   = mv.id
+    LEFT JOIN Supplier    sup ON r.supplier_id = sup.id
+    LEFT JOIN Location    loc_r ON r.destination_id = loc_r.id
     LEFT JOIN Assignment  asn ON asn.id = mv.id
+    LEFT JOIN Employee    e_asn ON asn.assigned_to = e_asn.id
+    LEFT JOIN Location    loc_asn ON asn.source_id = loc_asn.id
     LEFT JOIN Transfer    t   ON t.id   = mv.id
+    LEFT JOIN Location    loc_tsrc ON t.source_id = loc_tsrc.id
+    LEFT JOIN Location    loc_tdst ON t.destination_id = loc_tdst.id
     LEFT JOIN AssetReturn ar  ON ar.id  = mv.id
+    LEFT JOIN Location    loc_ar ON ar.returned_to = loc_ar.id
     WHERE mv.id = ?
     GROUP BY mv.id
   `, [id]);
