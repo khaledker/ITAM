@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle } from 'lucide-react'
-import { Button, Textarea, Table, type TableColumn, Radio } from '@/components'
+import { useEffect, useState, useMemo } from 'react'
+import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
+import { Button, Textarea, Table, type TableColumn, Radio, Input } from '@/components'
 import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
 import type { Asset, Location } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -53,25 +53,21 @@ export default function TransferPage() {
   const [observations, setObservations] = useState('')
 
   // ── Asset picker ──────────────────────────────────────────────────────────
-  const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([])
-  const [assetPickValue, setAssetPickValue] = useState('')
+  const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set())
+  const [searchTerm, setSearchTerm] = useState('')
 
-  const addAsset = () => {
-    if (!assetPickValue) return
-    const asset = availableAssets.find(a => String(a.id) === assetPickValue)
-    if (!asset || selectedAssets.some(a => a.id === asset.id)) return
-    setSelectedAssets(prev => [...prev, {
-      id: asset.id,
-      tag: asset.tag,
-      modelName: asset.modele?.nom ?? '—',
-      brand: asset.modele?.marque ?? '—',
-      category: asset.modele?.categorie ?? '—',
-    }])
-    setAssetPickValue('')
-  }
-
-  const removeAsset = (id: number) =>
-    setSelectedAssets(prev => prev.filter(a => a.id !== id))
+  const filteredAssets = useMemo(() => {
+    if (!searchTerm.trim()) return availableAssets;
+    const lowerTerm = searchTerm.toLowerCase();
+    return availableAssets.filter((asset) => {
+      const tagMatch = asset.tag?.toLowerCase().includes(lowerTerm);
+      const snMatch = asset.partNum?.toLowerCase().includes(lowerTerm);
+      const categoryMatch = asset.modele?.categorie?.toLowerCase().includes(lowerTerm);
+      const brandMatch = asset.modele?.marque?.toLowerCase().includes(lowerTerm);
+      const modelMatch = asset.modele?.nom?.toLowerCase().includes(lowerTerm);
+      return tagMatch || snMatch || categoryMatch || brandMatch || modelMatch;
+    });
+  }, [availableAssets, searchTerm]);
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false)
@@ -83,7 +79,7 @@ export default function TransferPage() {
       setSubmitError('A destination location is required.')
       return
     }
-    if (selectedAssets.length === 0) {
+    if (selectedAssetIds.size === 0) {
       setSubmitError('Select at least one asset to transfer.')
       return
     }
@@ -91,10 +87,11 @@ export default function TransferPage() {
     setIsSaving(true)
     setSubmitError(null)
     try {
-      await Promise.all(selectedAssets.map(asset =>
+      const assetIds = Array.from(selectedAssetIds).map(Number)
+      await Promise.all(assetIds.map(assetId =>
         movementsApi.createTransfer({
           date: today,
-          asset_id: asset.id,
+          asset_id: assetId,
           performed_by: user.id,
           reference: reference || null,
           source_id: sourceId ? Number(sourceId) : null,
@@ -102,7 +99,7 @@ export default function TransferPage() {
         })
       ))
       setSubmitSuccess(true)
-      setSelectedAssets([])
+      setSelectedAssetIds(new Set())
       setSourceId(''); setDestinationId(''); setReference('')
       setTransportName(''); setTransportContact(''); setObservations('')
       // Refresh assets
@@ -115,22 +112,21 @@ export default function TransferPage() {
   }
 
   // ── Table columns ─────────────────────────────────────────────────────────
-  const columns: TableColumn<SelectedAsset>[] = [
-    { key: 'tag', label: 'Tag', width: 'w-[14%]',
-      render: (v: string) => <span className="font-semibold text-neutral-900">{v}</span> },
-    { key: 'modelName', label: 'Model', width: 'w-[22%]' },
-    { key: 'brand', label: 'Brand', width: 'w-[18%]' },
-    { key: 'category', label: 'Category', width: 'w-[18%]',
-      render: (v: string) => (
-        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{v}</span>
+  const columns: TableColumn<Asset>[] = [
+    { key: 'tag', label: 'Tag', width: 'w-[15%]',
+      render: (v: string) => <span className="font-semibold text-neutral-900">{v || '-'}</span> },
+    { key: 'partNum', label: 'S/N', width: 'w-[15%]',
+      render: (v: string) => <span className="text-neutral-500">{v || '-'}</span> },
+    { key: 'category', label: 'Category', width: 'w-[20%]',
+      render: (_v: any, row: Asset) => (
+        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+          {row.modele?.categorie || '-'}
+        </span>
       ) },
-    { key: 'actions', label: '', width: 'w-[8%]',
-      render: (_v: any, row: SelectedAsset) => (
-        <button type="button" onClick={() => removeAsset(row.id)}
-          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors">
-          <Trash2 className="h-4 w-4" />
-        </button>
-      ) },
+    { key: 'brand', label: 'Brand', width: 'w-[20%]',
+      render: (_v: any, row: Asset) => row.modele?.marque || '-' },
+    { key: 'modelName', label: 'Model', width: 'w-[30%]',
+      render: (_v: any, row: Asset) => row.modele?.nom || '-' },
   ]
 
   // ── Shared select style ───────────────────────────────────────────────────
@@ -258,7 +254,7 @@ export default function TransferPage() {
             {isSaving ? 'Saving…' : 'Save Transfer'}
           </Button>
           <Button id="transfer-cancel-btn" variant="ghost" onClick={() => {
-            setSelectedAssets([]); setSourceId(''); setDestinationId('');
+            setSelectedAssetIds(new Set()); setSourceId(''); setDestinationId('');
             setReference(''); setTransportName(''); setTransportContact('');
             setObservations(''); setSubmitSuccess(false); setSubmitError(null);
           }}>Cancel</Button>
@@ -267,26 +263,33 @@ export default function TransferPage() {
 
       {/* Asset picker */}
       <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Assets to Transfer</h2>
-        <div className="flex items-center gap-3">
-          <select value={assetPickValue} onChange={e => setAssetPickValue(e.target.value)} className={`flex-1 ${selectCls}`}>
-            <option value="">— Pick an asset —</option>
-            {availableAssets
-              .filter(a => !selectedAssets.some(s => s.id === a.id))
-              .map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.tag} — {a.modele?.nom ?? ''} [{a.etat}]
-                </option>
-              ))}
-          </select>
-          <Button variant="ghost" size="sm" onClick={addAsset} disabled={!assetPickValue}>
-            <Plus className="h-4 w-4" /> Add
-          </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-900">Assets to Transfer</h2>
+            <p className="text-sm text-neutral-500">{selectedAssetIds.size} asset(s) selected.</p>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Input
+              type="text"
+              placeholder="Search Tag, S/N, Brand, Category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 w-full"
+            />
+          </div>
         </div>
-        <Table<SelectedAsset> columns={columns} rows={selectedAssets} rowKey="id" hoverable={false} striped />
-        {selectedAssets.length === 0 && (
-          <p className="text-center text-sm text-neutral-400 py-4">No assets selected yet.</p>
-        )}
+
+        <Table<Asset>
+          columns={columns}
+          rows={filteredAssets}
+          rowKey={(row) => String(row.id)}
+          hoverable={true}
+          striped
+          selectable={true}
+          selectedRows={selectedAssetIds}
+          onSelectRows={setSelectedAssetIds}
+        />
       </div>
     </div>
   )

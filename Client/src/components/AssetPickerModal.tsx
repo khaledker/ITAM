@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Asset } from '../lib/api';
+import { useState, useMemo, useEffect } from 'react';
+import type { Asset } from '../lib/api';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { Checkbox } from './ui/Checkbox';

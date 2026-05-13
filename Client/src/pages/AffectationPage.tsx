@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
 import { Button, Input, Textarea, Table, type TableColumn } from '@/components'
 import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
 import type { Asset, Employee, Location } from '@/lib/api'
@@ -48,27 +48,21 @@ export default function AffectationPage() {
   const [observations, setObservations] = useState('')
 
   // ── Selected asset list ───────────────────────────────────────────────────
-  const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([])
-  const [assetPickValue, setAssetPickValue] = useState('')
+  const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set())
+  const [searchTerm, setSearchTerm] = useState('')
 
-  const handleAddAsset = () => {
-    if (!assetPickValue) return
-    const asset = availableAssets.find(a => String(a.id) === assetPickValue)
-    if (!asset) return
-    if (selectedAssets.some(a => a.id === asset.id)) return // prevent duplicates
-    setSelectedAssets(prev => [...prev, {
-      id: asset.id,
-      tag: asset.tag,
-      modelName: asset.modele?.nom ?? '—',
-      brand: asset.modele?.marque ?? '—',
-      category: asset.modele?.categorie ?? '—',
-      serialNumber: '',
-    }])
-    setAssetPickValue('')
-  }
-
-  const removeAsset = (id: number) =>
-    setSelectedAssets(prev => prev.filter(a => a.id !== id))
+  const filteredAssets = useMemo(() => {
+    if (!searchTerm.trim()) return availableAssets;
+    const lowerTerm = searchTerm.toLowerCase();
+    return availableAssets.filter((asset) => {
+      const tagMatch = asset.tag?.toLowerCase().includes(lowerTerm);
+      const snMatch = asset.partNum?.toLowerCase().includes(lowerTerm);
+      const categoryMatch = asset.modele?.categorie?.toLowerCase().includes(lowerTerm);
+      const brandMatch = asset.modele?.marque?.toLowerCase().includes(lowerTerm);
+      const modelMatch = asset.modele?.nom?.toLowerCase().includes(lowerTerm);
+      return tagMatch || snMatch || categoryMatch || brandMatch || modelMatch;
+    });
+  }, [availableAssets, searchTerm]);
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false)
@@ -76,7 +70,7 @@ export default function AffectationPage() {
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
   const handleSave = async () => {
-    if (!assignedTo || !user || selectedAssets.length === 0) {
+    if (!assignedTo || !user || selectedAssetIds.size === 0) {
       setSubmitError('Please select a user and at least one asset.')
       return
     }
@@ -84,10 +78,12 @@ export default function AffectationPage() {
     setSubmitError(null)
     try {
       const today = new Date().toISOString().split('T')[0]
-      await Promise.all(selectedAssets.map(asset =>
+      const assetIds = Array.from(selectedAssetIds).map(Number)
+      
+      await Promise.all(assetIds.map(assetId =>
         movementsApi.createAssignment({
           date: today,
-          asset_id: asset.id,
+          asset_id: assetId,
           performed_by: user.id,
           assigned_to: Number(assignedTo),
           source_id: sourceId ? Number(sourceId) : null,
@@ -95,7 +91,7 @@ export default function AffectationPage() {
         })
       ))
       setSubmitSuccess(true)
-      setSelectedAssets([])
+      setSelectedAssetIds(new Set())
       setAssignedTo('')
       setSourceId('')
       setExpectedReturn('')
@@ -110,22 +106,21 @@ export default function AffectationPage() {
   }
 
   // ── Table columns ─────────────────────────────────────────────────────────
-  const columns: TableColumn<SelectedAsset>[] = [
-    { key: 'tag', label: 'Tag', width: 'w-[14%]',
-      render: (v: string) => <span className="font-semibold text-neutral-900">{v}</span> },
-    { key: 'modelName', label: 'Model', width: 'w-[22%]' },
-    { key: 'brand', label: 'Brand', width: 'w-[16%]' },
-    { key: 'category', label: 'Category', width: 'w-[16%]',
-      render: (v: string) => (
-        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">{v}</span>
+  const columns: TableColumn<Asset>[] = [
+    { key: 'tag', label: 'Tag', width: 'w-[15%]',
+      render: (v: string) => <span className="font-semibold text-neutral-900">{v || '-'}</span> },
+    { key: 'partNum', label: 'S/N', width: 'w-[15%]',
+      render: (v: string) => <span className="text-neutral-500">{v || '-'}</span> },
+    { key: 'category', label: 'Category', width: 'w-[20%]',
+      render: (_v: any, row: Asset) => (
+        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+          {row.modele?.categorie || '-'}
+        </span>
       ) },
-    { key: 'actions', label: '', width: 'w-[8%]',
-      render: (_v: any, row: SelectedAsset) => (
-        <button type="button" onClick={() => removeAsset(row.id)}
-          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors">
-          <Trash2 className="h-4 w-4" />
-        </button>
-      ) },
+    { key: 'brand', label: 'Brand', width: 'w-[20%]',
+      render: (_v: any, row: Asset) => row.modele?.marque || '-' },
+    { key: 'modelName', label: 'Model', width: 'w-[30%]',
+      render: (_v: any, row: Asset) => row.modele?.nom || '-' },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -240,7 +235,7 @@ export default function AffectationPage() {
             {isSaving ? 'Saving…' : 'Save Affectation'}
           </Button>
           <Button id="aff-cancel-btn" variant="ghost" onClick={() => {
-            setSelectedAssets([]); setAssignedTo(''); setSourceId('');
+            setSelectedAssetIds(new Set()); setAssignedTo(''); setSourceId('');
             setExpectedReturn(''); setObservations(''); setSubmitSuccess(false); setSubmitError(null);
           }}>
             Cancel
@@ -248,41 +243,35 @@ export default function AffectationPage() {
         </div>
       </div>
 
-      {/* Asset picker + table */}
+      {/* Selectable Asset Table */}
       <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Assets to Assign</h2>
-
-        {/* Picker row */}
-        <div className="flex items-center gap-3">
-          <select
-            value={assetPickValue}
-            onChange={e => setAssetPickValue(e.target.value)}
-            className="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value="">— Pick an available asset —</option>
-            {availableAssets
-              .filter(a => !selectedAssets.some(s => s.id === a.id))
-              .map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.tag} — {a.modele?.nom ?? ''} ({a.modele?.marque ?? ''})
-                </option>
-              ))}
-          </select>
-          <Button variant="ghost" size="sm" onClick={handleAddAsset} disabled={!assetPickValue}>
-            <Plus className="h-4 w-4" /> Add
-          </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-900">Assets to Assign</h2>
+            <p className="text-sm text-neutral-500">{selectedAssetIds.size} asset(s) selected.</p>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Input
+              type="text"
+              placeholder="Search Tag, S/N, Brand, Category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 w-full"
+            />
+          </div>
         </div>
 
-        <Table<SelectedAsset>
+        <Table<Asset>
           columns={columns}
-          rows={selectedAssets}
-          rowKey="id"
-          hoverable={false}
+          rows={filteredAssets}
+          rowKey={(row) => String(row.id)}
+          hoverable={true}
           striped
+          selectable={true}
+          selectedRows={selectedAssetIds}
+          onSelectRows={setSelectedAssetIds}
         />
-        {selectedAssets.length === 0 && (
-          <p className="text-center text-sm text-neutral-400 py-4">No assets selected yet.</p>
-        )}
       </div>
     </div>
   )
