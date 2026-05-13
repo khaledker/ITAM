@@ -76,6 +76,22 @@ export const movementsApi = {
   createReturn: (body: object) => request<AssetMovement>('/movements/return', { method: 'POST', body: JSON.stringify(body) }),
   approve: (id: number) => request<AssetMovement>(`/movements/${id}/approve`, { method: 'PATCH' }),
   reject: (id: number) => request<AssetMovement>(`/movements/${id}/reject`, { method: 'PATCH' }),
+  downloadTicket: async (id: number) => {
+    const token = localStorage.getItem('itam_token');
+    const res = await fetch(`http://localhost:3000/api/movements/${id}/ticket`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!res.ok) throw new Error('Failed to download ticket');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Ticket-${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
 };
 
 // ── Employees ─────────────────────────────────────────────

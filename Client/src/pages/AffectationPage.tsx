@@ -67,7 +67,7 @@ export default function AffectationPage() {
   // ── Submit ────────────────────────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitSuccessId, setSubmitSuccessId] = useState<number | null>(null)
 
   const handleSave = async () => {
     if (!assignedTo || !user || selectedAssetIds.size === 0) {
@@ -76,11 +76,12 @@ export default function AffectationPage() {
     }
     setIsSaving(true)
     setSubmitError(null)
+    setSubmitSuccessId(null)
     try {
       const today = new Date().toISOString().split('T')[0]
       const assetIds = Array.from(selectedAssetIds).map(Number)
       
-      await movementsApi.createAssignment({
+      const createdMv = await movementsApi.createAssignment({
         date: today,
         asset_ids: assetIds,
         performed_by: user.id,
@@ -88,7 +89,7 @@ export default function AffectationPage() {
         source_id: sourceId ? Number(sourceId) : null,
         expected_return: expectedReturn || null,
       })
-      setSubmitSuccess(true)
+      setSubmitSuccessId(createdMv.id)
       setSelectedAssetIds(new Set())
       setAssignedTo('')
       setSourceId('')
@@ -133,10 +134,15 @@ export default function AffectationPage() {
       {loadError && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</div>
       )}
-      {submitSuccess && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Affectation saved successfully. The asset status has been updated.
+      {submitSuccessId !== null && (
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>Affectation saved successfully. The asset status has been updated.</span>
+          </div>
+          <Button variant="outline" onClick={() => movementsApi.downloadTicket(submitSuccessId)}>
+            Download PDF Ticket
+          </Button>
         </div>
       )}
       {submitError && (
@@ -234,7 +240,7 @@ export default function AffectationPage() {
           </Button>
           <Button id="aff-cancel-btn" variant="ghost" onClick={() => {
             setSelectedAssetIds(new Set()); setAssignedTo(''); setSourceId('');
-            setExpectedReturn(''); setObservations(''); setSubmitSuccess(false); setSubmitError(null);
+            setExpectedReturn(''); setObservations(''); setSubmitSuccessId(null); setSubmitError(null);
           }}>
             Cancel
           </Button>

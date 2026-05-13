@@ -66,4 +66,24 @@ const reject = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getAll, getOne, createReception, createAssignment, createTransfer, createReturn, approve, reject };
+// GET /api/movements/:id/ticket
+const downloadTicket = async (req, res, next) => {
+  try {
+    const mv = await svc.findById(req.params.id);
+    if (!mv) return res.status(404).json({ message: 'Movement not found.' });
+
+    const pdfService = require('../services/pdf.service');
+    
+    // Set response headers for PDF download
+    const filename = `TKT-${mv.type.substring(0, 3).toUpperCase()}-${String(mv.id).padStart(4, '0')}.pdf`;
+    res.setHeader('Content-disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-type', 'application/pdf');
+
+    // Generate and stream the PDF
+    pdfService.generateMovementTicket(mv, res);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getAll, getOne, createReception, createAssignment, createTransfer, createReturn, approve, reject, downloadTicket };
