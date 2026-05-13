@@ -110,6 +110,7 @@ export const locationsApi = {
 // ── Asset Models ──────────────────────────────────────────
 export const assetModelsApi = {
   getAll: () => request<AssetModel[]>('/asset-models'),
+  create: (body: Partial<AssetModel>) => request<AssetModel>('/asset-models', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 // ── Dashboard ─────────────────────────────────────────────
