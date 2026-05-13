@@ -88,16 +88,14 @@ export default function TransferPage() {
     setSubmitError(null)
     try {
       const assetIds = Array.from(selectedAssetIds).map(Number)
-      await Promise.all(assetIds.map(assetId =>
-        movementsApi.createTransfer({
-          date: today,
-          asset_id: assetId,
-          performed_by: user.id,
-          reference: reference || null,
-          source_id: sourceId ? Number(sourceId) : null,
-          destination_id: Number(destinationId),
-        })
-      ))
+      await movementsApi.createTransfer({
+        date: today,
+        asset_ids: assetIds,
+        performed_by: user.id,
+        reference: reference || null,
+        source_id: sourceId ? Number(sourceId) : null,
+        destination_id: Number(destinationId),
+      })
       setSubmitSuccess(true)
       setSelectedAssetIds(new Set())
       setSourceId(''); setDestinationId(''); setReference('')

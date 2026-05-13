@@ -15,9 +15,9 @@ const getOne = async (req, res, next) => {
 // POST /api/movements/reception
 const createReception = async (req, res, next) => {
   try {
-    const { date, asset_id, performed_by } = req.body;
-    if (!date || !asset_id || !performed_by)
-      return res.status(400).json({ message: 'date, asset_id, performed_by are required.' });
+    const { date, asset_ids, performed_by } = req.body;
+    if (!date || !asset_ids || !performed_by)
+      return res.status(400).json({ message: 'date, asset_ids, performed_by are required.' });
     res.status(201).json(await svc.createReception(req.body));
   } catch (err) { next(err); }
 };
@@ -25,9 +25,9 @@ const createReception = async (req, res, next) => {
 // POST /api/movements/assignment
 const createAssignment = async (req, res, next) => {
   try {
-    const { date, asset_id, performed_by } = req.body;
-    if (!date || !asset_id || !performed_by)
-      return res.status(400).json({ message: 'date, asset_id, performed_by are required.' });
+    const { date, asset_ids, performed_by } = req.body;
+    if (!date || !asset_ids || !performed_by)
+      return res.status(400).json({ message: 'date, asset_ids, performed_by are required.' });
     res.status(201).json(await svc.createAssignment(req.body));
   } catch (err) { next(err); }
 };
@@ -35,9 +35,9 @@ const createAssignment = async (req, res, next) => {
 // POST /api/movements/transfer
 const createTransfer = async (req, res, next) => {
   try {
-    const { date, asset_id, performed_by } = req.body;
-    if (!date || !asset_id || !performed_by)
-      return res.status(400).json({ message: 'date, asset_id, performed_by are required.' });
+    const { date, asset_ids, performed_by } = req.body;
+    if (!date || !asset_ids || !performed_by)
+      return res.status(400).json({ message: 'date, asset_ids, performed_by are required.' });
     res.status(201).json(await svc.createTransfer(req.body));
   } catch (err) { next(err); }
 };
@@ -45,9 +45,9 @@ const createTransfer = async (req, res, next) => {
 // POST /api/movements/return
 const createReturn = async (req, res, next) => {
   try {
-    const { date, asset_id, performed_by } = req.body;
-    if (!date || !asset_id || !performed_by)
-      return res.status(400).json({ message: 'date, asset_id, performed_by are required.' });
+    const { date, asset_ids, performed_by } = req.body;
+    if (!date || !asset_ids || !performed_by)
+      return res.status(400).json({ message: 'date, asset_ids, performed_by are required.' });
     res.status(201).json(await svc.createReturn(req.body));
   } catch (err) { next(err); }
 };

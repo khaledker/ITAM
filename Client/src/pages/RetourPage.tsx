@@ -77,15 +77,13 @@ export default function RetourPage() {
     setSubmitError(null)
     try {
       const assetIds = Array.from(selectedAssetIds).map(Number)
-      await Promise.all(assetIds.map(assetId =>
-        movementsApi.createReturn({
-          date: today,
-          asset_id: assetId,
-          performed_by: actorId,
-          reason: reason || null,
-          returned_to: returnedToId ? Number(returnedToId) : null,
-        })
-      ))
+      await movementsApi.createReturn({
+        date: today,
+        asset_ids: assetIds,
+        performed_by: actorId,
+        reason: reason || null,
+        returned_to: returnedToId ? Number(returnedToId) : null,
+      })
       setSubmitSuccess(true)
       setSelectedAssetIds(new Set())
       setReturnedToId(''); setPerformedBy(''); setReason('')

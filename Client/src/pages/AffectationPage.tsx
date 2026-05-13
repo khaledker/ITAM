@@ -80,16 +80,14 @@ export default function AffectationPage() {
       const today = new Date().toISOString().split('T')[0]
       const assetIds = Array.from(selectedAssetIds).map(Number)
       
-      await Promise.all(assetIds.map(assetId =>
-        movementsApi.createAssignment({
-          date: today,
-          asset_id: assetId,
-          performed_by: user.id,
-          assigned_to: Number(assignedTo),
-          source_id: sourceId ? Number(sourceId) : null,
-          expected_return: expectedReturn || null,
-        })
-      ))
+      await movementsApi.createAssignment({
+        date: today,
+        asset_ids: assetIds,
+        performed_by: user.id,
+        assigned_to: Number(assignedTo),
+        source_id: sourceId ? Number(sourceId) : null,
+        expected_return: expectedReturn || null,
+      })
       setSubmitSuccess(true)
       setSelectedAssetIds(new Set())
       setAssignedTo('')

@@ -180,6 +180,7 @@ export default function ReceptionPage() {
     setIsSaving(true)
     setSubmitError(null)
     try {
+      const createdAssetIds: number[] = []
       for (const row of rows) {
         let currentModelId = row.modelId;
 
@@ -201,7 +202,6 @@ export default function ReceptionPage() {
             currentModelId = String(createdModel.id);
           } catch (err) {
             console.error('Failed to auto-create model:', row.modelName, err);
-            // Fallback or skip? Let's throw to stop the process and inform the user
             throw new Error(`Failed to create missing model: ${row.modelName}`);
           }
         }
@@ -219,17 +219,18 @@ export default function ReceptionPage() {
           model_id: Number(currentModelId),
           location_id: destinationId ? Number(destinationId) : null,
         } as any)
-
-        await movementsApi.createReception({
-          date: deliveryDate,
-          asset_id: newAsset.id,
-          performed_by: actorId,
-          purchase_order_number: poNumber || null,
-          receipt_number: brNumber || null,
-          supplier_id: supplierId ? Number(supplierId) : null,
-          destination_id: destinationId ? Number(destinationId) : null,
-        })
+        createdAssetIds.push(newAsset.id);
       }
+
+      await movementsApi.createReception({
+        date: deliveryDate,
+        asset_ids: createdAssetIds,
+        performed_by: actorId,
+        purchase_order_number: poNumber || null,
+        receipt_number: brNumber || null,
+        supplier_id: supplierId ? Number(supplierId) : null,
+        destination_id: destinationId ? Number(destinationId) : null,
+      })
 
       setSubmitSuccess(true)
       setRows([])
