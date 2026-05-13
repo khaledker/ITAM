@@ -119,9 +119,21 @@ export default function MaintenancePage() {
     {
       key: 'actions', label: 'Actions', width: 'w-[20%]',
       render: (_v: any, row: AssetMovement) => {
+        if (row.status === 'Approved') {
+          return (
+            <button
+              onClick={() => movementsApi.downloadTicket(row.id)}
+              className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors shadow-sm"
+            >
+              Download Ticket
+            </button>
+          )
+        }
+
         if (!isAdminOrManager || row.status !== 'Draft') {
           return <span className="text-xs text-neutral-400">—</span>
         }
+
         const busy = processingId === row.id
         return (
           <div className="flex items-center gap-2">
