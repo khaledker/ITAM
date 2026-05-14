@@ -11,6 +11,7 @@ import {
   Users,
   ClipboardList,
   RotateCcw,
+  Search,
 } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -24,6 +25,7 @@ type NavItem = {
 const primaryNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { label: "Assets", icon: Server, to: "/assets" },
+  { label: "Advanced Search", icon: Search, to: "/search" },
   { label: "Affectation", icon: UserCheck, to: "/affectation" },
   { label: "Reception", icon: PackageCheck, to: "/reception" },
   { label: "Transfer", icon: ArrowRightLeft, to: "/transfer" },

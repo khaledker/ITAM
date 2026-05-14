@@ -14,6 +14,7 @@ import ReceptionPage from './pages/ReceptionPage'
 import TransferPage from './pages/TransferPage'
 import AffectationPage from './pages/AffectationPage'
 import RetourPage from './pages/RetourPage'
+import SearchPage from './pages/SearchPage'
 import './App.css'
 
 // ── Protected shell — redirects to /login if not authenticated ──
@@ -51,6 +52,7 @@ function AppShell() {
             <Route path="/" element={<Navigate to="/assets" replace />} />
             <Route path="/dashboard"   element={<DashboardPage />} />
             <Route path="/assets"      element={<AssetsPage />} />
+            <Route path="/search"      element={<SearchPage />} />
             <Route path="/maintenance" element={<MaintenancePage />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
             <Route path="/reports"     element={<ReportsPage />} />
