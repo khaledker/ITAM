@@ -142,14 +142,9 @@ export default function TransferPage() {
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</div>
       )}
       {submitSuccessId !== null && (
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 shrink-0" />
-            <span>Transfer saved successfully as Draft.</span>
-          </div>
-          <Button variant="outline" onClick={() => movementsApi.downloadTicket(submitSuccessId)}>
-            Download PDF Ticket
-          </Button>
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <CheckCircle className="h-4 w-4 shrink-0" />
+          <span>Transfer saved successfully as Draft. An Admin/Manager must approve it.</span>
         </div>
       )}
       {submitError && (
