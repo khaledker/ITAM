@@ -91,6 +91,26 @@ export const movementsApi = {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  },
+  openTicket: async (id: number) => {
+    const token = localStorage.getItem('itam_token');
+    const res = await fetch(`http://localhost:3000/api/movements/${id}/ticket`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!res.ok) throw new Error('Failed to open ticket');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const preview = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!preview) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
   }
 };
 
@@ -171,9 +191,30 @@ export interface AssetMovement {
   status: 'Draft' | 'Approved' | 'Returned' | 'Rejected';
   type: 'Reception' | 'Assignment' | 'Transfer' | 'Return';
   asset_id: number;
+  asset_ids?: string;
   tag?: string;                   // joined from Asset
+  serial_numbers?: string;
   performed_by: number;
   performed_by_name?: string;     // joined from Employee
+  purchase_order_number?: string | null;
+  receipt_number?: string | null;
+  supplier_id?: number | null;
+  supplier_name?: string | null;
+  destination_id?: number | null;
+  reception_dest_name?: string | null;
+  expected_return?: string | null;
+  assigned_to?: number | null;
+  assigned_to_name?: string | null;
+  assignment_source_id?: number | null;
+  assignment_source_name?: string | null;
+  reference?: string | null;
+  transfer_source_id?: number | null;
+  transfer_source_name?: string | null;
+  transfer_dest_id?: number | null;
+  transfer_dest_name?: string | null;
+  reason?: string | null;
+  returned_to?: number | null;
+  returned_to_name?: string | null;
 }
 
 

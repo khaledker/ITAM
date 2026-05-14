@@ -48,6 +48,7 @@ const findAll = async ({ type, status, asset_id } = {}) => {
     SELECT
       mv.id, mv.date, mv.status, mv.performed_by,
       GROUP_CONCAT(a.id) AS asset_ids,
+      GROUP_CONCAT(a.tag) AS tag,
       GROUP_CONCAT(a.serial_number) AS serial_numbers,
       e.full_name AS performed_by_name,
       CASE
