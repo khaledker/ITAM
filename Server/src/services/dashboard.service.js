@@ -21,7 +21,8 @@ const getRecentMovements = async () => {
       mv.id,
       mv.date,
       mv.status,
-      GROUP_CONCAT(a.tag) AS asset_tag,
+      SUBSTRING_INDEX(GROUP_CONCAT(a.tag ORDER BY a.tag), ',', 3) AS asset_tag,
+      COUNT(mi.asset_id) AS asset_count,
       e.full_name AS performed_by,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'

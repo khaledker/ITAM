@@ -262,6 +262,7 @@ export interface RecentMovement {
   date: string;
   status: string;
   asset_tag: string;
+  asset_count: number;
   performed_by: string;
   type: 'Reception' | 'Assignment' | 'Transfer' | 'Return' | null;
 }
