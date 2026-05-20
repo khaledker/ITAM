@@ -6,8 +6,11 @@ const findById = async (id) => {
     SELECT
       mv.id, mv.date, mv.status, mv.performed_by,
       GROUP_CONCAT(a.id) AS asset_ids,
-      GROUP_CONCAT(a.serial_number) AS serial_numbers,
-      GROUP_CONCAT(a.tag) AS tag,
+      GROUP_CONCAT(a.serial_number SEPARATOR '||') AS serial_numbers,
+      GROUP_CONCAT(a.tag SEPARATOR '||') AS tag,
+      GROUP_CONCAT(am.brand SEPARATOR '||') AS brands,
+      GROUP_CONCAT(am.name SEPARATOR '||') AS model_names,
+      GROUP_CONCAT(am.category SEPARATOR '||') AS categories,
       e.full_name AS performed_by_name,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
@@ -25,6 +28,7 @@ const findById = async (id) => {
     FROM AssetMovement mv
     JOIN MovementItem mi ON mv.id = mi.movement_id
     JOIN Asset a ON mi.asset_id = a.id
+    JOIN AssetModel am ON am.id = a.model_id
     JOIN Employee e ON mv.performed_by = e.id
     LEFT JOIN Reception   r   ON r.id   = mv.id
     LEFT JOIN Supplier    sup ON r.supplier_id = sup.id
