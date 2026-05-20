@@ -192,7 +192,8 @@ export interface AssetMovement {
   type: 'Reception' | 'Assignment' | 'Transfer' | 'Return';
   asset_id: number;
   asset_ids?: string;
-  tag?: string;                   // joined from Asset
+  tag?: string;
+  asset_count?: number;
   serial_numbers?: string;
   performed_by: number;
   performed_by_name?: string;     // joined from Employee

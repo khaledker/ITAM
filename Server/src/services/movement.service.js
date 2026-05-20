@@ -43,12 +43,13 @@ const findById = async (id) => {
   return rows[0] || null;
 };
 
-const findAll = async ({ type, status, asset_id } = {}) => {
+const findAll = async ({ type, status, asset_id, search, sort } = {}) => {
   let query = `
     SELECT
       mv.id, mv.date, mv.status, mv.performed_by,
       GROUP_CONCAT(a.id) AS asset_ids,
-      GROUP_CONCAT(a.tag) AS tag,
+      SUBSTRING_INDEX(GROUP_CONCAT(a.tag ORDER BY a.tag SEPARATOR ','), ',', 3) AS tag,
+      COUNT(mi.asset_id) AS asset_count,
       GROUP_CONCAT(a.serial_number) AS serial_numbers,
       e.full_name AS performed_by_name,
       CASE
@@ -70,11 +71,13 @@ const findAll = async ({ type, status, asset_id } = {}) => {
   const params = [];
   if (status)   { query += ' AND mv.status = ?';   params.push(status);   }
   if (asset_id) { query += ' AND mi.asset_id = ?'; params.push(asset_id); }
+  if (search)   { query += ' AND a.tag LIKE ?';    params.push(`%${search}%`); }
   if (type) {
     const typeMap = { Reception: 'r.id', Assignment: 'asn.id', Transfer: 't.id', Return: 'ar.id' };
     if (typeMap[type]) query += ` AND ${typeMap[type]} IS NOT NULL`;
   }
-  query += '\n    GROUP BY mv.id\n    ORDER BY mv.date DESC';
+  const orderDir = sort === 'oldest' ? 'ASC' : 'DESC';
+  query += `\n    GROUP BY mv.id\n    ORDER BY mv.id ${orderDir}`;
   const [rows] = await db.query(query, params);
   return rows;
 };
