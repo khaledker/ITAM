@@ -1,136 +1,312 @@
 const PDFDocument = require('pdfkit');
 
-/**
- * Generates a PDF ticket for a given movement.
- * @param {Object} movement - The movement object retrieved from the database.
- * @param {stream.Writable} outStream - The output stream (e.g., HTTP response) to write the PDF to.
- */
-const generateMovementTicket = (movement, outStream) => {
-  const doc = new PDFDocument({ margin: 50, size: 'A4' });
+// ── Constants ────────────────────────────────────────────────────────────
+const ORANGE = '#E8971E';
+const DARK   = '#222222';
+const GRAY   = '#666666';
+const LIGHT  = '#F5F5F5';
+const WHITE  = '#FFFFFF';
+const LEFT   = 40;
+const RIGHT  = 555;
+const WIDTH  = RIGHT - LEFT;
 
-  // Pipe the PDF directly to the output stream
-  doc.pipe(outStream);
+const TITLES = {
+  Reception:  { fr: 'Bon de Réception Matériel Informatique', en: 'IT Reception Form' },
+  Assignment: { fr: 'Bon de Livraison Matériel Informatique', en: 'IT Delivery Form' },
+  Transfer:   { fr: 'Bon de Transfert Externe',               en: 'External Transfer Form' },
+  Return:     { fr: 'Bon de Retour Matériel Informatique',     en: 'IT Return Form' },
+};
 
-  // Helper to format date
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('fr-FR'); // Format DD/MM/YYYY
+// ── Helpers ──────────────────────────────────────────────────────────────
+const fmt = (d) => {
+  if (!d) return 'N/A';
+  const dt = new Date(d);
+  const dd = String(dt.getDate()).padStart(2, '0');
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const yy = dt.getFullYear();
+  const hh = String(dt.getHours()).padStart(2, '0');
+  const mi = String(dt.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yy} ${hh}:${mi}`;
+};
+
+const split = (v) => v ? v.split('||').map(s => s.trim()) : [];
+
+/** Draw a fake Code-128-style barcode visual */
+function drawBarcode(doc, x, y, w, h) {
+  const bars = [];
+  let pos = 0;
+  // Generate pseudo-random bar pattern
+  const seed = [3,1,2,1,3,2,1,1,2,3,1,2,1,1,3,1,2,1,2,1,3,1,1,2,1,3,2,1,1,2,3,1,2,1,3,1,2,2,1,1];
+  for (const b of seed) { bars.push(b); pos += b; }
+  const scale = w / pos;
+  let cx = x;
+  bars.forEach((b, i) => {
+    if (i % 2 === 0) doc.rect(cx, y, b * scale, h).fill(DARK);
+    cx += b * scale;
+  });
+}
+
+/** Draw an orange section banner */
+function sectionBanner(doc, text, x, y, w) {
+  const h = 22;
+  doc.roundedRect(x, y, w, h, 4).fill(ORANGE);
+  doc.fill(WHITE).fontSize(10).font('Helvetica-Bold').text(text, x, y + 5, { width: w, align: 'center' });
+  doc.fill(DARK);
+  return y + h + 8;
+}
+
+/** Draw a label: value pair */
+function labelValue(doc, label, value, x, y, labelW, valueW) {
+  doc.font('Helvetica').fontSize(8).fill(GRAY).text(label, x, y, { width: labelW });
+  doc.font('Helvetica-Bold').fontSize(9).fill(DARK).text(value || 'N/A', x + labelW, y, { width: valueW });
+}
+
+/** Draw dual signature boxes at current Y */
+function drawSignatureBoxes(doc, leftTitle, leftName, rightTitle, rightName) {
+  let y = doc.y;
+  // Check page space — need ~120pt for signatures
+  if (y > 680) { doc.addPage(); y = 50; }
+
+  const boxW = WIDTH / 2 - 8;
+  const boxH = 110;
+
+  // Left header
+  doc.roundedRect(LEFT, y, boxW, 22, 4).fill(ORANGE);
+  doc.fill(WHITE).fontSize(10).font('Helvetica-Bold')
+    .text(leftTitle, LEFT, y + 5, { width: boxW, align: 'center' });
+
+  // Right header
+  doc.roundedRect(LEFT + boxW + 16, y, boxW, 22, 4).fill(ORANGE);
+  doc.fill(WHITE).fontSize(10).font('Helvetica-Bold')
+    .text(rightTitle, LEFT + boxW + 16, y + 5, { width: boxW, align: 'center' });
+
+  doc.fill(DARK);
+  y += 26;
+
+  // Left box
+  doc.rect(LEFT, y, boxW, boxH).stroke('#CCCCCC');
+  doc.font('Helvetica').fontSize(8).fill(GRAY);
+  doc.text('Nom Complet', LEFT + 8, y + 8);
+  doc.font('Helvetica-Bold').fontSize(9).fill(DARK).text(leftName || '', LEFT + 80, y + 8, { width: boxW - 90 });
+  doc.font('Helvetica').fontSize(8).fill(GRAY).text('Date', LEFT + 8, y + 30);
+  doc.font('Helvetica').fontSize(8).fill(GRAY).text('Signature', LEFT + 8, y + 55);
+
+  // Right box
+  const rx = LEFT + boxW + 16;
+  doc.rect(rx, y, boxW, boxH).stroke('#CCCCCC');
+  doc.font('Helvetica').fontSize(8).fill(GRAY);
+  doc.text('Nom Complet', rx + 8, y + 8);
+  doc.font('Helvetica-Bold').fontSize(9).fill(DARK).text(rightName || '', rx + 80, y + 8, { width: boxW - 90 });
+  doc.font('Helvetica').fontSize(8).fill(GRAY).text('Date', rx + 8, y + 30);
+  doc.font('Helvetica').fontSize(8).fill(GRAY).text('Signature', rx + 8, y + 55);
+
+  doc.y = y + boxH + 10;
+}
+
+// ── Asset Table (optimized for high volume) ──────────────────────────────
+function drawAssetTable(doc, assets, startY) {
+  const colX = [LEFT, LEFT + 70, LEFT + 220, LEFT + 370];
+  const colW = [70, 150, 150, WIDTH - 370 - LEFT + 40];
+  const headers = ['Marque', 'Modèle', 'SN', 'Tag'];
+  const ROW_H = 14;
+  const HDR_H = 18;
+  const PAGE_BOTTOM = 700; // leave room for signatures
+
+  let y = startY;
+
+  // Draw header row
+  const drawHeader = (yy) => {
+    doc.rect(LEFT, yy, WIDTH, HDR_H).fill('#E0E0E0');
+    doc.fill(DARK).font('Helvetica-Bold').fontSize(7.5);
+    headers.forEach((h, i) => doc.text(h, colX[i] + 4, yy + 5, { width: colW[i] }));
+    return yy + HDR_H;
   };
 
-  // Header
-  doc
-    .fontSize(20)
-    .font('Helvetica-Bold')
-    .text('Djezzy ITAM - Asset Movement Ticket', { align: 'center' })
-    .moveDown(0.5);
+  y = drawHeader(y);
 
-  const ticketRef = `TKT-${movement.type.substring(0, 3).toUpperCase()}-${String(movement.id).padStart(4, '0')}`;
+  // Group by category
+  const categories = {};
+  assets.forEach(a => {
+    const cat = a.category || 'Other';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(a);
+  });
 
-  doc
-    .fontSize(10)
-    .font('Helvetica')
-    .text(`Reference: ${ticketRef}`, { align: 'right' })
-    .text(`Date: ${formatDate(movement.date)}`, { align: 'right' })
-    .text(`Status: ${movement.status}`, { align: 'right' })
-    .moveDown(1);
+  doc.font('Helvetica').fontSize(7);
 
-  // Movement Details
-  doc
-    .fontSize(14)
-    .font('Helvetica-Bold')
-    .text('Movement Details')
-    .moveTo(50, doc.y).lineTo(545, doc.y).stroke()
-    .moveDown(0.5);
+  for (const [cat, items] of Object.entries(categories)) {
+    // Category header row
+    if (y + ROW_H > PAGE_BOTTOM) { doc.addPage(); y = 50; y = drawHeader(y); }
+    doc.rect(LEFT, y, WIDTH, ROW_H).fill(LIGHT);
+    doc.fill(DARK).font('Helvetica-Bold').fontSize(7).text(cat.toUpperCase(), LEFT + 4, y + 3);
+    y += ROW_H;
+    doc.font('Helvetica').fontSize(7);
 
-  doc
-    .fontSize(10)
-    .font('Helvetica')
-    .text(`Type: ${movement.type}`)
-    .text(`Performed By: ${movement.performed_by_name}`)
-    .moveDown(0.5);
+    for (const a of items) {
+      if (y + ROW_H > PAGE_BOTTOM) { doc.addPage(); y = 50; y = drawHeader(y); }
 
-  // Type specific details
-  if (movement.type === 'Reception') {
-    doc.text(`Supplier: ${movement.supplier_name || movement.supplier_id || 'N/A'}`);
-    doc.text(`Destination Location: ${movement.reception_dest_name || movement.destination_id || 'N/A'}`);
-    doc.text(`Purchase Order: ${movement.purchase_order_number || 'N/A'}`);
-    doc.text(`Receipt Number: ${movement.receipt_number || 'N/A'}`);
-  } else if (movement.type === 'Assignment') {
-    doc.text(`Assigned To: ${movement.assigned_to_name || movement.assigned_to || 'N/A'}`);
-    if (movement.assignment_source_name) doc.text(`Source Location: ${movement.assignment_source_name}`);
-    doc.text(`Expected Return: ${formatDate(movement.expected_return)}`);
-  } else if (movement.type === 'Transfer') {
-    doc.text(`Source Location: ${movement.transfer_source_name || movement.transfer_source_id || 'N/A'}`);
-    doc.text(`Destination Location: ${movement.transfer_dest_name || movement.transfer_dest_id || 'N/A'}`);
-    doc.text(`Reference: ${movement.reference || 'N/A'}`);
-  } else if (movement.type === 'Return') {
-    doc.text(`Returned To Location: ${movement.returned_to_name || movement.returned_to || 'N/A'}`);
-    doc.text(`Reason: ${movement.reason || 'N/A'}`);
-  }
-
-  doc.moveDown(1.5);
-
-  // Assets List
-  doc
-    .fontSize(14)
-    .font('Helvetica-Bold')
-    .text('Concerned Assets')
-    .moveTo(50, doc.y).lineTo(545, doc.y).stroke()
-    .moveDown(0.5);
-
-  const assetIds = movement.asset_ids ? movement.asset_ids.split(',') : [];
-  const serials = movement.serial_numbers ? movement.serial_numbers.split(',') : [];
-  const tags = movement.tag ? movement.tag.split(',') : []; // tag column in findById is GROUP_CONCAT(a.tag) AS tag
-
-  if (assetIds.length === 0) {
-    doc.fontSize(10).font('Helvetica').text('No assets listed in this movement.');
-  } else {
-    // Simple table header
-    doc.fontSize(10).font('Helvetica-Bold');
-    doc.text('Asset Tag', 50, doc.y, { continued: true, width: 150 });
-    doc.text('Serial Number', 200, doc.y);
-    doc.moveDown(0.2);
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown(0.5);
-
-    doc.font('Helvetica');
-    for (let i = 0; i < assetIds.length; i++) {
-      const tag = tags[i] || 'N/A';
-      const serial = serials[i] || 'N/A';
-      const startY = doc.y;
-      
-      doc.text(tag, 50, startY, { continued: false, width: 140 });
-      doc.text(serial, 200, startY);
-      doc.moveDown(0.2);
+      // Alternate row shading
+      doc.rect(LEFT, y, WIDTH, ROW_H).fill(WHITE).stroke('#EEEEEE');
+      doc.fill(DARK);
+      doc.text(a.brand || '—',   colX[0] + 4, y + 3, { width: colW[0] - 8 });
+      doc.text(a.model || '—',   colX[1] + 4, y + 3, { width: colW[1] - 8 });
+      doc.text(a.serial || '—',  colX[2] + 4, y + 3, { width: colW[2] - 8 });
+      doc.text(a.tag || '—',     colX[3] + 4, y + 3, { width: colW[3] - 8 });
+      y += ROW_H;
     }
   }
 
-  doc.moveDown(3);
+  // Quantity line
+  doc.font('Helvetica-Bold').fontSize(8).fill(DARK);
+  doc.text(`Qte:  ${assets.length}`, LEFT + 4, y + 4);
+  doc.y = y + 20;
+}
 
-  // Signatures
-  doc
-    .fontSize(14)
-    .font('Helvetica-Bold')
-    .text('Signatures', 50, doc.y)
-    .moveTo(50, doc.y).lineTo(545, doc.y).stroke()
-    .moveDown(1);
+// ── Main Generator ──────────────────────────────────────────────────────
+const generateMovementTicket = (movement, outStream) => {
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  doc.pipe(outStream);
 
-  doc.fontSize(10).font('Helvetica');
-  doc.text('IT Department', 50, doc.y, { continued: true });
-  
-  if (movement.type === 'Assignment' || movement.type === 'Return') {
-    doc.text('Employee', 300, doc.y);
-  } else if (movement.type === 'Transfer') {
-    doc.text('Destination Manager', 300, doc.y);
-  } else if (movement.type === 'Reception') {
-    doc.text('Supplier / Deliverer', 300, doc.y);
+  const titleInfo = TITLES[movement.type] || TITLES.Reception;
+  const ticketRef = `TKT-${movement.type.substring(0, 3).toUpperCase()}-${String(movement.id).padStart(4, '0')}`;
+
+  // Parse assets
+  const tags       = split(movement.tag);
+  const serials    = split(movement.serial_numbers);
+  const brands     = split(movement.brands);
+  const modelNames = split(movement.model_names);
+  const cats       = split(movement.categories);
+  const assetCount = Math.max(tags.length, serials.length);
+
+  const assets = [];
+  for (let i = 0; i < assetCount; i++) {
+    assets.push({
+      brand:    brands[i]     || '',
+      model:    modelNames[i] || '',
+      serial:   serials[i]    || '',
+      tag:      tags[i]       || '',
+      category: cats[i]       || 'Other',
+    });
   }
 
-  // Finalize PDF file
+  // Calculate total pages (roughly: ~35 asset rows per page in asset section)
+  const assetPages = Math.max(1, Math.ceil(assetCount / 35));
+  const totalPages = assetPages;
+  let currentPage = 1;
+
+  // ── Page Header ────────────────────────────────────────
+  const drawPageHeader = () => {
+    // Title banner
+    doc.roundedRect(LEFT, 30, 340, 50, 6).fill(ORANGE);
+    doc.fill(WHITE).font('Helvetica-Bold');
+    doc.fontSize(13).text(titleInfo.fr, LEFT + 15, 38, { width: 310 });
+    doc.fontSize(10).text(titleInfo.en, LEFT + 15, 56, { width: 310 });
+
+    // Barcode
+    drawBarcode(doc, 400, 30, 140, 50);
+
+    // Meta line
+    doc.fill(DARK).font('Helvetica').fontSize(8);
+    const metaY = 88;
+    drawBarcode(doc, LEFT, metaY, 50, 16);
+    doc.font('Helvetica').fontSize(7).fill(GRAY).text('Imprimé par:', LEFT + 58, metaY + 3);
+    doc.font('Helvetica-Bold').fontSize(8).fill(DARK).text(movement.performed_by_name || 'System', LEFT + 102, metaY + 3);
+    doc.font('Helvetica').fontSize(7).fill(GRAY).text('Date/Heure:', 260, metaY + 3);
+    doc.font('Helvetica-Bold').fontSize(8).fill(DARK).text(fmt(movement.date), 310, metaY + 3);
+    doc.font('Helvetica').fontSize(7).fill(GRAY).text('Page', 460, metaY + 3);
+    doc.font('Helvetica-Bold').fontSize(8).fill(DARK).text(`${currentPage}/${totalPages}`, 482, metaY + 3);
+    doc.font('Helvetica').fontSize(7).fill(GRAY).text(`Réf: ${ticketRef}`, 510, metaY + 3);
+
+    return metaY + 24;
+  };
+
+  let y = drawPageHeader();
+
+  // ── Type-specific info sections ────────────────────────
+  if (movement.type === 'Assignment') {
+    // Employee info
+    y = sectionBanner(doc, "Informations sur l'employé", LEFT + 30, y, WIDTH - 60);
+    doc.rect(LEFT, y, WIDTH, 55).stroke('#CCCCCC');
+    labelValue(doc, 'Nom:',   movement.assigned_to_name, LEFT + 8, y + 5, 70, 170);
+    labelValue(doc, 'Source:', movement.assignment_source_name, LEFT + 8, y + 20, 70, 170);
+    labelValue(doc, 'Retour:', movement.expected_return ? fmt(movement.expected_return).split(' ')[0] : 'N/A', LEFT + 8, y + 35, 70, 170);
+    y += 63;
+
+    // Manager info
+    y = sectionBanner(doc, 'Informations sur le responsable', LEFT + 30, y, WIDTH - 60);
+    doc.rect(LEFT, y, WIDTH, 25).stroke('#CCCCCC');
+    labelValue(doc, 'Nom:', movement.performed_by_name, LEFT + 8, y + 7, 70, 200);
+    y += 33;
+  }
+
+  if (movement.type === 'Reception') {
+    // Supplier info
+    y = sectionBanner(doc, 'Informations Fournisseur', LEFT + 30, y, WIDTH - 60);
+    doc.rect(LEFT, y, WIDTH, 55).stroke('#CCCCCC');
+    labelValue(doc, 'Fournisseur:', movement.supplier_name, LEFT + 8, y + 5, 80, 170);
+    labelValue(doc, 'N° Commande:', movement.purchase_order_number, LEFT + 8, y + 20, 80, 170);
+    labelValue(doc, 'N° Réception:', movement.receipt_number, LEFT + 8, y + 35, 80, 170);
+    labelValue(doc, 'Destination:', movement.reception_dest_name, 300, y + 5, 70, 170);
+    y += 63;
+  }
+
+  if (movement.type === 'Transfer') {
+    // Side-by-side source/destination
+    const boxW = WIDTH / 2 - 8;
+    y = sectionBanner(doc, 'Expéditeur', LEFT, y, boxW);
+    const rightBannerY = y - 30;
+    sectionBanner(doc, 'Destinataire', LEFT + boxW + 16, rightBannerY, boxW);
+
+    const boxH = 50;
+    doc.rect(LEFT, y, boxW, boxH).stroke('#CCCCCC');
+    labelValue(doc, 'Entrepôt:', movement.transfer_source_name, LEFT + 8, y + 8, 60, boxW - 78);
+    labelValue(doc, 'Référence:', movement.reference, LEFT + 8, y + 26, 60, boxW - 78);
+
+    const rx = LEFT + boxW + 16;
+    doc.rect(rx, y, boxW, boxH).stroke('#CCCCCC');
+    labelValue(doc, 'Entrepôt:', movement.transfer_dest_name, rx + 8, y + 8, 60, boxW - 78);
+    y += boxH + 8;
+  }
+
+  if (movement.type === 'Return') {
+    y = sectionBanner(doc, 'Informations Retour', LEFT + 30, y, WIDTH - 60);
+    doc.rect(LEFT, y, WIDTH, 40).stroke('#CCCCCC');
+    labelValue(doc, 'Destination:', movement.returned_to_name, LEFT + 8, y + 5, 80, 200);
+    labelValue(doc, 'Motif:', movement.reason, LEFT + 8, y + 20, 80, 200);
+    y += 48;
+  }
+
+  // ── Asset Table ────────────────────────────────────────
+  drawAssetTable(doc, assets, y);
+
+  // ── Signature Boxes ────────────────────────────────────
+  if (movement.type === 'Assignment') {
+    drawSignatureBoxes(doc,
+      'Expéditeur', movement.performed_by_name,
+      'Destinataire', movement.assigned_to_name
+    );
+  } else if (movement.type === 'Transfer') {
+    drawSignatureBoxes(doc,
+      'Expéditeur', movement.performed_by_name,
+      'Destinataire', ''
+    );
+  } else if (movement.type === 'Reception') {
+    drawSignatureBoxes(doc,
+      'Expéditeur', movement.supplier_name,
+      'Destinataire', movement.performed_by_name
+    );
+  } else {
+    drawSignatureBoxes(doc,
+      'Expéditeur', movement.performed_by_name,
+      'Destinataire', ''
+    );
+  }
+
+  // ── Footer barcode ─────────────────────────────────────
+  const fy = Math.min(doc.y + 5, 780);
+  drawBarcode(doc, LEFT, fy, 80, 20);
+
   doc.end();
 };
 
-module.exports = {
-  generateMovementTicket
-};
+module.exports = { generateMovementTicket };
