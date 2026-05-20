@@ -61,7 +61,16 @@ const movementColumns: TableColumn<RecentMovement>[] = [
     key: 'asset_tag',
     label: 'Asset Tag',
     width: '14%',
-    render: (value: string) => <span className="font-semibold text-neutral-800">{value}</span>,
+    render: (_value: string, row: RecentMovement) => {
+      const firstTag = (row.asset_tag || '').split(',')[0]?.trim()
+      const count = row.asset_count ?? 1
+      if (count <= 1) return <span className="font-semibold text-neutral-800">{firstTag || '—'}</span>
+      return (
+        <span className="font-semibold text-neutral-800">
+          {firstTag} <span className="font-normal text-neutral-400">&amp; {count - 1} more</span>
+        </span>
+      )
+    },
   },
   {
     key: 'performed_by',
