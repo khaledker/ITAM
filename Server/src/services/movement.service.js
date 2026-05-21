@@ -2,6 +2,7 @@ const db = require('../config/db');
 
 // ── Shared: get movement with subtype detail ──────────────
 const findById = async (id) => {
+  await db.query('SET SESSION group_concat_max_len = 1000000;');
   const [rows] = await db.query(`
     SELECT
       mv.id, mv.date, mv.status, mv.performed_by,
@@ -48,6 +49,7 @@ const findById = async (id) => {
 };
 
 const findAll = async ({ type, status, asset_id, search, sort } = {}) => {
+  await db.query('SET SESSION group_concat_max_len = 1000000;');
   let query = `
     SELECT
       mv.id, mv.date, mv.status, mv.performed_by,
