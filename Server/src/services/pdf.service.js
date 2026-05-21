@@ -49,7 +49,7 @@ function drawBarcode(doc, x, y, w, h) {
 /** Draw an orange section banner */
 function sectionBanner(doc, text, x, y, w) {
   const h = 22;
-  doc.roundedRect(x, y, w, h, 4).fill(ORANGE);
+  doc.lineWidth(1).roundedRect(x, y, w, h, 4).fillAndStroke(ORANGE, DARK);
   doc.fill(WHITE).fontSize(10).font('Helvetica-Bold').text(text, x, y + 5, { width: w, align: 'center' });
   doc.fill(DARK);
   return y + h + 8;
@@ -71,12 +71,12 @@ function drawSignatureBoxes(doc, leftTitle, leftName, rightTitle, rightName) {
   const boxH = 110;
 
   // Left header
-  doc.roundedRect(LEFT, y, boxW, 22, 4).fill(ORANGE);
+  doc.lineWidth(1).roundedRect(LEFT, y, boxW, 22, 4).fillAndStroke(ORANGE, DARK);
   doc.fill(WHITE).fontSize(10).font('Helvetica-Bold')
     .text(leftTitle, LEFT, y + 5, { width: boxW, align: 'center' });
 
   // Right header
-  doc.roundedRect(LEFT + boxW + 16, y, boxW, 22, 4).fill(ORANGE);
+  doc.lineWidth(1).roundedRect(LEFT + boxW + 16, y, boxW, 22, 4).fillAndStroke(ORANGE, DARK);
   doc.fill(WHITE).fontSize(10).font('Helvetica-Bold')
     .text(rightTitle, LEFT + boxW + 16, y + 5, { width: boxW, align: 'center' });
 
@@ -84,7 +84,7 @@ function drawSignatureBoxes(doc, leftTitle, leftName, rightTitle, rightName) {
   y += 26;
 
   // Left box
-  doc.rect(LEFT, y, boxW, boxH).stroke('#CCCCCC');
+  doc.lineWidth(1).rect(LEFT, y, boxW, boxH).stroke(DARK);
   doc.font('Helvetica').fontSize(8).fill(GRAY);
   doc.text('Nom Complet', LEFT + 8, y + 8);
   doc.font('Helvetica-Bold').fontSize(9).fill(DARK).text(leftName || '', LEFT + 80, y + 8, { width: boxW - 90 });
@@ -93,7 +93,7 @@ function drawSignatureBoxes(doc, leftTitle, leftName, rightTitle, rightName) {
 
   // Right box
   const rx = LEFT + boxW + 16;
-  doc.rect(rx, y, boxW, boxH).stroke('#CCCCCC');
+  doc.lineWidth(1).rect(rx, y, boxW, boxH).stroke(DARK);
   doc.font('Helvetica').fontSize(8).fill(GRAY);
   doc.text('Nom Complet', rx + 8, y + 8);
   doc.font('Helvetica-Bold').fontSize(9).fill(DARK).text(rightName || '', rx + 80, y + 8, { width: boxW - 90 });
@@ -116,7 +116,7 @@ function drawAssetTable(doc, assets, startY) {
 
   // Draw header row
   const drawHeader = (yy) => {
-    doc.rect(LEFT, yy, WIDTH, HDR_H).fill('#E0E0E0');
+    doc.lineWidth(1).rect(LEFT, yy, WIDTH, HDR_H).fillAndStroke('#E0E0E0', DARK);
     doc.fill(DARK).font('Helvetica-Bold').fontSize(7.5);
     headers.forEach((h, i) => doc.text(h, colX[i] + 4, yy + 5, { width: colW[i] }));
     return yy + HDR_H;
@@ -146,7 +146,7 @@ function drawAssetTable(doc, assets, startY) {
       if (y + ROW_H > PAGE_BOTTOM) { doc.addPage(); y = 50; y = drawHeader(y); }
 
       // Alternate row shading
-      doc.rect(LEFT, y, WIDTH, ROW_H).fill(WHITE).stroke('#EEEEEE');
+      doc.lineWidth(1).rect(LEFT, y, WIDTH, ROW_H).fillAndStroke(WHITE, DARK);
       doc.fill(DARK);
       doc.text(a.brand || '—',   colX[0] + 4, y + 3, { width: colW[0] - 8 });
       doc.text(a.model || '—',   colX[1] + 4, y + 3, { width: colW[1] - 8 });
@@ -197,7 +197,7 @@ const generateMovementTicket = (movement, outStream) => {
   // ── Page Header ────────────────────────────────────────
   const drawPageHeader = () => {
     // Title banner
-    doc.roundedRect(LEFT, 30, 340, 50, 6).fill(ORANGE);
+    doc.lineWidth(1).roundedRect(LEFT, 30, 340, 50, 6).fillAndStroke(ORANGE, DARK);
     doc.fill(WHITE).font('Helvetica-Bold');
     doc.fontSize(13).text(titleInfo.fr, LEFT + 15, 38, { width: 310 });
     doc.fontSize(10).text(titleInfo.en, LEFT + 15, 56, { width: 310 });
@@ -226,7 +226,7 @@ const generateMovementTicket = (movement, outStream) => {
   if (movement.type === 'Assignment') {
     // Employee info
     y = sectionBanner(doc, "Informations sur l'employé", LEFT + 30, y, WIDTH - 60);
-    doc.rect(LEFT, y, WIDTH, 55).stroke('#CCCCCC');
+    doc.lineWidth(1).rect(LEFT, y, WIDTH, 55).stroke(DARK);
     labelValue(doc, 'Nom:',   movement.assigned_to_name, LEFT + 8, y + 5, 70, 170);
     labelValue(doc, 'Source:', movement.assignment_source_name, LEFT + 8, y + 20, 70, 170);
     labelValue(doc, 'Retour:', movement.expected_return ? fmt(movement.expected_return).split(' ')[0] : 'N/A', LEFT + 8, y + 35, 70, 170);
@@ -234,7 +234,7 @@ const generateMovementTicket = (movement, outStream) => {
 
     // Manager info
     y = sectionBanner(doc, 'Informations sur le responsable', LEFT + 30, y, WIDTH - 60);
-    doc.rect(LEFT, y, WIDTH, 25).stroke('#CCCCCC');
+    doc.lineWidth(1).rect(LEFT, y, WIDTH, 25).stroke(DARK);
     labelValue(doc, 'Nom:', movement.performed_by_name, LEFT + 8, y + 7, 70, 200);
     y += 33;
   }
@@ -242,7 +242,7 @@ const generateMovementTicket = (movement, outStream) => {
   if (movement.type === 'Reception') {
     // Supplier info
     y = sectionBanner(doc, 'Informations Fournisseur', LEFT + 30, y, WIDTH - 60);
-    doc.rect(LEFT, y, WIDTH, 55).stroke('#CCCCCC');
+    doc.lineWidth(1).rect(LEFT, y, WIDTH, 55).stroke(DARK);
     labelValue(doc, 'Fournisseur:', movement.supplier_name, LEFT + 8, y + 5, 80, 170);
     labelValue(doc, 'N° Commande:', movement.purchase_order_number, LEFT + 8, y + 20, 80, 170);
     labelValue(doc, 'N° Réception:', movement.receipt_number, LEFT + 8, y + 35, 80, 170);
@@ -258,19 +258,19 @@ const generateMovementTicket = (movement, outStream) => {
     sectionBanner(doc, 'Destinataire', LEFT + boxW + 16, rightBannerY, boxW);
 
     const boxH = 50;
-    doc.rect(LEFT, y, boxW, boxH).stroke('#CCCCCC');
+    doc.lineWidth(1).rect(LEFT, y, boxW, boxH).stroke(DARK);
     labelValue(doc, 'Entrepôt:', movement.transfer_source_name, LEFT + 8, y + 8, 60, boxW - 78);
     labelValue(doc, 'Référence:', movement.reference, LEFT + 8, y + 26, 60, boxW - 78);
 
     const rx = LEFT + boxW + 16;
-    doc.rect(rx, y, boxW, boxH).stroke('#CCCCCC');
+    doc.lineWidth(1).rect(rx, y, boxW, boxH).stroke(DARK);
     labelValue(doc, 'Entrepôt:', movement.transfer_dest_name, rx + 8, y + 8, 60, boxW - 78);
     y += boxH + 8;
   }
 
   if (movement.type === 'Return') {
     y = sectionBanner(doc, 'Informations Retour', LEFT + 30, y, WIDTH - 60);
-    doc.rect(LEFT, y, WIDTH, 40).stroke('#CCCCCC');
+    doc.lineWidth(1).rect(LEFT, y, WIDTH, 40).stroke(DARK);
     labelValue(doc, 'Destination:', movement.returned_to_name, LEFT + 8, y + 5, 80, 200);
     labelValue(doc, 'Motif:', movement.reason, LEFT + 8, y + 20, 80, 200);
     y += 48;
