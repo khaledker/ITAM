@@ -105,7 +105,7 @@ export default function UsersPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+      <div className="border border-neutral-200 bg-white shadow-sm overflow-hidden">
         <Table<Employee>
           columns={columns}
           rows={employees}
@@ -113,6 +113,7 @@ export default function UsersPage() {
           loading={isLoading}
           hoverable
           striped
+          className="border-none rounded-none"
         />
       </div>
     </div>

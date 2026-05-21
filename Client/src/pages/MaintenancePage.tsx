@@ -18,13 +18,7 @@ function formatList(value?: string | null): string[] {
   return value ? value.split(',').map(s => s.trim()).filter(Boolean) : []
 }
 
-function assetSummary(movement: AssetMovement): string {
-  const tags = formatList(movement.tag)
-  const count = movement.asset_count ?? tags.length
-  if (!tags.length) return `Movement #${movement.id}`
-  if (count <= 1) return tags[0]
-  return `${tags[0]} & ${count - 1} more`
-}
+
 
 function movementActionText(m: AssetMovement): string {
   if (m.status === 'Rejected') return 'This movement was rejected and will not change asset status, location, or assignment data.'
@@ -98,7 +92,7 @@ export default function MaintenancePage() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<number | null>(null)
   const [detailMovement, setDetailMovement] = useState<AssetMovement | null>(null)
-  const [detailLoading, setDetailLoading] = useState(false)
+  const [, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
 
   // ── Load with server-side filters ─────────────────────────
@@ -455,7 +449,7 @@ export default function MaintenancePage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-neutral-300 bg-white shadow-md overflow-hidden">
+      <div className="border border-neutral-300 bg-white shadow-md overflow-hidden">
         <Table<AssetMovement>
           columns={columns}
           rows={movements}
@@ -464,6 +458,7 @@ export default function MaintenancePage() {
           hoverable
           striped
           onRowClick={row => void openDetails(row)}
+          className="border-none rounded-none"
         />
         {!isLoading && movements.length === 0 && (
           <p className="py-10 text-center text-sm text-neutral-400">

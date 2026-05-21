@@ -293,7 +293,7 @@ export default function SearchPage() {
       </div>
 
       {results && (
-        <div className="rounded-xl border border-neutral-300 bg-white shadow-sm overflow-hidden mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="border border-neutral-300 bg-white shadow-sm overflow-hidden mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
            <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4 flex items-center justify-between">
              <div className="flex items-center gap-2">
                <Server className="h-5 w-5 text-neutral-500" />
@@ -305,7 +305,7 @@ export default function SearchPage() {
            {results.length === 0 ? (
              <div className="p-10 text-center text-sm text-neutral-500">No assets match your complex criteria.</div>
            ) : (
-             <Table<Asset> columns={columns} rows={results} rowKey="id" hoverable striped />
+             <Table<Asset> columns={columns} rows={results} rowKey="id" hoverable striped className="border-none rounded-none" />
            )}
         </div>
       )}
