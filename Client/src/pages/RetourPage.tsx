@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
-import { Button, Textarea, Table, type TableColumn, Input } from '@/components'
+import { Button, Textarea, Table, type TableColumn, Input, Select } from '@/components'
 import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
 import type { Asset, Employee, Location } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -98,7 +98,6 @@ export default function RetourPage() {
   }
 
   // ── Table columns ─────────────────────────────────────────────────────────
-  const selectCls = "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
 
   const columns: TableColumn<Asset>[] = [
     { key: 'tag', label: 'Tag', width: 'w-[15%]',
@@ -149,19 +148,19 @@ export default function RetourPage() {
           {/* Returned To (location) */}
           <div className="space-y-1.5">
             <label htmlFor="ret-location" className="block text-sm font-medium text-neutral-700">Return to (Warehouse)</label>
-            <select id="ret-location" value={returnedToId} onChange={e => setReturnedToId(e.target.value)} className={selectCls}>
+            <Select id="ret-location" value={returnedToId} onChange={e => setReturnedToId(e.target.value)}>
               <option value="">— Select location —</option>
               {locations.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-            </select>
+            </Select>
           </div>
 
           {/* Performed By */}
           <div className="space-y-1.5">
             <label htmlFor="ret-by" className="block text-sm font-medium text-neutral-700">Performed By</label>
-            <select id="ret-by" value={performedBy} onChange={e => setPerformedBy(e.target.value)} className={selectCls}>
+            <Select id="ret-by" value={performedBy} onChange={e => setPerformedBy(e.target.value)}>
               <option value="">— Defaults to you —</option>
               {employees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
-            </select>
+            </Select>
           </div>
 
           {/* Reason */}
