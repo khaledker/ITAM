@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Upload } from 'lucide-react'
-import { Button, Input, Textarea, Table, type TableColumn } from '@/components'
+import { Button, Input, Textarea, Table, type TableColumn, Select } from '@/components'
 import { assetsApi, employeesApi, locationsApi, suppliersApi, movementsApi, assetModelsApi } from '@/lib/api'
 import type { Employee, Location, Supplier, AssetModel } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -333,11 +333,10 @@ export default function ReceptionPage() {
           {/* Supplier */}
           <div className="space-y-1.5">
             <label htmlFor="rec-supplier" className="block text-sm font-medium text-neutral-700">Supplier</label>
-            <select id="rec-supplier" value={supplierId} onChange={e => setSupplierId(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+            <Select id="rec-supplier" value={supplierId} onChange={e => setSupplierId(e.target.value)}>
               <option value="">— Select supplier —</option>
               {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
-            </select>
+            </Select>
           </div>
 
           {/* PO Number */}
@@ -365,21 +364,19 @@ export default function ReceptionPage() {
           {/* Destination */}
           <div className="space-y-1.5">
             <label htmlFor="rec-dest" className="block text-sm font-medium text-neutral-700">Destination (Warehouse)</label>
-            <select id="rec-dest" value={destinationId} onChange={e => setDestinationId(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+            <Select id="rec-dest" value={destinationId} onChange={e => setDestinationId(e.target.value)}>
               <option value="">— Select location —</option>
               {locations.map(l => <option key={l.id} value={l.id}>{l.label} ({l.type ?? 'General'})</option>)}
-            </select>
+            </Select>
           </div>
 
           {/* Performed By */}
           <div className="space-y-1.5">
             <label htmlFor="rec-by" className="block text-sm font-medium text-neutral-700">Performed By</label>
-            <select id="rec-by" value={performedBy} onChange={e => setPerformedBy(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+            <Select id="rec-by" value={performedBy} onChange={e => setPerformedBy(e.target.value)}>
               <option value="">— Defaults to you —</option>
               {employees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
-            </select>
+            </Select>
           </div>
 
           {/* Observations */}
@@ -451,16 +448,17 @@ export default function ReceptionPage() {
         {rows.length > 0 && (
           <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm">
             <span className="text-sm font-medium text-amber-800 whitespace-nowrap">Bulk Apply Model:</span>
-            <select
-              value={bulkModelId}
-              onChange={e => setBulkModelId(e.target.value)}
-              className="max-w-md w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm text-neutral-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-            >
-              <option value="">— Select a model to apply to all rows below —</option>
-              {models.map(m => (
-                <option key={m.id} value={m.id}>{m.name} ({m.brand})</option>
-              ))}
-            </select>
+            <div className="max-w-md w-full">
+              <Select
+                value={bulkModelId}
+                onChange={e => setBulkModelId(e.target.value)}
+              >
+                <option value="">— Select a model to apply to all rows below —</option>
+                {models.map(m => (
+                  <option key={m.id} value={m.id}>{m.name} ({m.brand})</option>
+                ))}
+              </Select>
+            </div>
             <Button variant="primary" size="sm" onClick={handleApplyBulkModel} disabled={!bulkModelId}>
               Apply
             </Button>

@@ -94,8 +94,6 @@ function AddAssetModal({ models, locations, onClose, onSaved }: AddAssetModalPro
     }
   }
 
-  const selectCls = "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-
   return (
     /* Backdrop */
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -141,25 +139,25 @@ function AddAssetModal({ models, locations, onClose, onSaved }: AddAssetModalPro
               <label className="block text-sm font-medium text-neutral-700">
                 Model <span className="text-red-500">*</span>
               </label>
-              <select value={form.model_id || ''} onChange={e => update('model_id', Number(e.target.value))} className={selectCls} required>
+              <Select value={form.model_id || ''} onChange={e => update('model_id', Number(e.target.value))} required>
                 <option value="">— Select a model —</option>
                 {models.map(m => (
                   <option key={m.id} value={m.id}>
                     {m.name} — {m.brand ?? '?'} ({m.category ?? '?'})
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* Status */}
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-neutral-700">Status</label>
-              <select value={form.status} onChange={e => update('status', e.target.value)} className={selectCls}>
+              <Select value={form.status} onChange={e => update('status', e.target.value)}>
                 <option value="Available">Available</option>
                 <option value="Assigned">Assigned</option>
                 <option value="inMaintenance">In Maintenance</option>
                 <option value="retired">Retired</option>
-              </select>
+              </Select>
             </div>
 
             {/* Date Acquired */}
@@ -172,10 +170,10 @@ function AddAssetModal({ models, locations, onClose, onSaved }: AddAssetModalPro
             {/* Location */}
             <div className="space-y-1.5 col-span-2">
               <label className="block text-sm font-medium text-neutral-700">Location</label>
-              <select value={form.location_id ?? ''} onChange={e => update('location_id', e.target.value ? Number(e.target.value) : null)} className={selectCls}>
+              <Select value={form.location_id ?? ''} onChange={e => update('location_id', e.target.value ? Number(e.target.value) : null)}>
                 <option value="">— No location —</option>
                 {locations.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-              </select>
+              </Select>
             </div>
 
             {/* Description */}

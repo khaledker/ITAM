@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
-import { Button, Input, Textarea, Table, type TableColumn } from '@/components'
+import { Button, Input, Textarea, Table, type TableColumn, Select } from '@/components'
 import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
 import type { Asset, Employee, Location } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -158,18 +158,17 @@ export default function AffectationPage() {
             <label htmlFor="aff-employee" className="block text-sm font-medium text-neutral-700">
               Assign To <span className="text-red-500">*</span>
             </label>
-            <select
+            <Select
               id="aff-employee"
               value={assignedTo}
               onChange={e => setAssignedTo(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               required
             >
               <option value="">— Select employee —</option>
               {employees.map(e => (
                 <option key={e.id} value={e.id}>{e.full_name}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Source Location */}
@@ -177,17 +176,16 @@ export default function AffectationPage() {
             <label htmlFor="aff-source" className="block text-sm font-medium text-neutral-700">
               Source Location
             </label>
-            <select
+            <Select
               id="aff-source"
               value={sourceId}
               onChange={e => setSourceId(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="">— Select location —</option>
               {locations.map(l => (
                 <option key={l.id} value={l.id}>{l.label}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Expected Return */}

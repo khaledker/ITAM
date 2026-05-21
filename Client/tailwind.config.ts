@@ -42,8 +42,9 @@ const config: Config = {
           light: '#ECFDF5',
         },
         warning: {
-          DEFAULT: '#F59E0B',
-          light: '#FFFBEB',
+          DEFAULT: '#FFC107',
+          700: '#D39E00',
+          light: '#FFF8E1',
         },
         error: {
           DEFAULT: '#EF4444',

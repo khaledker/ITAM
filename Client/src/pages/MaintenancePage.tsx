@@ -3,7 +3,7 @@ import {
   CheckCircle, XCircle, RefreshCw, Clock, Eye, Printer,
   ArrowLeft, ArrowRightLeft, Search, SortAsc, SortDesc, Filter,
 } from 'lucide-react'
-import { Badge, Button, Table, type TableColumn } from '@/components'
+import { Badge, Button, Table, type TableColumn, Input, Select } from '@/components'
 import { movementsApi, type AssetMovement } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
@@ -409,25 +409,24 @@ export default function MaintenancePage() {
           {/* Asset tag search */}
           <div className="relative flex-1 min-w-[180px] max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
-            <input
+            <Input
               type="text"
               placeholder="Search asset tag…"
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 bg-white py-2 pl-9 pr-3 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+              className="pl-9"
             />
           </div>
 
           {/* Type filter */}
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-neutral-400 shrink-0" />
-            <select
+            <Select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value as typeof typeFilter)}
-              className="rounded-lg border border-neutral-300 bg-white py-2 pl-3 pr-8 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
             >
               {TYPE_OPTIONS.map(t => <option key={t} value={t}>{t === 'All' ? 'All Types' : t}</option>)}
-            </select>
+            </Select>
           </div>
 
           {/* Sort toggle */}

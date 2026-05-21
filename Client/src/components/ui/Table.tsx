@@ -87,12 +87,13 @@ function Table<T = any>({
   const isSorted = (columnKey: string) => sortConfig?.key === columnKey
 
   return (
-    <div className={cn('overflow-x-auto rounded-lg border border-neutral-300', className)}>
-      <table className="w-full table-fixed">
-        <thead>
-          <tr className="border-b border-neutral-300 bg-neutral-50">
-            {selectable && (
-              <th className="w-12 px-4 py-3">
+    <div className={cn('rounded-sm border border-neutral-400 overflow-hidden', className)}>
+      <div className="overflow-x-auto w-full">
+        <table className="w-full table-fixed">
+          <thead>
+            <tr className="border-b border-neutral-400 bg-neutral-200">
+              {selectable && (
+                <th className="w-8 px-2 py-1 text-center">
                 <Checkbox
                   checked={selectedRows.size === rows.length && rows.length > 0}
                   indeterminate={selectedRows.size > 0 && selectedRows.size < rows.length}
@@ -104,7 +105,7 @@ function Table<T = any>({
               <th
                 key={column.key}
                 className={cn(
-                  'px-4 py-3 text-left text-sm font-semibold text-neutral-700',
+                  'px-2 py-1 text-left text-xs font-bold text-neutral-800 uppercase',
                   column.width
                 )}
               >
@@ -151,14 +152,14 @@ function Table<T = any>({
                   key={rowId}
                   className={cn(
                     'border-b border-neutral-300 transition-colors',
-                    striped && rowIndex % 2 === 1 && 'bg-neutral-50',
-                    hoverable && 'hover:bg-neutral-100 cursor-pointer',
-                    isSelected && 'bg-primary bg-opacity-5'
+                    striped && rowIndex % 2 === 1 ? 'bg-neutral-50' : 'bg-white',
+                    hoverable && 'hover:bg-warning/20 cursor-pointer',
+                    isSelected && 'bg-warning/30 font-semibold'
                   )}
                   onClick={() => onRowClick?.(row)}
                 >
                   {selectable && (
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-2 py-1 flex items-center justify-center h-full" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={isSelected}
                         onChange={() => handleSelectRow(rowId)}
@@ -169,7 +170,7 @@ function Table<T = any>({
                     <td
                       key={`${rowId}-${column.key}`}
                       className={cn(
-                        'px-4 py-3 text-sm text-neutral-700',
+                        'px-2 py-1 text-xs text-neutral-800',
                         column.width
                       )}
                     >
@@ -193,6 +194,7 @@ function Table<T = any>({
           )}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

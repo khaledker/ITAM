@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
-import { Button, Textarea, Table, type TableColumn, Radio, Input } from '@/components'
+import { Button, Textarea, Table, type TableColumn, Radio, Input, Select } from '@/components'
 import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
 import type { Asset, Location } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -129,7 +129,6 @@ export default function TransferPage() {
   ]
 
   // ── Shared select style ───────────────────────────────────────────────────
-  const selectCls = "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
 
   return (
     <div className="space-y-6">
@@ -179,10 +178,10 @@ export default function TransferPage() {
             <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Source</h3>
             <div className="space-y-1.5">
               <label htmlFor="tr-source" className="block text-sm font-medium text-neutral-700">Location</label>
-              <select id="tr-source" value={sourceId} onChange={e => setSourceId(e.target.value)} className={selectCls}>
+              <Select id="tr-source" value={sourceId} onChange={e => setSourceId(e.target.value)}>
                 <option value="">— Select source location —</option>
                 {locations.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-              </select>
+              </Select>
             </div>
           </div>
 
@@ -193,15 +192,14 @@ export default function TransferPage() {
               <label htmlFor="tr-dest" className="block text-sm font-medium text-neutral-700">
                 Location <span className="text-red-500">*</span>
               </label>
-              <select id="tr-dest" value={destinationId} onChange={e => setDestinationId(e.target.value)} className={selectCls} required>
+              <Select id="tr-dest" value={destinationId} onChange={e => setDestinationId(e.target.value)} required>
                 <option value="">— Select destination —</option>
                 {locations.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-              </select>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <label htmlFor="tr-date" className="block text-sm font-medium text-neutral-700">Transfer Date</label>
-              <input id="tr-date" type="date" value={transferDate} onChange={e => setTransferDate(e.target.value)}
-                className={selectCls} />
+              <Input id="tr-date" type="date" value={transferDate} onChange={e => setTransferDate(e.target.value)} />
             </div>
           </div>
         </div>
@@ -212,18 +210,18 @@ export default function TransferPage() {
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3">
             <div className="space-y-1.5">
               <label htmlFor="tr-ref" className="block text-sm font-medium text-neutral-700">Reference</label>
-              <input id="tr-ref" type="text" placeholder="TR-2026-XXXX" value={reference}
-                onChange={e => setReference(e.target.value)} className={selectCls} />
+              <Input id="tr-ref" type="text" placeholder="TR-2026-XXXX" value={reference}
+                onChange={e => setReference(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <label htmlFor="tr-transport" className="block text-sm font-medium text-neutral-700">Transport Name</label>
-              <input id="tr-transport" type="text" placeholder="e.g. Relocation"
-                value={transportName} onChange={e => setTransportName(e.target.value)} className={selectCls} />
+              <Input id="tr-transport" type="text" placeholder="e.g. Relocation"
+                value={transportName} onChange={e => setTransportName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <label htmlFor="tr-contact" className="block text-sm font-medium text-neutral-700">Contact</label>
-              <input id="tr-contact" type="text" placeholder="Logistics team"
-                value={transportContact} onChange={e => setTransportContact(e.target.value)} className={selectCls} />
+              <Input id="tr-contact" type="text" placeholder="Logistics team"
+                value={transportContact} onChange={e => setTransportContact(e.target.value)} />
             </div>
           </div>
         </div>
