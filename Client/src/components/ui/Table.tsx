@@ -87,7 +87,7 @@ function Table<T = any>({
   const isSorted = (columnKey: string) => sortConfig?.key === columnKey
 
   return (
-    <div className={cn('rounded-sm border border-neutral-400 overflow-hidden', className)}>
+    <div className={cn('border border-neutral-400 overflow-hidden', className)}>
       <div className="overflow-x-auto w-full">
         <table className="w-full table-fixed">
           <thead>
@@ -153,8 +153,8 @@ function Table<T = any>({
                   className={cn(
                     'border-b border-neutral-300 transition-colors',
                     striped && rowIndex % 2 === 1 ? 'bg-neutral-50' : 'bg-white',
-                    hoverable && 'hover:bg-warning/20 cursor-pointer',
-                    isSelected && 'bg-warning/30 font-semibold'
+                    hoverable && 'hover:bg-primary/5 cursor-pointer',
+                    isSelected && 'bg-primary/10 font-semibold'
                   )}
                   onClick={() => onRowClick?.(row)}
                 >

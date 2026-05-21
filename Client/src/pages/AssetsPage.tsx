@@ -304,7 +304,7 @@ export default function AssetsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [categoryFilter, setCategoryFilter] = useState('All')
-  const [sortConfig, setSortConfig] = useState<SortConfig | undefined>(undefined)
+  const [sortConfig, setSortConfig] = useState<SortConfig | undefined>({ key: 'createdAt', direction: 'desc' })
 
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false)
@@ -507,7 +507,7 @@ export default function AssetsPage() {
 
       {/* Search + Add */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full max-w-sm shrink-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <Input
             id="asset-search"

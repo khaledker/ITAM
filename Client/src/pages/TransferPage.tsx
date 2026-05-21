@@ -1,19 +1,11 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
+import { User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
 import { Button, Textarea, Table, type TableColumn, Radio, Input, Select } from '@/components'
 import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
 import type { Asset, Location } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-interface SelectedAsset {
-  id: number
-  tag: string
-  modelName: string
-  brand: string
-  category: string
-}
 
 type TransferType = 'stock' | 'pannes' | 'reformes'
 
