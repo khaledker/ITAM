@@ -103,63 +103,68 @@ function drawSignatureBoxes(doc, leftTitle, leftName, rightTitle, rightName) {
   doc.y = y + boxH + 10;
 }
 
-// ── Asset Table (optimized for high volume) ──────────────────────────────
+// ── Asset Table (optimized for bulk) ──────────────────────────────
 function drawAssetTable(doc, assets, startY) {
-  const colX = [LEFT, LEFT + 70, LEFT + 220, LEFT + 370];
-  const colW = [70, 150, 150, WIDTH - 370 - LEFT + 40];
-  const headers = ['Marque', 'Modèle', 'SN', 'Tag'];
+  const colX = [LEFT, LEFT + 120, LEFT + 380];
+  const colW = [120, 260, 135];
+  const headers = ['Marque', 'Modèle', 'Quantité'];
   const ROW_H = 14;
   const HDR_H = 18;
   const PAGE_BOTTOM = 700; // leave room for signatures
 
   let y = startY;
 
-  // Draw header row
   const drawHeader = (yy) => {
     doc.lineWidth(1).rect(LEFT, yy, WIDTH, HDR_H).fillAndStroke('#E0E0E0', DARK);
-    doc.fill(DARK).font('Helvetica-Bold').fontSize(7.5);
+    doc.fill(DARK).font('Helvetica-Bold').fontSize(8);
     headers.forEach((h, i) => doc.text(h, colX[i] + 4, yy + 5, { width: colW[i] }));
     return yy + HDR_H;
   };
 
   y = drawHeader(y);
 
-  // Group by category
+  // Group by category, then by model
   const categories = {};
   assets.forEach(a => {
     const cat = a.category || 'Other';
-    if (!categories[cat]) categories[cat] = [];
-    categories[cat].push(a);
+    if (!categories[cat]) categories[cat] = {};
+    const modelKey = `${a.brand}||${a.model}`;
+    if (!categories[cat][modelKey]) {
+      categories[cat][modelKey] = { brand: a.brand, model: a.model, qty: 0 };
+    }
+    categories[cat][modelKey].qty++;
   });
 
-  doc.font('Helvetica').fontSize(7);
+  doc.font('Helvetica').fontSize(8);
 
-  for (const [cat, items] of Object.entries(categories)) {
-    // Category header row
+  let totalQty = 0;
+
+  for (const [cat, models] of Object.entries(categories)) {
     if (y + ROW_H > PAGE_BOTTOM) { doc.addPage(); y = 50; y = drawHeader(y); }
     doc.rect(LEFT, y, WIDTH, ROW_H).fill(LIGHT);
-    doc.fill(DARK).font('Helvetica-Bold').fontSize(7).text(cat.toUpperCase(), LEFT + 4, y + 3);
+    doc.fill(DARK).font('Helvetica-Bold').fontSize(8).text(cat.toUpperCase(), LEFT + 4, y + 3);
     y += ROW_H;
-    doc.font('Helvetica').fontSize(7);
+    doc.font('Helvetica').fontSize(8);
 
-    for (const a of items) {
+    for (const m of Object.values(models)) {
       if (y + ROW_H > PAGE_BOTTOM) { doc.addPage(); y = 50; y = drawHeader(y); }
 
-      // Alternate row shading
       doc.lineWidth(1).rect(LEFT, y, WIDTH, ROW_H).fillAndStroke(WHITE, DARK);
       doc.fill(DARK);
-      doc.text(a.brand || '—',   colX[0] + 4, y + 3, { width: colW[0] - 8 });
-      doc.text(a.model || '—',   colX[1] + 4, y + 3, { width: colW[1] - 8 });
-      doc.text(a.serial || '—',  colX[2] + 4, y + 3, { width: colW[2] - 8 });
-      doc.text(a.tag || '—',     colX[3] + 4, y + 3, { width: colW[3] - 8 });
+      doc.text(m.brand || '—', colX[0] + 4, y + 3, { width: colW[0] - 8 });
+      doc.text(m.model || '—', colX[1] + 4, y + 3, { width: colW[1] - 8 });
+      doc.font('Helvetica-Bold').text(String(m.qty), colX[2] + 4, y + 3, { width: colW[2] - 8 });
+      doc.font('Helvetica');
       y += ROW_H;
+      totalQty += m.qty;
     }
   }
 
   // Quantity line
-  doc.font('Helvetica-Bold').fontSize(8).fill(DARK);
-  doc.text(`Qte:  ${assets.length}`, LEFT + 4, y + 4);
-  doc.y = y + 20;
+  y += 5;
+  doc.font('Helvetica-Bold').fontSize(10).fill(DARK);
+  doc.text(`Quantité Totale:  ${totalQty} équipements`, LEFT, y);
+  doc.y = y + 25;
 }
 
 // ── Main Generator ──────────────────────────────────────────────────────

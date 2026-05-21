@@ -15,7 +15,7 @@ function formatDate(iso: string): string {
 }
 
 function formatList(value?: string | null): string[] {
-  return value ? value.split(',').map(s => s.trim()).filter(Boolean) : []
+  return value ? value.split(/\|\||,/).map(s => s.trim()).filter(Boolean) : []
 }
 
 
@@ -298,9 +298,9 @@ export default function MaintenancePage() {
               {assetCount === 0 ? (
                 <div className="p-8 text-center text-sm text-neutral-500">No assets listed.</div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-neutral-50/80 text-neutral-500 border-b border-neutral-200">
+                <div className="overflow-x-auto max-h-[300px] overflow-y-auto border border-neutral-100 rounded-lg">
+                  <table className="w-full text-left text-sm relative">
+                    <thead className="bg-neutral-50/90 backdrop-blur-sm text-neutral-500 border-b border-neutral-200 sticky top-0 z-10">
                       <tr>
                         <th className="px-6 py-3 font-semibold w-16">#</th>
                         <th className="px-6 py-3 font-semibold">Asset Tag</th>

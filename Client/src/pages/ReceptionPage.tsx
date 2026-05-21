@@ -239,11 +239,11 @@ export default function ReceptionPage() {
         const newAsset = await assetsApi.create({
           tag: row.tag,
           serial_number: row.serialNumber || row.tag,
-          status: 'Available',
+          status: 'Pending',
           date_acq: deliveryDate,
           description: row.description || null,
           model_id: Number(currentModelId),
-          location_id: destinationId ? Number(destinationId) : null,
+          location_id: null, // Location is assigned upon reception approval
         } as any)
         succeeded.push({ tag: row.tag, id: newAsset.id })
       } catch (err) {
@@ -386,10 +386,13 @@ export default function ReceptionPage() {
           {saveResult.succeeded.length > 0 && (
             <div>
               <p className="text-xs font-medium text-green-700 mb-1">✓ Saved successfully:</p>
-              <div className="flex flex-wrap gap-1.5">
-                {saveResult.succeeded.map(s => (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {saveResult.succeeded.slice(0, 10).map(s => (
                   <span key={s.tag} className="text-xs bg-green-100 text-green-800 border border-green-200 rounded px-2 py-0.5 font-mono">{s.tag}</span>
                 ))}
+                {saveResult.succeeded.length > 10 && (
+                  <span className="text-xs text-green-700 ml-1 font-medium italic">+{saveResult.succeeded.length - 10} more...</span>
+                )}
               </div>
             </div>
           )}
@@ -398,12 +401,15 @@ export default function ReceptionPage() {
             <div>
               <p className="text-xs font-medium text-red-700 mb-1">✗ Skipped (still in list below):</p>
               <div className="space-y-1">
-                {saveResult.failed.map((f, i) => (
+                {saveResult.failed.slice(0, 10).map((f, i) => (
                   <div key={i} className="flex items-start gap-2 text-xs text-red-700">
                     <span className="font-mono bg-red-100 border border-red-200 rounded px-1.5 py-0.5 shrink-0">{f.tag}</span>
                     <span className="text-red-600">{f.reason}</span>
                   </div>
                 ))}
+                {saveResult.failed.length > 10 && (
+                  <div className="text-xs text-red-700 mt-2 font-medium italic">+{saveResult.failed.length - 10} more failures hidden.</div>
+                )}
               </div>
             </div>
           )}
