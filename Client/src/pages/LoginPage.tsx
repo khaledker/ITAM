@@ -138,6 +138,16 @@ export default function LoginPage() {
                 ) : 'Sign in'}
               </Button>
 
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/register')}
+                  className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors bg-transparent border-none cursor-pointer"
+                >
+                  Don't have an account? Request access
+                </button>
+              </div>
+
             </form>
           </div>
         </div>

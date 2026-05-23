@@ -4,8 +4,8 @@ const jwt    = require('jsonwebtoken');
 
 const login = async (user_name, password) => {
   const [rows] = await db.query(
-    'SELECT * FROM Employee WHERE user_name = ? AND actif = TRUE',
-    [user_name]
+    'SELECT * FROM Employee WHERE user_name = ? AND status = ?',
+    [user_name, 'active']
   );
 
   if (rows.length === 0) {

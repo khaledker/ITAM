@@ -1,11 +1,16 @@
 const db = require('../config/db');
+const bcrypt = require('bcryptjs');
 
 const findAll = async () => {
   const [rows] = await db.query(`
-    SELECT e.id, e.user_name, e.full_name, e.email, e.actif, e.role,
-           d.id AS department_id, d.code AS department_code, d.libelle AS department_name
+    SELECT e.id, e.user_name, e.full_name, e.email, e.status, e.role,
+           e.created_at, e.reviewed_at,
+           d.id AS department_id, d.code AS department_code, d.libelle AS department_name,
+           r.full_name AS reviewed_by_name
     FROM Employee e
     LEFT JOIN Department d ON e.department_id = d.id
+    LEFT JOIN Employee r ON e.reviewed_by = r.id
+    WHERE e.status = 'active'
     ORDER BY e.full_name
   `);
   return rows;
@@ -13,27 +18,32 @@ const findAll = async () => {
 
 const findById = async (id) => {
   const [rows] = await db.query(`
-    SELECT e.id, e.user_name, e.full_name, e.email, e.actif, e.role,
-           d.id AS department_id, d.code AS department_code, d.libelle AS department_name
+    SELECT e.id, e.user_name, e.full_name, e.email, e.status, e.role,
+           e.created_at, e.reviewed_at,
+           d.id AS department_id, d.code AS department_code, d.libelle AS department_name,
+           r.full_name AS reviewed_by_name
     FROM Employee e
     LEFT JOIN Department d ON e.department_id = d.id
+    LEFT JOIN Employee r ON e.reviewed_by = r.id
     WHERE e.id = ?
   `, [id]);
   return rows[0] || null;
 };
 
-const create = async ({ user_name, full_name, email, department_id, actif }) => {
+const create = async ({ user_name, full_name, email, department_id, status, password, role }) => {
+  const pwd = password || 'Djezzy@123';
+  const hashed = await bcrypt.hash(pwd, 10);
   const [result] = await db.query(
-    'INSERT INTO Employee (user_name, full_name, email, department_id, actif, password) VALUES (?, ?, ?, ?, ?, ?)',
-    [user_name, full_name, email, department_id || null, actif ?? true, '']
+    'INSERT INTO Employee (user_name, full_name, email, department_id, status, password, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [user_name, full_name, email, department_id || null, status || 'active', hashed, role || 'Employee']
   );
   return findById(result.insertId);
 };
 
-const update = async (id, { full_name, email, department_id, actif }) => {
+const update = async (id, { full_name, email, department_id, status }) => {
   await db.query(
-    'UPDATE Employee SET full_name = ?, email = ?, department_id = ?, actif = ? WHERE id = ?',
-    [full_name, email, department_id || null, actif ?? true, id]
+    'UPDATE Employee SET full_name = ?, email = ?, department_id = ?, status = ? WHERE id = ?',
+    [full_name, email, department_id || null, status || 'active', id]
   );
   return findById(id);
 };
@@ -52,7 +62,8 @@ const getAssignedAssets = async (employeeId) => {
            mv.date AS assigned_date
     FROM Assignment asn
     JOIN AssetMovement mv ON asn.id = mv.id
-    JOIN Asset a ON mv.asset_id = a.id
+    JOIN MovementItem mi ON mv.id = mi.movement_id
+    JOIN Asset a ON mi.asset_id = a.id
     JOIN AssetModel am ON a.model_id = am.id
     WHERE asn.assigned_to = ?
       AND mv.status = 'Approved'

@@ -16,6 +16,8 @@ USE itam;
 
 -- ── Wipe in reverse FK order ─────────────────────────────
 SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE ManagerPermission;
+TRUNCATE TABLE ManagerLocation;
 TRUNCATE TABLE AssetReturn;
 TRUNCATE TABLE Transfer;
 TRUNCATE TABLE Assignment;
@@ -73,28 +75,28 @@ INSERT INTO AssetModel (id, name, code, brand, category, part_number) VALUES
 --    id=2  Manager  – password: Pass@1234
 --    id=3..7 Employee – password: Pass@1234
 -- ────────────────────────────────────────────────────────
-INSERT INTO Employee (id, user_name, full_name, email, password, actif, role, department_id) VALUES
+INSERT INTO Employee (id, user_name, full_name, email, password, status, role, department_id) VALUES
 (1, 'admin.sys',   'System Administrator', 'admin@itam.local',
     '$2b$10$GKFcFbH7GYLKCr7XrnC5T.K7I1hlB1yiKSmZP3N5OsEKRCY9F1qd6',  -- Admin@1234
-    TRUE, 'Admin', 1),
+    'active', 'Admin', 1),
 (2, 'm.belkacem',  'Mohamed Belkacem',     'm.belkacem@itam.local',
     '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',  -- Pass@1234
-    TRUE, 'Manager', 1),
+    'active', 'Manager', 1),
 (3, 's.rahmani',   'Sofia Rahmani',        's.rahmani@itam.local',
     '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    TRUE, 'Employee', 2),
+    'active', 'Employee', 2),
 (4, 'k.haddad',    'Karim Haddad',         'k.haddad@itam.local',
     '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    TRUE, 'Employee', 1),
+    'active', 'Employee', 1),
 (5, 'a.mekki',     'Amira Mekki',          'a.mekki@itam.local',
     '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    TRUE, 'Employee', 3),
+    'active', 'Employee', 3),
 (6, 'r.bouzid',    'Riad Bouzid',          'r.bouzid@itam.local',
     '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    FALSE, 'Employee', 4),   -- inactive – tests actif filter
+    'rejected', 'Employee', 4),   -- rejected – tests status filter
 (7, 'l.hamza',     'Leila Hamza',          'l.hamza@itam.local',
     '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    TRUE, 'Employee', 2);
+    'active', 'Employee', 2);
 
 -- ────────────────────────────────────────────────────────
 -- 6. ASSETS  (10 rows – all 4 statuses represented)
