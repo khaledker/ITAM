@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Eye, Plus, Search, RotateCcw, X, CheckCircle, XCircle, User, CalendarClock } from 'lucide-react'
 import { Button, Input, Select, Badge, EmptyState, Table, type TableColumn, type SortConfig } from '@/components'
-import { assetsApi, assetModelsApi, locationsApi, type Asset, type AssetModel, type Location, type AssetMovement } from '@/lib/api'
+import { assetsApi, assetModelsApi, locationsApi, telemetryApi, type Asset, type AssetModel, type Location, type AssetMovement } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -205,18 +205,26 @@ interface ViewAssetModalProps {
 }
 
 function ViewAssetModal({ asset, onClose }: ViewAssetModalProps) {
+  const [activeTab, setActiveTab] = useState<'history' | 'health'>('history')
   const [history, setHistory] = useState<AssetMovement[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [healthLabels, setHealthLabels] = useState<any[]>([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+  const [isLoadingHealth, setIsLoadingHealth] = useState(true)
 
   useEffect(() => {
     assetsApi.getHistory(asset.id)
       .then(setHistory)
-      .finally(() => setIsLoading(false))
-  }, [asset.id])
+      .finally(() => setIsLoadingHistory(false))
+      
+    telemetryApi.getLabelHistory(asset.tag)
+      .then(res => setHealthLabels(res || []))
+      .catch(() => setHealthLabels([]))
+      .finally(() => setIsLoadingHealth(false))
+  }, [asset.id, asset.tag])
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-[95vw] sm:w-[700px] max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-2xl flex flex-col">
+      <div className="w-[95vw] sm:w-[800px] max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-2xl flex flex-col">
         <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">Asset Details: {asset.tag}</h2>
@@ -248,37 +256,130 @@ function ViewAssetModal({ asset, onClose }: ViewAssetModalProps) {
             </div>
           </div>
 
-          {/* History Timeline */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400">Movement History</h3>
-            
-            {isLoading ? (
-              <div className="space-y-3 animate-pulse">
-                {[1, 2].map(i => <div key={i} className="h-16 bg-neutral-50 rounded-lg" />)}
-              </div>
-            ) : history.length === 0 ? (
-              <p className="text-sm text-neutral-500 italic py-4 text-center border-2 border-dashed border-neutral-100 rounded-xl">No history records found for this asset.</p>
-            ) : (
-              <div className="relative space-y-4 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-neutral-100">
-                {history.map((mov) => (
-                  <div key={mov.id} className="relative flex items-center gap-4 pl-10">
-                    <span className={`absolute left-0 mt-1 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white bg-neutral-100 text-neutral-600 ring-1 ring-neutral-200`}>
-                      {mov.type === 'Reception' && <Plus className="h-4 w-4" />}
-                      {mov.type === 'Assignment' && <User className="h-4 w-4 text-blue-500" />}
-                      {mov.type === 'Transfer' && <RotateCcw className="h-4 w-4 text-orange-500" />}
-                      {mov.type === 'Return' && <CalendarClock className="h-4 w-4 text-green-500" />}
-                    </span>
-                    <div className="flex-1 rounded-xl border border-neutral-100 bg-neutral-50/50 p-3 shadow-sm">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-bold text-neutral-900">{mov.type}</p>
-                        <Badge variant={mov.status === 'Approved' ? 'active' : 'warning'}>{mov.status}</Badge>
-                      </div>
-                      <p className="mt-0.5 text-xs text-neutral-500">
-                        {formatDate(mov.date)} • Performed by {mov.performed_by_name}
-                      </p>
-                    </div>
+          {/* Tabs */}
+          <div className="border-b border-neutral-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'history'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
+                }`}
+              >
+                Movement History
+              </button>
+              <button
+                onClick={() => setActiveTab('health')}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'health'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
+                }`}
+              >
+                Telemetry Health
+              </button>
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          <div className="min-h-[250px]">
+            {activeTab === 'history' && (
+              <div className="space-y-3">
+                {isLoadingHistory ? (
+                  <div className="space-y-3 animate-pulse">
+                    {[1, 2].map(i => <div key={i} className="h-16 bg-neutral-50 rounded-lg" />)}
                   </div>
-                ))}
+                ) : history.length === 0 ? (
+                  <p className="text-sm text-neutral-500 italic py-4 text-center border-2 border-dashed border-neutral-100 rounded-xl">No history records found for this asset.</p>
+                ) : (
+                  <div className="relative space-y-4 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-neutral-100">
+                    {history.map((mov) => (
+                      <div key={mov.id} className="relative flex items-center gap-4 pl-10">
+                        <span className={`absolute left-0 mt-1 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white bg-neutral-100 text-neutral-600 ring-1 ring-neutral-200`}>
+                          {mov.type === 'Reception' && <Plus className="h-4 w-4" />}
+                          {mov.type === 'Assignment' && <User className="h-4 w-4 text-blue-500" />}
+                          {mov.type === 'Transfer' && <RotateCcw className="h-4 w-4 text-orange-500" />}
+                          {mov.type === 'Return' && <CalendarClock className="h-4 w-4 text-green-500" />}
+                        </span>
+                        <div className="flex-1 rounded-xl border border-neutral-100 bg-neutral-50/50 p-3 shadow-sm">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-bold text-neutral-900">{mov.type}</p>
+                            <Badge variant={mov.status === 'Approved' ? 'active' : 'warning'}>{mov.status}</Badge>
+                          </div>
+                          <p className="mt-0.5 text-xs text-neutral-500">
+                            {formatDate(mov.date)} • Performed by {mov.performed_by_name}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'health' && (
+              <div className="space-y-3">
+                {isLoadingHealth ? (
+                  <div className="space-y-3 animate-pulse">
+                    {[1, 2].map(i => <div key={i} className="h-20 bg-neutral-50 rounded-lg" />)}
+                  </div>
+                ) : healthLabels.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed border-neutral-100 rounded-xl">
+                    <CheckCircle className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
+                    <p className="text-sm text-neutral-500 italic">No telemetry data recorded.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Render the latest label prominent, then historical */}
+                    {healthLabels.map((lbl, idx) => {
+                      const isLatest = idx === 0;
+                      return (
+                        <div key={lbl.id} className={`rounded-xl border p-4 ${isLatest ? 'border-primary/30 bg-primary/5 shadow-sm' : 'border-neutral-100 bg-neutral-50'}`}>
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-neutral-900">Score: {lbl.risk_score}</span>
+                                {isLatest && <Badge variant="active">Latest</Badge>}
+                              </div>
+                              <p className="text-xs text-neutral-500 mt-1">
+                                Scanned: {new Date(lbl.scored_at).toLocaleString()}
+                              </p>
+                            </div>
+                            <Badge variant={lbl.risk_level === 'Critical' ? 'critical' : lbl.risk_level === 'At Risk' ? 'warning' : 'active'}>
+                              {lbl.risk_level}
+                            </Badge>
+                          </div>
+                          
+                          {lbl.triggered_rules && lbl.triggered_rules.length > 0 && (
+                            <div className="space-y-1.5 mt-3 pt-3 border-t border-neutral-200/60">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Triggered Rules</p>
+                              <div className="flex flex-col gap-1">
+                                {lbl.triggered_rules.map((r: any, rIdx: number) => (
+                                  <div key={rIdx} className="text-xs flex items-start gap-2 bg-white rounded p-1.5 border border-neutral-100">
+                                    <span className="font-medium text-neutral-700 min-w-[120px]">{r.label}</span>
+                                    <span className="text-red-600 break-words">{r.note}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {lbl.recommended_actions && lbl.recommended_actions.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-neutral-200/60">
+                               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1">Recommended Actions</p>
+                               <ul className="list-disc pl-4 text-xs text-neutral-600 space-y-0.5">
+                                 {lbl.recommended_actions.map((act: string, aIdx: number) => (
+                                   <li key={aIdx}>{act}</li>
+                                 ))}
+                               </ul>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
