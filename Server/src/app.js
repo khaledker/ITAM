@@ -12,6 +12,7 @@ const assetModelRoutes = require('./routes/assetModel.routes');
 const assetRoutes      = require('./routes/asset.routes');
 const movementRoutes   = require('./routes/movement.routes');
 const dashboardRoutes  = require('./routes/dashboard.routes');
+const telemetryRoutes  = require('./routes/telemetry.routes');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/asset-models', assetModelRoutes);
 app.use('/api/assets',       assetRoutes);
 app.use('/api/movements',    movementRoutes);
 app.use('/api/dashboard',    dashboardRoutes);
+app.use('/api/telemetry',    telemetryRoutes);
 
 // ── Health check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));

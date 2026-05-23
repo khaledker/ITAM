@@ -2,162 +2,143 @@ import { useState, useMemo, useEffect } from "react";
 import {
   AlertTriangle,
   ShieldAlert,
-  ListChecks,
+  Activity,
+  CheckCircle,
 } from "lucide-react";
 import { StatCard, Select, Button, Badge, Table, type TableColumn } from "@/components";
-import { dashboardApi, type FlaggedAsset } from "@/lib/api";
+import { telemetryApi, type DeviceHealthLabel, type TelemetrySummary } from "@/lib/api";
 
 export default function MonitoringPage() {
   const [filterRiskLevel, setFilterRiskLevel] = useState("all");
-  const [filterRule, setFilterRule] = useState("all");
-  const [flaggedAssets, setFlaggedAssets] = useState<FlaggedAsset[]>([]);
+  const [labels, setLabels] = useState<DeviceHealthLabel[]>([]);
+  const [summary, setSummary] = useState<TelemetrySummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hardcoded rules logic to toggle them on and off locally for the UI showcase
-  const [rules, setRules] = useState([
-    {
-      id: "1",
-      name: "Age > 3 years",
-      condition: "Asset age exceeds 3 years",
-      severity: "critical",
-      enabled: true,
-    },
-    {
-      id: "2",
-      name: "Age > 2 years",
-      condition: "Asset age exceeds 2 years",
-      severity: "high",
-      enabled: true,
-    },
-    {
-      id: "3",
-      name: "Age > 1 year",
-      condition: "Asset age exceeds 1 year",
-      severity: "medium",
-      enabled: true,
-    },
-    {
-      id: "4",
-      name: "Currently in maintenance",
-      condition: "Asset is currently undergoing maintenance",
-      severity: "high",
-      enabled: true,
-    },
-  ]);
-
   useEffect(() => {
-    dashboardApi.getSummary()
-      .then((data) => {
-        setFlaggedAssets(data.flaggedAssets || []);
+    setIsLoading(true);
+    Promise.all([
+      telemetryApi.getLabels(),
+      telemetryApi.getSummary()
+    ])
+      .then(([labelsData, summaryData]) => {
+        setLabels(labelsData);
+        setSummary(summaryData);
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
   }, []);
 
-  const handleToggleRule = (ruleId: string) => {
-    setRules(
-      rules.map((rule) =>
-        rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule
-      )
-    );
-  };
-
-  // Filter out assets if their corresponding rule is toggled off
-  const enabledFlaggedAssets = useMemo(() => {
-    return flaggedAssets.filter(asset => {
-      const correspondingRule = rules.find(r => r.name === asset.rule);
-      return correspondingRule ? correspondingRule.enabled : true;
+  const filteredLabels = useMemo(() => {
+    return labels.filter((label) => {
+      const riskMatch = filterRiskLevel === "all" || label.risk_level === filterRiskLevel;
+      return riskMatch;
     });
-  }, [flaggedAssets, rules]);
-
-  const filteredAssets = useMemo(() => {
-    return enabledFlaggedAssets.filter((asset) => {
-      const riskMatch = filterRiskLevel === "all" || asset.riskLevel === filterRiskLevel;
-      const ruleMatch = filterRule === "all" || asset.rule === filterRule;
-      return riskMatch && ruleMatch;
-    });
-  }, [filterRiskLevel, filterRule, enabledFlaggedAssets]);
+  }, [filterRiskLevel, labels]);
 
   const handleResetFilters = () => {
     setFilterRiskLevel("all");
-    setFilterRule("all");
   };
 
-  const assetTableColumns: TableColumn<FlaggedAsset>[] = [
-    { key: "assetTag", label: "Asset Tag", sortable: true, width: "15%" },
-    { key: "assetName", label: "Asset Model", sortable: true, width: "20%" },
-    { key: "category", label: "Category", width: "15%" },
-    { key: "rule", label: "Rule Triggered", width: "20%" },
+  const assetTableColumns: TableColumn<any>[] = [
+    { key: "asset_tag", label: "Asset Tag", sortable: true, width: "15%" },
+    { 
+      key: "model_name", 
+      label: "Asset Model", 
+      sortable: true, 
+      width: "20%",
+      render: (_, row) => <span>{row.brand} {row.model_name}</span>
+    },
+    { 
+      key: "risk_score", 
+      label: "Risk Score", 
+      sortable: true, 
+      width: "10%",
+      render: (val) => <span className="font-semibold">{val}</span>
+    },
     {
-      key: "riskLevel",
+      key: "risk_level",
       label: "Risk Level",
       width: "15%",
       render: (value) => {
-        const variantMap: Record<string, "active" | "inactive" | "warning" | "critical" | "maintenance"> = {
-          critical: "critical",
-          high: "warning",
-          medium: "warning",
-          low: "active",
+        const variantMap: Record<string, "active" | "inactive" | "warning" | "critical"> = {
+          Critical: "critical",
+          'At Risk': "warning",
+          Watch: "warning",
+          Healthy: "active",
         };
         return (
           <Badge variant={variantMap[value] || "inactive"}>
-            {value.charAt(0).toUpperCase() + value.slice(1)}
+            {value}
           </Badge>
         );
       },
     },
+    { 
+      key: "triggered_rules", 
+      label: "Issues Detected", 
+      width: "25%",
+      render: (rules: any[]) => {
+        if (!rules || rules.length === 0) return <span className="text-neutral-400">None</span>;
+        return (
+          <div className="flex flex-wrap gap-1">
+            {rules.slice(0, 2).map((r: any, idx) => (
+              <span key={idx} className="bg-red-50 text-red-700 border border-red-200 text-xs px-2 py-0.5 rounded-full" title={r.note}>
+                {r.label}
+              </span>
+            ))}
+            {rules.length > 2 && (
+              <span className="bg-neutral-100 text-neutral-600 text-xs px-2 py-0.5 rounded-full">
+                +{rules.length - 2} more
+              </span>
+            )}
+          </div>
+        );
+      }
+    },
     {
-      key: "ageDays",
-      label: "Age (Days)",
+      key: "scored_at",
+      label: "Last Synced",
       width: "15%",
-      render: (value) => <span>{value} days</span>,
+      render: (val) => {
+        const date = new Date(val);
+        return <span className="text-sm text-neutral-500">{date.toLocaleDateString()} {date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+      }
     },
   ];
-
-  const getRiskBadgeVariant = (
-    level: string
-  ): "active" | "inactive" | "warning" | "critical" | "maintenance" => {
-    switch (level) {
-      case "critical": return "critical";
-      case "high": return "warning";
-      case "medium": return "warning";
-      case "low": return "active";
-      default: return "inactive";
-    }
-  };
-
-  const totalFlaggedAssets = enabledFlaggedAssets.length;
-  const criticalCount = enabledFlaggedAssets.filter((a) => a.riskLevel === "critical").length;
-  const activeRulesCount = rules.filter((r) => r.enabled).length;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-          Monitoring
+          Intelligent Telemetry Monitoring
         </h1>
         <p className="text-neutral-500 text-sm">
-          System monitoring and proactive maintenance alerts.
+          Real-time hardware health analysis from local prediction agents.
         </p>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
-          label="Total Flagged Assets"
-          value={totalFlaggedAssets}
+          label="Total Monitored"
+          value={summary?.total_monitored || 0}
+          icon={<Activity className="h-6 w-6 text-blue-500" />}
+        />
+        <StatCard
+          label="Healthy"
+          value={summary?.healthy || 0}
+          icon={<CheckCircle className="h-6 w-6 text-emerald-500" />}
+        />
+        <StatCard
+          label="At Risk"
+          value={summary?.at_risk || 0}
           icon={<AlertTriangle className="h-6 w-6 text-amber-500" />}
         />
         <StatCard
-          label="Critical Risk"
-          value={criticalCount}
+          label="Critical"
+          value={summary?.critical || 0}
           icon={<ShieldAlert className="h-6 w-6 text-red-500" />}
-        />
-        <StatCard
-          label="Rules Active"
-          value={activeRulesCount}
-          icon={<ListChecks className="h-6 w-6 text-blue-500" />}
         />
       </div>
 
@@ -165,7 +146,7 @@ export default function MonitoringPage() {
       <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
         <h2 className="text-sm font-semibold text-neutral-900">Filters</h2>
         <div className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 md:max-w-[250px]">
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Risk Level
             </label>
@@ -175,24 +156,10 @@ export default function MonitoringPage() {
               onChange={(e) => setFilterRiskLevel(e.target.value)}
             >
               <option value="all">All</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-            </Select>
-          </div>
-          <div className="flex-1 min-w-0">
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Rule
-            </label>
-            <Select
-              id="rule-filter"
-              value={filterRule}
-              onChange={(e) => setFilterRule(e.target.value)}
-            >
-              <option value="all">All</option>
-              {rules.map(r => (
-                <option key={r.id} value={r.name}>{r.name}</option>
-              ))}
+              <option value="Healthy">Healthy</option>
+              <option value="Watch">Watch</option>
+              <option value="At Risk">At Risk</option>
+              <option value="Critical">Critical</option>
             </Select>
           </div>
           <Button variant="ghost" onClick={handleResetFilters}>
@@ -205,71 +172,21 @@ export default function MonitoringPage() {
       <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-neutral-900">
-            Flagged Assets ({filteredAssets.length})
+            Monitored Devices ({filteredLabels.length})
           </h2>
         </div>
 
         <div className="overflow-x-auto">
-          <Table<FlaggedAsset>
+          <Table<any>
             columns={assetTableColumns}
-            rows={filteredAssets}
+            rows={filteredLabels}
             rowKey="id"
             loading={isLoading}
             hoverable
           />
         </div>
       </div>
-
-      {/* Active Rules */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold text-neutral-900">
-            Active Maintenance Rules
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {rules.map((rule) => {
-            const flaggedCount = flaggedAssets.filter(a => a.rule === rule.name).length;
-            
-            return (
-              <div
-                key={rule.id}
-                className="border border-neutral-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-neutral-900">{rule.name}</h3>
-                    </div>
-                    <p className="text-sm text-neutral-600 mt-1">{rule.condition}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={rule.enabled}
-                      onChange={() => handleToggleRule(rule.id)}
-                      className="h-4 w-4 rounded border-neutral-300 text-primary cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
-                  <div className="text-sm">
-                    <span className="font-semibold text-neutral-900">
-                      {flaggedCount}
-                    </span>
-                    <span className="text-neutral-600"> assets flagged</span>
-                  </div>
-                  <Badge variant={getRiskBadgeVariant(rule.severity)}>
-                    {rule.severity.charAt(0).toUpperCase() + rule.severity.slice(1)}
-                  </Badge>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+      
     </div>
   );
 }
