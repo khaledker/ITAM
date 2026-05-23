@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Lock, User, Eye, EyeOff, AlertCircle, Mail, Briefcase, CheckCircle2 } from 'lucide-react'
+import { Lock, User, AlertCircle, Mail, Briefcase, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { departmentsApi, registrationApi, type Department } from '@/lib/api'
@@ -90,7 +90,7 @@ export default function RegisterPage() {
               <Button
                 onClick={() => navigate('/login')}
                 className="w-full mt-6"
-                variant="outline"
+                variant="secondary"
               >
                 Return to Sign In
               </Button>

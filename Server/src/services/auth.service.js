@@ -30,6 +30,12 @@ const login = async (user_name, password) => {
   );
 
   const { password: _, ...employeeData } = employee;
+  if (employee.role === 'Manager') {
+    const permissionService = require('./permission.service');
+    const perms = await permissionService.getPermissions(employee.id);
+    employeeData.permissions = perms.permissions || [];
+    employeeData.locationIds = perms.locationIds || [];
+  }
   return { token, employee: employeeData };
 };
 

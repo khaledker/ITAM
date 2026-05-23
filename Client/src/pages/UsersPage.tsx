@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ShieldAlert, CheckCircle, XCircle, Key, Shield, MapPin, Search, Filter, UserPlus, ThumbsUp, ThumbsDown, Plus } from 'lucide-react'
+import { ShieldAlert, CheckCircle, XCircle, Key, Shield, MapPin, Search, Filter, ThumbsUp, ThumbsDown, Plus } from 'lucide-react'
 import { Badge, Table, Button, Modal, Input, type TableColumn } from '@/components'
 import { employeesApi, locationsApi, departmentsApi, registrationApi, type Employee, type Location, type Department } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -316,7 +316,7 @@ export default function UsersPage() {
             <ThumbsUp className="h-3 w-3" /> Approve
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => handleRejectRequest(v)}
             className="border-neutral-200 text-neutral-600 hover:text-red-600 hover:bg-red-50 flex items-center gap-1 py-1 px-2.5 text-xs rounded cursor-pointer"
