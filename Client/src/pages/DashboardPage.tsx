@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Server, CheckCircle, Wrench, Clock } from 'lucide-react'
+import { Server, CheckCircle, Wrench, Clock, Activity, ShieldAlert, AlertTriangle } from 'lucide-react'
 import { StatCard } from '../components/ui/StatCard'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Table, type TableColumn } from '../components/ui/Table'
-import { dashboardApi, type RecentMovement, type DashboardSummary } from '@/lib/api'
+import { dashboardApi, telemetryApi, type RecentMovement, type DashboardSummary, type TelemetrySummary, type DeviceHealthLabel } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
+import { Link } from 'react-router-dom'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -31,13 +32,6 @@ const STATUS_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critic
   Draft:    'warning',
   Rejected: 'critical',
   Returned: 'maintenance',
-}
-
-const RISK_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critical' | 'maintenance'> = {
-  critical: 'critical',
-  high:     'warning',
-  medium:   'warning',
-  low:      'active',
 }
 
 // ── Table column definitions ──────────────────────────────────────────────────
@@ -113,19 +107,32 @@ function StatSkeleton() {
 export default function DashboardPage() {
   const { user } = useAuth()
   const [data, setData] = useState<DashboardSummary | null>(null)
+  const [telemetry, setTelemetry] = useState<{ summary: TelemetrySummary | null, labels: DeviceHealthLabel[] }>({ summary: null, labels: [] })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    dashboardApi.getSummary()
-      .then(setData)
+    Promise.all([
+      dashboardApi.getSummary(),
+      telemetryApi.getSummary(),
+      telemetryApi.getLabels()
+    ])
+      .then(([dashboardRes, tSummary, tLabels]) => {
+        setData(dashboardRes)
+        setTelemetry({ summary: tSummary, labels: tLabels || [] })
+      })
       .catch(err => setError(err instanceof Error ? err.message : 'Failed to load dashboard.'))
       .finally(() => setIsLoading(false))
   }, [])
 
   const stats = data?.stats
   const movements = data?.recentMovements ?? []
-  const flagged   = data?.flaggedAssets   ?? []
+  
+  // Filter for top critical issues to display on dashboard
+  const criticalAssets = (telemetry.labels || [])
+    .filter(l => l.risk_level === 'Critical' || l.risk_level === 'At Risk')
+    .sort((a, b) => b.risk_score - a.risk_score)
+    .slice(0, 4)
 
   return (
     <div className="min-h-screen p-6 max-w-7xl mx-auto space-y-8">
@@ -172,73 +179,122 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Recent Operations */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
-        <h2 className="text-xl font-semibold text-neutral-900">Recent Operations</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: Operations */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Recent Operations */}
+          <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+            <h2 className="text-xl font-semibold text-neutral-900">Recent Operations</h2>
 
-        {isLoading ? (
-          <div className="animate-pulse space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-10 rounded bg-neutral-100" />
-            ))}
+            {isLoading ? (
+              <div className="animate-pulse space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-10 rounded bg-neutral-100" />
+                ))}
+              </div>
+            ) : movements.length === 0 ? (
+              <p className="text-sm text-neutral-500 py-6 text-center">No operations recorded yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table<RecentMovement>
+                  columns={movementColumns}
+                  rows={movements}
+                  rowKey="id"
+                  hoverable
+                />
+              </div>
+            )}
           </div>
-        ) : movements.length === 0 ? (
-          <p className="text-sm text-neutral-500 py-6 text-center">No operations recorded yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table<RecentMovement>
-              columns={movementColumns}
-              rows={movements}
-              rowKey="id"
-              hoverable
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Monitoring & Alerts */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-neutral-900">Monitoring & Alerts</h2>
-          <p className="text-sm text-neutral-500 mt-0.5">Assets flagged by the system monitoring engine</p>
         </div>
 
-        {isLoading ? (
-          <div className="animate-pulse grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 rounded-lg bg-neutral-100" />
-            ))}
-          </div>
-        ) : flagged.length === 0 ? (
-          <p className="text-sm text-neutral-500 py-6 text-center">
-            🎉 No assets currently flagged for maintenance.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {flagged.map(asset => (
-              <div
-                key={asset.id}
-                className="border border-neutral-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <div>
-                    <p className="font-semibold text-neutral-900">{asset.assetTag}</p>
-                    <p className="text-sm text-neutral-500">{asset.assetName}</p>
-                  </div>
-                  <Badge variant={RISK_VARIANT[asset.riskLevel] ?? 'inactive'}>
-                    {asset.riskLevel.charAt(0).toUpperCase() + asset.riskLevel.slice(1)}
-                  </Badge>
-                </div>
-                <p className="text-sm text-neutral-600 mb-3">{asset.rule}</p>
-                <Button variant="ghost" size="sm" className="text-primary">
-                  View Asset
-                </Button>
+        {/* Right Column: AI Telemetry Widgets */}
+        <div className="space-y-8">
+          
+          <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-5">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-900">AI Device Health</h2>
+                <p className="text-sm text-neutral-500">Live telemetry agent overview</p>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              <Activity className="h-5 w-5 text-indigo-500" />
+            </div>
 
+            {isLoading ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-10 bg-neutral-100 rounded" />
+                <div className="h-10 bg-neutral-100 rounded" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-lg border border-neutral-100">
+                  <span className="text-sm font-medium text-neutral-600">Total Monitored</span>
+                  <span className="font-bold text-neutral-900">{telemetry.summary?.total_monitored || 0}</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-emerald-600">{telemetry.summary?.healthy || 0}</div>
+                    <div className="text-xs font-medium text-emerald-800 mt-1">Healthy</div>
+                  </div>
+                  <div className="bg-red-50 border border-red-100 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-red-600">{telemetry.summary?.critical || 0}</div>
+                    <div className="text-xs font-medium text-red-800 mt-1">Critical</div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Link to="/monitoring">
+                    <Button variant="outline" className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+                      Open Full Monitoring
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold text-neutral-900">Priority Alerts</h2>
+              <p className="text-sm text-neutral-500">Top risks requiring attention</p>
+            </div>
+
+            {isLoading ? (
+               <div className="animate-pulse h-24 rounded-lg bg-neutral-100" />
+            ) : criticalAssets.length === 0 ? (
+              <div className="text-center py-6 border border-dashed border-neutral-200 rounded-lg">
+                <CheckCircle className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
+                <p className="text-sm text-neutral-600">No critical assets found.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {criticalAssets.map(asset => (
+                  <div key={asset.id} className="border border-red-100 bg-red-50/50 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-semibold text-neutral-900">{asset.asset_tag}</span>
+                      <Badge variant={asset.risk_level === 'Critical' ? 'critical' : 'warning'}>
+                        {asset.risk_level}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-neutral-600 line-clamp-1 mb-2">
+                      {(asset.triggered_rules || []).map(r => r.label).join(', ') || 'Unknown Issue'}
+                    </p>
+                    {asset.asset_id && (
+                      <Link to={`/assets/${asset.asset_id}`}>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs text-red-600 px-0">
+                          Inspect Asset &rarr;
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
     </div>
   )
 }
