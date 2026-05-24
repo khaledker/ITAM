@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const errorHandler = require('./middleware/errorHandler');
 
 const authRoutes       = require('./routes/auth.routes');
+const registrationRoutes = require('./routes/registration.routes');
 const employeeRoutes   = require('./routes/employee.routes');
 const departmentRoutes = require('./routes/department.routes');
 const supplierRoutes   = require('./routes/supplier.routes');
@@ -12,6 +13,7 @@ const assetModelRoutes = require('./routes/assetModel.routes');
 const assetRoutes      = require('./routes/asset.routes');
 const movementRoutes   = require('./routes/movement.routes');
 const dashboardRoutes  = require('./routes/dashboard.routes');
+const permissionRoutes = require('./routes/permission.routes');
 const telemetryRoutes  = require('./routes/telemetry.routes');
 
 const app = express();
@@ -23,6 +25,7 @@ app.use(express.json());
 
 // ── Routes ───────────────────────────────────────────────
 app.use('/api/auth',         authRoutes);
+app.use('/api/registration', registrationRoutes);
 app.use('/api/employees',    employeeRoutes);
 app.use('/api/departments',  departmentRoutes);
 app.use('/api/suppliers',    supplierRoutes);
@@ -31,6 +34,7 @@ app.use('/api/asset-models', assetModelRoutes);
 app.use('/api/assets',       assetRoutes);
 app.use('/api/movements',    movementRoutes);
 app.use('/api/dashboard',    dashboardRoutes);
+app.use('/api/employees',    permissionRoutes);  // permission sub-routes (:id/permissions)
 app.use('/api/telemetry',    telemetryRoutes);
 
 // ── Health check ─────────────────────────────────────────

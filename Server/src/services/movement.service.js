@@ -48,7 +48,7 @@ const findById = async (id) => {
   return rows[0] || null;
 };
 
-const findAll = async ({ type, status, asset_id, search, sort } = {}) => {
+const findAll = async ({ type, status, asset_id, search, sort, scopeLocationIds } = {}) => {
   await db.query('SET SESSION group_concat_max_len = 1000000;');
   let query = `
     SELECT
@@ -75,6 +75,13 @@ const findAll = async ({ type, status, asset_id, search, sort } = {}) => {
     WHERE 1=1
   `;
   const params = [];
+
+  // Region/warehouse scoping for Managers
+  if (scopeLocationIds && scopeLocationIds.length > 0) {
+    query += ' AND a.location_id IN (?)';
+    params.push(scopeLocationIds);
+  }
+
   if (status)   { query += ' AND mv.status = ?';   params.push(status);   }
   if (asset_id) { query += ' AND mi.asset_id = ?'; params.push(asset_id); }
   if (search)   { query += ' AND a.tag LIKE ?';    params.push(`%${search}%`); }

@@ -7,6 +7,7 @@ import './App.css'
 
 // Import all pages
 import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import AssetsPage from './pages/AssetsPage'
 import SearchPage from './pages/SearchPage'
@@ -77,11 +78,15 @@ function AppLayout() {
 
 function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <AppLayout />
-      </AuthProvider>
-    </ToastProvider>
+    <AuthProvider>
+      <ToastProvider>
+        <Routes>
+          <Route path="/login"    element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/*"        element={<AppShell />} />
+        </Routes>
+      </ToastProvider>
+    </AuthProvider>
   )
 }
 

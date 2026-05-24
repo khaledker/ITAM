@@ -123,6 +123,12 @@ export const employeesApi = {
   update: (id: number, body: Partial<Employee>) => request<Employee>(`/employees/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   remove: (id: number) => request<void>(`/employees/${id}`, { method: 'DELETE' }),
   updateRole: (id: number, role: 'Admin' | 'Manager' | 'Employee') => request<Employee>(`/employees/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
+  getPermissions: (id: number) => request<{ permissions: string[]; locationIds: number[] }>(`/employees/${id}/permissions`),
+  updatePermissions: (id: number, body: { permissions: string[]; locationIds: number[] }) =>
+    request<{ permissions: string[]; locationIds: number[] }>(`/employees/${id}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
 };
 
 // ── Departments ───────────────────────────────────────────
@@ -172,8 +178,13 @@ export interface Employee {
   full_name: string;
   email: string;
   role: 'Admin' | 'Manager' | 'Employee';
-  actif: boolean;
+  status: 'pending' | 'active' | 'rejected';
   department_id: number | null;
+  department_name?: string | null;
+  reviewed_by_name?: string | null;
+  created_at?: string;
+  reviewed_at?: string | null;
+  password?: string;
 }
 
 export interface Asset {

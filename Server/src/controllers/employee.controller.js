@@ -14,10 +14,10 @@ const getOne = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   try {
-    const { user_name, full_name, email, department_id, actif } = req.body;
+    const { user_name, full_name, email, department_id, status, password, role } = req.body;
     if (!user_name || !full_name || !email)
       return res.status(400).json({ message: 'user_name, full_name, email are required.' });
-    res.status(201).json(await svc.create({ user_name, full_name, email, department_id, actif }));
+    res.status(201).json(await svc.create({ user_name, full_name, email, department_id, status, password, role }));
   } catch (err) { next(err); }
 };
 

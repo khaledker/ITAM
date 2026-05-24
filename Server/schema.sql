@@ -71,10 +71,14 @@ CREATE TABLE Employee (
     full_name     VARCHAR(150) NOT NULL,
     email         VARCHAR(150) NOT NULL UNIQUE,
     password      VARCHAR(255) NOT NULL DEFAULT '',
-    actif         BOOLEAN      DEFAULT TRUE,
+    status        VARCHAR(20)  NOT NULL DEFAULT 'active'
+                      CHECK (status IN ('pending', 'active', 'rejected')),
     role          VARCHAR(50)  NOT NULL DEFAULT 'Employee'
                       CHECK (role IN ('Admin', 'Manager', 'Employee')),
     department_id INT,
+    reviewed_by   INT,
+    reviewed_at   TIMESTAMP NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id) REFERENCES Department(id)
 );
 
@@ -181,6 +185,31 @@ CREATE TABLE AssetReturn (
     returned_to INT,
     FOREIGN KEY (id)          REFERENCES AssetMovement(id) ON DELETE CASCADE,
     FOREIGN KEY (returned_to) REFERENCES Location(id)
+);
+-- --------------------------------------------------------
+-- 12. MANAGER PERMISSION  (granular functionality per manager)
+-- --------------------------------------------------------
+
+CREATE TABLE ManagerPermission (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id   INT NOT NULL,
+    permission    VARCHAR(50) NOT NULL
+                      CHECK (permission IN ('consultation', 'reception', 'assignment', 'transfer', 'return')),
+    UNIQUE KEY uq_mgr_perm (employee_id, permission),
+    FOREIGN KEY (employee_id) REFERENCES Employee(id) ON DELETE CASCADE
+);
+
+-- --------------------------------------------------------
+-- 13. MANAGER LOCATION  (regional / warehouse scoping)
+-- --------------------------------------------------------
+
+CREATE TABLE ManagerLocation (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id   INT NOT NULL,
+    location_id   INT NOT NULL,
+    UNIQUE KEY uq_mgr_loc (employee_id, location_id),
+    FOREIGN KEY (employee_id) REFERENCES Employee(id) ON DELETE CASCADE,
+    FOREIGN KEY (location_id) REFERENCES Location(id) ON DELETE CASCADE
 );
 
 -- --------------------------------------------------------

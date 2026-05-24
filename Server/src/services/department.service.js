@@ -31,7 +31,7 @@ const remove = async (id) => {
 // Get all employees in a department
 const getEmployees = async (departmentId) => {
   const [rows] = await db.query(
-    'SELECT id, user_name, full_name, email, actif FROM Employee WHERE department_id = ?',
+    'SELECT id, user_name, full_name, email, status FROM Employee WHERE department_id = ?',
     [departmentId]
   );
   return rows;

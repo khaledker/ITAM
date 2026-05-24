@@ -1,8 +1,8 @@
 const db = require('../config/db');
 
 // ── KPI Stats ─────────────────────────────────────────────
-const getStats = async () => {
-  const [rows] = await db.query(`
+const getStats = async ({ scopeLocationIds } = {}) => {
+  let query = `
     SELECT
       COUNT(*)                            AS total,
       SUM(status = 'Available')           AS available,
@@ -10,12 +10,25 @@ const getStats = async () => {
       SUM(status IN ('inMaintenance',
                      'Maintenance'))      AS in_maintenance
     FROM Asset
-  `);
+  `;
+  const params = [];
+  if (scopeLocationIds && scopeLocationIds.length > 0) {
+    query += ' WHERE location_id IN (?)';
+    params.push(scopeLocationIds);
+  }
+  const [rows] = await db.query(query, params);
   return rows[0];
 };
 
 // ── Recent Movements (last 10) ────────────────────────────
-const getRecentMovements = async () => {
+const getRecentMovements = async ({ scopeLocationIds } = {}) => {
+  let whereClause = '';
+  const params = [];
+  if (scopeLocationIds && scopeLocationIds.length > 0) {
+    whereClause = ' AND a.location_id IN (?)';
+    params.push(scopeLocationIds);
+  }
+
   const [rows] = await db.query(`
     SELECT
       mv.id,
@@ -38,16 +51,24 @@ const getRecentMovements = async () => {
     LEFT JOIN Assignment  asn ON asn.id = mv.id
     LEFT JOIN Transfer    t   ON t.id   = mv.id
     LEFT JOIN AssetReturn ar  ON ar.id  = mv.id
+    WHERE 1=1 ${whereClause}
     GROUP BY mv.id
     ORDER BY mv.date DESC, mv.id DESC
     LIMIT 10
-  `);
+  `, params);
   return rows;
 };
 
 // ── Maintenance Predictions ───────────────────────────────
 // Flag assets that are "inMaintenance" or were acquired > 1 year ago
-const getFlaggedAssets = async () => {
+const getFlaggedAssets = async ({ scopeLocationIds } = {}) => {
+  let whereClause = '';
+  const params = [];
+  if (scopeLocationIds && scopeLocationIds.length > 0) {
+    whereClause = ' AND a.location_id IN (?)';
+    params.push(scopeLocationIds);
+  }
+
   const [rows] = await db.query(`
     SELECT
       a.id,
@@ -60,11 +81,12 @@ const getFlaggedAssets = async () => {
     FROM Asset a
     JOIN AssetModel am ON am.id = a.model_id
     WHERE
-      a.status IN ('inMaintenance', 'Maintenance')
-      OR DATEDIFF(CURDATE(), a.date_acq) > 365
+      (a.status IN ('inMaintenance', 'Maintenance')
+       OR DATEDIFF(CURDATE(), a.date_acq) > 365)
+      ${whereClause}
     ORDER BY age_days DESC
     LIMIT 8
-  `);
+  `, params);
 
   return rows.map((r) => {
     let rule = 'Under maintenance';

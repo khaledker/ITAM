@@ -1,6 +1,7 @@
 const { body } = require('express-validator');
 
 const VALID_ROLES = ['Admin', 'Manager', 'Employee'];
+const VALID_STATUSES = ['pending', 'active', 'rejected'];
 
 const create = [
   body('user_name')
@@ -24,9 +25,17 @@ const create = [
     .optional({ nullable: true })
     .isInt({ min: 1 }).withMessage('department_id must be a positive integer.'),
 
-  body('actif')
+  body('status')
     .optional()
-    .isBoolean().withMessage('actif must be a boolean.'),
+    .isIn(VALID_STATUSES).withMessage(`status must be one of: ${VALID_STATUSES.join(', ')}.`),
+
+  body('password')
+    .optional()
+    .isLength({ min: 8 }).withMessage('password must be at least 8 characters.'),
+
+  body('role')
+    .optional()
+    .isIn(VALID_ROLES).withMessage(`role must be one of: ${VALID_ROLES.join(', ')}.`),
 ];
 
 const update = [
@@ -46,9 +55,9 @@ const update = [
     .optional({ nullable: true })
     .isInt({ min: 1 }).withMessage('department_id must be a positive integer.'),
 
-  body('actif')
+  body('status')
     .optional()
-    .isBoolean().withMessage('actif must be a boolean.'),
+    .isIn(VALID_STATUSES).withMessage(`status must be one of: ${VALID_STATUSES.join(', ')}.`),
 ];
 
 const updateRole = [

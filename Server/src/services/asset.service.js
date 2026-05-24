@@ -43,9 +43,15 @@ const formatAsset = (row) => ({
   } : null,
 });
 
-const findAll = async ({ status, category, location_id, employee_id, tag, sn, user_name, region, site, brand, supplier_id } = {}) => {
+const findAll = async ({ status, category, location_id, employee_id, tag, sn, user_name, region, site, brand, supplier_id, scopeLocationIds } = {}) => {
   let query = BASE_SELECT + ' WHERE 1=1';
   const params = [];
+
+  // Region/warehouse scoping for Managers
+  if (scopeLocationIds && scopeLocationIds.length > 0) {
+    query += ' AND a.location_id IN (?)';
+    params.push(scopeLocationIds);
+  }
   
   if (status) { query += ' AND a.status = ?'; params.push(status); }
   if (category) { query += ' AND am.category = ?'; params.push(category); }
@@ -138,8 +144,8 @@ const getMovementHistory = async (assetId) => {
 };
 
 // ── Stats summary ─────────────────────────────────────────
-const getStats = async () => {
-  const [rows] = await db.query(`
+const getStats = async ({ scopeLocationIds } = {}) => {
+  let query = `
     SELECT
       COUNT(*)                        AS total,
       SUM(status = 'Available')       AS available,
@@ -147,7 +153,13 @@ const getStats = async () => {
       SUM(status = 'inMaintenance')   AS in_maintenance,
       SUM(status = 'retired')         AS retired
     FROM Asset
-  `);
+  `;
+  const params = [];
+  if (scopeLocationIds && scopeLocationIds.length > 0) {
+    query += ' WHERE location_id IN (?)';
+    params.push(scopeLocationIds);
+  }
+  const [rows] = await db.query(query, params);
   return rows[0];
 };
 
