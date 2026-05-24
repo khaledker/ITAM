@@ -160,23 +160,16 @@ export const dashboardApi = {
   getSummary: () => request<DashboardSummary>('/dashboard/summary'),
 };
 
-// ── Registration ──────────────────────────────────────────
-export const registrationApi = {
-  submit: (body: Partial<Employee> & { password?: string }) =>
-    request<Employee>('/registration', {
-      method: 'POST',
-      body: JSON.stringify(body),
-      skipAuth: true,
-    }),
-  getAll: (params?: Record<string, string>) => {
+// ── Telemetry ─────────────────────────────────────────────
+export const telemetryApi = {
+  getSummary: () => request<TelemetrySummary>('/telemetry/summary'),
+  getLabels: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request<Employee[]>(`/registration${query}`);
+    return request<DeviceHealthLabel[]>(`/telemetry/labels${query}`);
   },
-  approve: (id: number) => request<{ message: string }>(`/registration/${id}/approve`, { method: 'PATCH' }),
-  reject: (id: number) => request<{ message: string }>(`/registration/${id}/reject`, { method: 'PATCH' }),
-  getPendingCount: () => request<{ count: number }>('/registration/pending-count'),
+  getLabelHistory: (assetTag: string) =>
+    request<DeviceHealthLabel[]>(`/telemetry/labels/${assetTag}`),
 };
-
 
 // ── Shared types ──────────────────────────────────────────
 export interface Employee {
@@ -310,5 +303,33 @@ export interface DashboardSummary {
   stats: DashboardStats;
   recentMovements: RecentMovement[];
   flaggedAssets: FlaggedAsset[];
+}
+
+export interface DeviceHealthLabel {
+  id: number;
+  asset_tag: string;
+  scored_at: string;
+  risk_score: number;
+  risk_level: 'Healthy' | 'Watch' | 'At Risk' | 'Critical';
+  triggered_rules: TriggeredRule[];
+  recommended_action: string;
+  asset_id: number | null;
+}
+
+export interface TriggeredRule {
+  rule_id: string;
+  label: string;
+  value: any;
+  score_contribution: number;
+  note: string;
+}
+
+export interface TelemetrySummary {
+  total_monitored: number;
+  healthy: number;
+  watch: number;
+  at_risk: number;
+  critical: number;
+  no_telemetry: number;
 }
 

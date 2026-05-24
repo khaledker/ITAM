@@ -14,6 +14,7 @@ const assetRoutes      = require('./routes/asset.routes');
 const movementRoutes   = require('./routes/movement.routes');
 const dashboardRoutes  = require('./routes/dashboard.routes');
 const permissionRoutes = require('./routes/permission.routes');
+const telemetryRoutes  = require('./routes/telemetry.routes');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/assets',       assetRoutes);
 app.use('/api/movements',    movementRoutes);
 app.use('/api/dashboard',    dashboardRoutes);
 app.use('/api/employees',    permissionRoutes);  // permission sub-routes (:id/permissions)
+app.use('/api/telemetry',    telemetryRoutes);
 
 // ── Health check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
