@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Server, CheckCircle, Wrench, Clock, Activity, ShieldAlert, AlertTriangle } from 'lucide-react'
+import { Server, CheckCircle, Wrench, Clock, Activity } from 'lucide-react'
 import { StatCard } from '../components/ui/StatCard'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -179,37 +179,34 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="space-y-8">
         
-        {/* Left Column: Operations */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Recent Operations */}
-          <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
-            <h2 className="text-xl font-semibold text-neutral-900">Recent Operations</h2>
+        {/* Operations */}
+        <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+          <h2 className="text-xl font-semibold text-neutral-900">Recent Operations</h2>
 
-            {isLoading ? (
-              <div className="animate-pulse space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-10 rounded bg-neutral-100" />
-                ))}
-              </div>
-            ) : movements.length === 0 ? (
-              <p className="text-sm text-neutral-500 py-6 text-center">No operations recorded yet.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table<RecentMovement>
-                  columns={movementColumns}
-                  rows={movements}
-                  rowKey="id"
-                  hoverable
-                />
-              </div>
-            )}
-          </div>
+          {isLoading ? (
+            <div className="animate-pulse space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-10 rounded bg-neutral-100" />
+              ))}
+            </div>
+          ) : movements.length === 0 ? (
+            <p className="text-sm text-neutral-500 py-6 text-center">No operations recorded yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table<RecentMovement>
+                columns={movementColumns}
+                rows={movements}
+                rowKey="id"
+                hoverable
+              />
+            </div>
+          )}
         </div>
 
-        {/* Right Column: AI Telemetry Widgets */}
-        <div className="space-y-8">
+        {/* AI Telemetry Widgets */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
           <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-5">
             <div className="flex justify-between items-center">
@@ -245,7 +242,7 @@ export default function DashboardPage() {
 
                 <div className="pt-2">
                   <Link to="/monitoring">
-                    <Button variant="outline" className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+                    <Button variant="secondary" className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50">
                       Open Full Monitoring
                     </Button>
                   </Link>

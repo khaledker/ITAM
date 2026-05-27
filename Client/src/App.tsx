@@ -83,7 +83,7 @@ function App() {
         <Routes>
           <Route path="/login"    element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/*"        element={<AppShell />} />
+          <Route path="/*"        element={<AppLayout />} />
         </Routes>
       </ToastProvider>
     </AuthProvider>

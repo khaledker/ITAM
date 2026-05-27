@@ -333,3 +333,13 @@ export interface TelemetrySummary {
   no_telemetry: number;
 }
 
+// ── Registration ──────────────────────────────────────────
+export const registrationApi = {
+  submit: (body: Partial<Employee>) => request<{ message: string }>('/auth/register', { method: 'POST', body: JSON.stringify(body), skipAuth: true }),
+  getAll: (params?: Record<string, string>) => {
+    const query = params ? '?' + new URLSearchParams(params).toString() : '';
+    return request<Employee[]>(`/auth/registrations${query}`);
+  },
+  approve: (id: number) => request<{ message: string }>(`/auth/registrations/${id}/approve`, { method: 'PATCH' }),
+  reject: (id: number) => request<{ message: string }>(`/auth/registrations/${id}/reject`, { method: 'PATCH' }),
+};

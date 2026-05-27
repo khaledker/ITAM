@@ -101,29 +101,30 @@ const remove = async (id) => {
 const getMovementHistory = async (assetId) => {
   const [rows] = await db.query(`
     SELECT
-      mv.id, mv.date, mv.status AS movement_status,
-      e.full_name AS performed_by,
+      mv.id, mv.date, mv.status,
+      e.full_name AS performed_by_name,
+      mv.performed_by,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
         WHEN asn.id IS NOT NULL THEN 'Assignment'
         WHEN t.id   IS NOT NULL THEN 'Transfer'
         WHEN ar.id  IS NOT NULL THEN 'Return'
-      END AS movement_type,
+      END AS type,
       -- Reception fields
       r.purchase_order_number, r.receipt_number,
       sup.name AS supplier_name,
-      dest_r.label AS reception_destination,
+      dest_r.label AS reception_dest_name,
       -- Assignment fields
       asn.expected_return,
-      emp_asn.full_name AS assigned_to,
-      src_asn.label AS assignment_source,
+      emp_asn.full_name AS assigned_to_name,
+      src_asn.label AS assignment_source_name,
       -- Transfer fields
-      t.reference AS transfer_reference,
-      src_t.label AS transfer_source,
-      dest_t.label AS transfer_destination,
+      t.reference,
+      src_t.label AS transfer_source_name,
+      dest_t.label AS transfer_dest_name,
       -- Return fields
-      ar.reason AS return_reason,
-      ret.label AS returned_to
+      ar.reason,
+      ret.label AS returned_to_name
     FROM AssetMovement mv
     JOIN Employee e ON mv.performed_by = e.id
     LEFT JOIN Reception   r      ON r.id      = mv.id
