@@ -199,12 +199,12 @@ function AddAssetModal({ models, locations, onClose, onSaved }: AddAssetModalPro
 
 // ── View Asset Modal (Details + History) ───────────────────────────────────────
 
-interface ViewAssetModalProps {
+interface AssetDetailsViewProps {
   asset: Asset
-  onClose: () => void
+  onBack: () => void
 }
 
-function ViewAssetModal({ asset, onClose }: ViewAssetModalProps) {
+function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
   const [activeTab, setActiveTab] = useState<'history' | 'health'>('history')
   const [history, setHistory] = useState<AssetMovement[]>([])
   const [healthLabels, setHealthLabels] = useState<any[]>([])
@@ -223,19 +223,20 @@ function ViewAssetModal({ asset, onClose }: ViewAssetModalProps) {
   }, [asset.id, asset.tag])
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-[95vw] sm:w-[800px] max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
-          <div>
-            <h2 className="text-lg font-semibold text-neutral-900">Asset Details: {asset.tag}</h2>
-            <p className="text-xs text-neutral-500">{asset.modele.marque} {asset.modele.nom}</p>
-          </div>
-          <button onClick={onClose} className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
-            <X className="h-5 w-5" />
-          </button>
+    <div className="flex flex-col space-y-6">
+      <div className="flex items-center gap-4 border-b border-neutral-100 pb-4">
+        <button onClick={onBack} className="rounded-md p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 transition-colors">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+        <div>
+          <h2 className="text-2xl font-bold text-neutral-900">Asset Details: {asset.tag}</h2>
+          <p className="text-sm text-neutral-500">{asset.modele.marque} {asset.modele.nom}</p>
         </div>
+      </div>
 
-        <div className="p-6 space-y-6">
+      <div className="space-y-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           {/* Top Summary */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-1">
@@ -308,8 +309,33 @@ function ViewAssetModal({ asset, onClose }: ViewAssetModalProps) {
                             <Badge variant={mov.status === 'Approved' ? 'active' : 'warning'}>{mov.status}</Badge>
                           </div>
                           <p className="mt-0.5 text-xs text-neutral-500">
-                            {formatDate(mov.date)} • Performed by {mov.performed_by_name}
+                            {formatDate(mov.date)} • Performed by {mov.performed_by_name || 'System'}
                           </p>
+                          <div className="mt-2 text-sm text-neutral-700">
+                            {mov.type === 'Reception' && (
+                              <p>
+                                {mov.supplier_name && <span className="mr-3">Supplier: <span className="font-medium">{mov.supplier_name}</span></span>}
+                                {mov.reception_dest_name && <span>Destination: <span className="font-medium">{mov.reception_dest_name}</span></span>}
+                              </p>
+                            )}
+                            {mov.type === 'Assignment' && (
+                              <p>
+                                Assigned to <span className="font-medium">{mov.assigned_to_name || 'Unknown'}</span> 
+                                {mov.assignment_source_name && <span className="text-neutral-500 text-xs ml-1">(from {mov.assignment_source_name})</span>}
+                              </p>
+                            )}
+                            {mov.type === 'Transfer' && (
+                              <p>
+                                Transfer from <span className="font-medium">{mov.transfer_source_name || 'Unknown'}</span> to <span className="font-medium">{mov.transfer_dest_name || 'Unknown'}</span>
+                              </p>
+                            )}
+                            {mov.type === 'Return' && (
+                              <p>
+                                Returned to <span className="font-medium">{mov.returned_to_name || 'Unknown'}</span>
+                                {mov.reason && <span className="text-neutral-500 text-xs ml-2">Reason: {mov.reason}</span>}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -383,11 +409,6 @@ function ViewAssetModal({ asset, onClose }: ViewAssetModalProps) {
               </div>
             )}
           </div>
-        </div>
-        
-        <div className="flex items-center justify-end border-t border-neutral-100 p-4">
-          <Button variant="ghost" onClick={onClose}>Close</Button>
-        </div>
       </div>
     </div>
   )
@@ -585,90 +606,92 @@ export default function AssetsPage() {
         />
       )}
 
-      {showViewModal && selectedAsset && (
-        <ViewAssetModal
+      {showViewModal && selectedAsset ? (
+        <AssetDetailsView
           asset={selectedAsset}
-          onClose={() => { setShowViewModal(false); setSelectedAsset(null); }}
+          onBack={() => { setShowViewModal(false); setSelectedAsset(null); }}
         />
-      )}
+      ) : (
+        <>
+          {/* Header */}
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Assets</h1>
+            <p className="mt-1 text-sm text-neutral-500">Manage and monitor all IT assets</p>
+          </div>
 
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Assets</h1>
-        <p className="mt-1 text-sm text-neutral-500">Manage and monitor all IT assets</p>
-      </div>
+          {/* Success banner */}
+          {saveSuccess && (
+            <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+              <CheckCircle className="h-4 w-4 shrink-0" />
+              Asset created successfully and added to the database.
+            </div>
+          )}
 
-      {/* Success banner */}
-      {saveSuccess && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Asset created successfully and added to the database.
-        </div>
-      )}
+          {/* Search + Add */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full max-w-sm shrink-0">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <Input
+                id="asset-search"
+                placeholder="Search by model or tag…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            {isAdminOrManager && (
+              <Button id="add-asset-btn" variant="primary" onClick={openAddModal}>
+                <Plus className="h-4 w-4" />
+                Add Asset
+              </Button>
+            )}
+          </div>
 
-      {/* Search + Add */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-sm shrink-0">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-          <Input
-            id="asset-search"
-            placeholder="Search by model or tag…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-48">
+              <Select id="filter-status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{s === 'All' ? 'Filter by Status' : s}</option>
+                ))}
+              </Select>
+            </div>
+            <div className="w-48">
+              <Select id="filter-category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+                {CATEGORY_OPTIONS.map((c) => (
+                  <option key={c} value={c}>{c === 'All' ? 'Filter by Category' : c}</option>
+                ))}
+              </Select>
+            </div>
+            {hasActiveFilters && (
+              <Button id="reset-filters-btn" variant="ghost" size="sm" onClick={resetFilters}>
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset Filters
+              </Button>
+            )}
+          </div>
+
+          {/* Table */}
+          {loadError && (
+            <EmptyState
+              title="Unable to load assets"
+              description={loadError}
+              action={{ label: 'Retry', onClick: loadAssets }}
+            />
+          )}
+
+          <Table<Asset>
+            columns={columns}
+            rows={filteredAndSorted}
+            rowKey="id"
+            sortConfig={sortConfig}
+            onSort={setSortConfig}
+            loading={isLoading}
+            hoverable
+            striped
           />
-        </div>
-        {isAdminOrManager && (
-          <Button id="add-asset-btn" variant="primary" onClick={openAddModal}>
-            <Plus className="h-4 w-4" />
-            Add Asset
-          </Button>
-        )}
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="w-48">
-          <Select id="filter-status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>{s === 'All' ? 'Filter by Status' : s}</option>
-            ))}
-          </Select>
-        </div>
-        <div className="w-48">
-          <Select id="filter-category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-            {CATEGORY_OPTIONS.map((c) => (
-              <option key={c} value={c}>{c === 'All' ? 'Filter by Category' : c}</option>
-            ))}
-          </Select>
-        </div>
-        {hasActiveFilters && (
-          <Button id="reset-filters-btn" variant="ghost" size="sm" onClick={resetFilters}>
-            <RotateCcw className="h-3.5 w-3.5" />
-            Reset Filters
-          </Button>
-        )}
-      </div>
-
-      {/* Table */}
-      {loadError && (
-        <EmptyState
-          title="Unable to load assets"
-          description={loadError}
-          action={{ label: 'Retry', onClick: loadAssets }}
-        />
+        </>
       )}
-
-      <Table<Asset>
-        columns={columns}
-        rows={filteredAndSorted}
-        rowKey="id"
-        sortConfig={sortConfig}
-        onSort={setSortConfig}
-        loading={isLoading}
-        hoverable
-        striped
-      />
     </div>
   )
 }
