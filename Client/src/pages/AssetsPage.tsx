@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type AssetStatus = 'active' | 'maintenance' | 'warning' | 'critical' | 'inactive'
+type AssetStatus = 'Available' | 'Assigned' | 'inMaintenance' | 'retired'
 
 interface AssetCreateBody {
   tag: string
@@ -20,15 +20,21 @@ interface AssetCreateBody {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUS_OPTIONS = ['All', 'Active', 'Maintenance', 'Warning', 'Critical', 'Inactive'] as const
+const STATUS_OPTIONS = ['All', 'Available', 'Assigned', 'In Maintenance', 'Retired'] as const
 const CATEGORY_OPTIONS = ['All', 'Network', 'Server', 'UPS', 'Workstation', 'Printer', 'Laptop', 'Desktop', 'Printer'] as const
 
 const statusLabel: Record<AssetStatus, string> = {
-  active: 'Active',
-  maintenance: 'Maintenance',
-  warning: 'Warning',
-  critical: 'Critical',
-  inactive: 'Inactive',
+  Available: 'Available',
+  Assigned: 'Assigned',
+  inMaintenance: 'In Maintenance',
+  retired: 'Retired',
+}
+
+const statusVariant: Record<AssetStatus, 'active' | 'inactive' | 'warning' | 'critical' | 'maintenance' | 'assigned'> = {
+  Available: 'active',
+  Assigned: 'assigned',
+  inMaintenance: 'maintenance',
+  retired: 'inactive',
 }
 
 function formatDate(iso: string): string {
@@ -241,7 +247,7 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-1">
               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Status</p>
-              <Badge variant={asset.etat}>{asset.etat}</Badge>
+              <Badge variant={statusVariant[asset.etat]}>{statusLabel[asset.etat]}</Badge>
             </div>
             <div className="space-y-1">
               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Assigned To</p>
@@ -482,7 +488,7 @@ export default function AssetsPage() {
               <span className="text-sm font-medium text-neutral-700">{row.employee.full_name}</span>
             </>
           ) : (
-            <span className="text-xs italic text-neutral-400">Available</span>
+            <span className="text-xs italic text-neutral-400">—</span>
           )}
         </div>
       ),
@@ -491,7 +497,7 @@ export default function AssetsPage() {
       key: 'etat',
       label: 'Status',
       width: 'w-[10%]',
-      render: (value: AssetStatus) => <Badge variant={value}>{statusLabel[value] ?? value}</Badge>,
+      render: (value: AssetStatus) => <Badge variant={statusVariant[value]}>{statusLabel[value] ?? value}</Badge>,
     },
     {
       key: 'createdAt',
@@ -574,7 +580,8 @@ export default function AssetsPage() {
     }
 
     if (statusFilter !== 'All') {
-      result = result.filter((a) => a.etat === statusFilter.toLowerCase())
+      const mappedFilter = statusFilter === 'In Maintenance' ? 'inMaintenance' : statusFilter === 'Retired' ? 'retired' : statusFilter;
+      result = result.filter((a) => a.etat === mappedFilter)
     }
 
     if (categoryFilter !== 'All') {

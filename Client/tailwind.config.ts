@@ -59,6 +59,11 @@ const config: Config = {
           DEFAULT: '#8B5CF6',
           light: '#F5F3FF',
         },
+        // Assigned status (blue)
+        assigned: {
+          DEFAULT: '#3B82F6',
+          light: '#EFF6FF',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

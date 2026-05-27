@@ -24,7 +24,7 @@ export default function ReportsPage() {
         a.id,
         a.tag,
         a.partNum || '', // We don't have SN directly on this schema without expanding it, but partNum is there
-        a.etat,
+        a.etat === 'Available' ? 'Available' : a.etat === 'Assigned' ? 'Assigned' : a.etat === 'inMaintenance' ? 'In Maintenance' : a.etat === 'retired' ? 'Retired' : a.etat,
         a.modele?.nom || '',
         a.modele?.marque || '',
         a.modele?.categorie || '',

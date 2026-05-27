@@ -12,6 +12,7 @@ const badgeVariants = CVA(
         warning: 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-30',
         critical: 'bg-error bg-opacity-10 text-error border border-error border-opacity-30',
         maintenance: 'bg-maintenance bg-opacity-10 text-maintenance border border-maintenance border-opacity-30',
+        assigned: 'bg-assigned bg-opacity-10 text-assigned border border-assigned border-opacity-30',
       },
     },
     defaultVariants: {

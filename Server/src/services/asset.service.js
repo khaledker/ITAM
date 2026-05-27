@@ -19,9 +19,7 @@ const formatAsset = (row) => ({
   id:      row.id,
   tag:     row.tag,
   partNum: row.part_number || '—',
-  etat:    row.status?.toLowerCase() === 'assigned' ? 'active' : 
-           row.status?.toLowerCase() === 'inmaintenance' ? 'maintenance' : 
-           row.status?.toLowerCase() === 'retired' ? 'inactive' : 'active',
+  etat:    row.status || 'Available',
   createdAt: row.date_acq,
   modele: {
     nom:       row.model_name,
