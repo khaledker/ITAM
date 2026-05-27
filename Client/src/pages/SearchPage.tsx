@@ -66,11 +66,15 @@ export default function SearchPage() {
     { key: 'modele.categorie', label: 'Category', render: (_, r) => r.modele?.categorie || '—' },
     { key: 'employee.full_name', label: 'Assigned To', render: (_, r) => r.employee?.full_name || '—' },
     {
-      key: 'status', label: 'Status', render: (_, r) => (
-        <Badge variant={r.etat === 'active' ? 'active' : r.etat === 'maintenance' ? 'maintenance' : r.etat === 'inactive' ? 'inactive' : 'warning'}>
-          {r.etat}
-        </Badge>
-      )
+      key: 'status', label: 'Status', render: (_, r) => {
+        const variantMap: Record<string, any> = { Available: 'active', Assigned: 'assigned', inMaintenance: 'maintenance', retired: 'inactive' }
+        const labelMap: Record<string, string> = { Available: 'Available', Assigned: 'Assigned', inMaintenance: 'In Maintenance', retired: 'Retired' }
+        return (
+          <Badge variant={variantMap[r.etat] || 'inactive'}>
+            {labelMap[r.etat] || r.etat}
+          </Badge>
+        )
+      }
     },
   ]
 

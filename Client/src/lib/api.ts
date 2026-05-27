@@ -192,7 +192,7 @@ export interface Asset {
   tag: string;
   partNum: string;
   serial_number?: string;
-  etat: 'active' | 'maintenance' | 'warning' | 'critical' | 'inactive';
+  etat: 'Available' | 'Assigned' | 'inMaintenance' | 'retired';
   createdAt: string;
   modele: { nom: string; marque: string; categorie: string };
   employee?: { id: number; full_name: string } | null;
