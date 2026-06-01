@@ -1,18 +1,14 @@
 import { useState, useMemo, useEffect } from "react";
-import {
-  AlertTriangle,
-  ShieldAlert,
-  Activity,
-  CheckCircle,
-} from "lucide-react";
-import { StatCard, Select, Button, Badge, Table, type TableColumn } from "@/components";
-import { telemetryApi, type DeviceHealthLabel, type TelemetrySummary } from "@/lib/api";
+import { AlertTriangle, ShieldAlert, Activity, CheckCircle, ArrowLeft } from "lucide-react";
+import { StatCard, Select, Button, Badge, Table, type TableColumn, AssetDetailsView } from "@/components";
+import { telemetryApi, type DeviceHealthLabel, type TelemetrySummary, type Asset } from "@/lib/api";
 
 export default function MonitoringPage() {
   const [filterRiskLevel, setFilterRiskLevel] = useState("all");
   const [labels, setLabels] = useState<DeviceHealthLabel[]>([]);
   const [summary, setSummary] = useState<TelemetrySummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedLabel, setSelectedLabel] = useState<any | null>(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -41,17 +37,17 @@ export default function MonitoringPage() {
 
   const assetTableColumns: TableColumn<any>[] = [
     { key: "asset_tag", label: "Asset Tag", sortable: true, width: "15%" },
-    { 
-      key: "model_name", 
-      label: "Asset Model", 
-      sortable: true, 
+    {
+      key: "model_name",
+      label: "Asset Model",
+      sortable: true,
       width: "20%",
       render: (_, row) => <span>{row.brand} {row.model_name}</span>
     },
-    { 
-      key: "risk_score", 
-      label: "Risk Score", 
-      sortable: true, 
+    {
+      key: "risk_score",
+      label: "Risk Score",
+      sortable: true,
       width: "10%",
       render: (val) => <span className="font-semibold">{val}</span>
     },
@@ -73,9 +69,9 @@ export default function MonitoringPage() {
         );
       },
     },
-    { 
-      key: "triggered_rules", 
-      label: "Issues Detected", 
+    {
+      key: "triggered_rules",
+      label: "Issues Detected",
       width: "25%",
       render: (rules: any[]) => {
         if (!rules || rules.length === 0) return <span className="text-neutral-600">None</span>;
@@ -101,10 +97,36 @@ export default function MonitoringPage() {
       width: "15%",
       render: (val) => {
         const date = new Date(val);
-        return <span className="text-sm text-neutral-600">{date.toLocaleDateString()} {date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        return <span className="text-sm text-neutral-600">{date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
       }
     },
   ];
+
+  if (selectedLabel) {
+    const assetObj: Asset = {
+      id: selectedLabel.asset_id || 9999,
+      tag: selectedLabel.asset_tag,
+      partNum: 'N/A',
+      etat: selectedLabel.risk_level === 'Critical' ? 'inMaintenance' : 'Available',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
+      modele: { 
+        nom: selectedLabel.model_name || 'Unknown', 
+        marque: selectedLabel.brand || 'Unknown', 
+        categorie: 'Computer' 
+      },
+      employee: null
+    };
+
+    return (
+      <div className="space-y-6">
+        <AssetDetailsView 
+          asset={assetObj} 
+          onBack={() => setSelectedLabel(null)} 
+          defaultTab="health"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -183,10 +205,11 @@ export default function MonitoringPage() {
             rowKey="id"
             loading={isLoading}
             hoverable
+            onRowClick={(row) => setSelectedLabel(row)}
           />
         </div>
       </div>
-      
+
     </div>
   );
 }
