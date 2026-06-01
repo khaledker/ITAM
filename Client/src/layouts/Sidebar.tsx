@@ -89,6 +89,7 @@ export default function Sidebar() {
           })}
         </ul>
 
+        {/* Hidden for screenshots 
         <ul className="mt-auto px-0">
           <li>
             <NavLink
@@ -104,6 +105,7 @@ export default function Sidebar() {
             </NavLink>
           </li>
         </ul>
+        */}
       </nav>
     </aside>
   );
