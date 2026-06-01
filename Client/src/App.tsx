@@ -41,7 +41,7 @@ function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col">
+    <div className="h-screen bg-slate-100 text-slate-900 flex flex-col overflow-hidden">
       <TopBar 
         userName={user?.full_name || "IT Operations"} 
         userInitials={user?.full_name ? user.full_name.charAt(0) : "IT"} 

@@ -153,10 +153,15 @@ function Table<T = any>({
                   className={cn(
                     'border-b border-neutral-300 transition-colors',
                     striped && rowIndex % 2 === 1 ? 'bg-neutral-50' : 'bg-white',
-                    hoverable && 'hover:bg-primary/5 cursor-pointer',
-                    isSelected && 'bg-primary/10 font-semibold'
+                    hoverable && 'table-row-hoverable cursor-pointer',
+                    isSelected && 'table-row-selected font-semibold'
                   )}
-                  onClick={() => onRowClick?.(row)}
+                  onClick={() => {
+                    if (selectable) {
+                      handleSelectRow(rowId)
+                    }
+                    onRowClick?.(row)
+                  }}
                 >
                   {selectable && (
                     <td className="px-2 py-1 flex items-center justify-center h-full" onClick={(e) => e.stopPropagation()}>

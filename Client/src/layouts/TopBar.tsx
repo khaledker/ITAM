@@ -99,6 +99,7 @@ const TopBar = React.forwardRef<HTMLDivElement, TopBarProps>(
       <div>{children}</div>
 
       <div className="flex items-center gap-2 sm:gap-4">
+        {/* Hidden for screenshots
         <NotificationBell
           count={notificationCount}
           onClick={onNotificationClick}
@@ -110,6 +111,7 @@ const TopBar = React.forwardRef<HTMLDivElement, TopBarProps>(
         >
           <Settings className="h-5 w-5" />
         </button>
+        */}
 
         <div className="h-6 w-px bg-neutral-200" />
 

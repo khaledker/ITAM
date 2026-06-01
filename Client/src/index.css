@@ -27,3 +27,12 @@
     line-height: 1.25rem;
   }
 }
+
+/* Table row hover & selected — pure CSS, no JS re-renders */
+.table-row-hoverable:hover {
+  background-color: #FFD6DA !important;
+}
+
+.table-row-selected {
+  background-color: rgba(227, 0, 27, 0.1) !important;
+}
