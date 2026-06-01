@@ -26,7 +26,7 @@ function AppLayout() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 rounded-full border-4 border-neutral-200 border-t-[#E3001B] animate-spin" />
+        <div className="h-8 w-8 rounded-full border-4 border-neutral-300 border-t-[#E3001B] animate-spin" />
       </div>
     )
   }

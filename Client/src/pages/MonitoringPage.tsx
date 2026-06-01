@@ -78,7 +78,7 @@ export default function MonitoringPage() {
       label: "Issues Detected", 
       width: "25%",
       render: (rules: any[]) => {
-        if (!rules || rules.length === 0) return <span className="text-neutral-400">None</span>;
+        if (!rules || rules.length === 0) return <span className="text-neutral-600">None</span>;
         return (
           <div className="flex flex-wrap gap-1">
             {rules.slice(0, 2).map((r: any, idx) => (
@@ -101,7 +101,7 @@ export default function MonitoringPage() {
       width: "15%",
       render: (val) => {
         const date = new Date(val);
-        return <span className="text-sm text-neutral-500">{date.toLocaleDateString()} {date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        return <span className="text-sm text-neutral-600">{date.toLocaleDateString()} {date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
       }
     },
   ];
@@ -113,7 +113,7 @@ export default function MonitoringPage() {
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
           Intelligent Telemetry Monitoring
         </h1>
-        <p className="text-neutral-500 text-sm">
+        <p className="text-neutral-600 text-sm">
           Real-time hardware health analysis from local prediction agents.
         </p>
       </div>
@@ -123,27 +123,27 @@ export default function MonitoringPage() {
         <StatCard
           label="Total Monitored"
           value={summary?.total_monitored || 0}
-          icon={<Activity className="h-6 w-6 text-blue-500" />}
+          icon={<Activity />}
         />
         <StatCard
           label="Healthy"
           value={summary?.healthy || 0}
-          icon={<CheckCircle className="h-6 w-6 text-emerald-500" />}
+          icon={<CheckCircle />}
         />
         <StatCard
           label="At Risk"
           value={summary?.at_risk || 0}
-          icon={<AlertTriangle className="h-6 w-6 text-amber-500" />}
+          icon={<AlertTriangle />}
         />
         <StatCard
           label="Critical"
           value={summary?.critical || 0}
-          icon={<ShieldAlert className="h-6 w-6 text-red-500" />}
+          icon={<ShieldAlert />}
         />
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+      <div className="bg-white border border-neutral-300 rounded-xl p-6 shadow-lg space-y-4">
         <h2 className="text-sm font-semibold text-neutral-900">Filters</h2>
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1 min-w-0 md:max-w-[250px]">
@@ -169,7 +169,7 @@ export default function MonitoringPage() {
       </div>
 
       {/* Flagged Assets Table */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+      <div className="bg-white border border-neutral-300 rounded-xl p-6 shadow-lg space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-neutral-900">
             Monitored Devices ({filteredLabels.length})

@@ -103,12 +103,12 @@ function AddAssetModal({ models, locations, onClose, onSaved }: AddAssetModalPro
   return (
     /* Backdrop */
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-[95vw] sm:w-[600px] max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-2xl flex flex-col">
+      <div className="w-[95vw] sm:w-[600px] max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-300 bg-white shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-neutral-900">Add New Asset</h2>
           <button onClick={onClose}
-            className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
+            className="rounded-md p-1.5 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-600 transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -191,7 +191,7 @@ function AddAssetModal({ models, locations, onClose, onSaved }: AddAssetModalPro
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 border-t border-neutral-100 pt-4">
+          <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-4">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
             <Button type="submit" variant="primary" disabled={isSaving}>
               {isSaving ? 'Creating…' : 'Create Asset'}
@@ -230,48 +230,48 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
 
   return (
     <div className="flex flex-col space-y-6">
-      <div className="flex items-center gap-4 border-b border-neutral-100 pb-4">
-        <button onClick={onBack} className="rounded-md p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 transition-colors">
+      <div className="flex items-center gap-4 border-b border-neutral-200 pb-4">
+        <button onClick={onBack} className="rounded-md p-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </button>
         <div>
           <h2 className="text-2xl font-bold text-neutral-900">Asset Details: {asset.tag}</h2>
-          <p className="text-sm text-neutral-500">{asset.modele.marque} {asset.modele.nom}</p>
+          <p className="text-sm text-neutral-600">{asset.modele.marque} {asset.modele.nom}</p>
         </div>
       </div>
 
-      <div className="space-y-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="space-y-6 rounded-2xl border border-neutral-300 bg-white p-6 shadow-lg">
           {/* Top Summary */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-1">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Status</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">Status</p>
               <Badge variant={statusVariant[asset.etat]}>{statusLabel[asset.etat]}</Badge>
             </div>
             <div className="space-y-1">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Assigned To</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">Assigned To</p>
               <p className="text-sm font-medium text-neutral-900">{asset.employee?.full_name ?? '—'}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Category</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">Category</p>
               <p className="text-sm font-medium text-neutral-900">{asset.modele.categorie}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Acquired On</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">Acquired On</p>
               <p className="text-sm font-medium text-neutral-900">{asset.createdAt ? formatDate(asset.createdAt) : '—'}</p>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-neutral-200">
+          <div className="border-b border-neutral-300">
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => setActiveTab('history')}
                 className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'history'
                     ? 'border-primary text-primary'
-                    : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
+                    : 'border-transparent text-neutral-600 hover:text-neutral-700 hover:border-neutral-300'
                 }`}
               >
                 Movement History
@@ -281,7 +281,7 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                 className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'health'
                     ? 'border-primary text-primary'
-                    : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
+                    : 'border-transparent text-neutral-600 hover:text-neutral-700 hover:border-neutral-300'
                 }`}
               >
                 Telemetry Health
@@ -298,7 +298,7 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                     {[1, 2].map(i => <div key={i} className="h-16 bg-neutral-50 rounded-lg" />)}
                   </div>
                 ) : history.length === 0 ? (
-                  <p className="text-sm text-neutral-500 italic py-4 text-center border-2 border-dashed border-neutral-100 rounded-xl">No history records found for this asset.</p>
+                  <p className="text-sm text-neutral-600 italic py-4 text-center border-2 border-dashed border-neutral-200 rounded-xl">No history records found for this asset.</p>
                 ) : (
                   <div className="relative space-y-4 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-neutral-100">
                     {history.map((mov) => (
@@ -309,12 +309,12 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                           {mov.type === 'Transfer' && <RotateCcw className="h-4 w-4 text-orange-500" />}
                           {mov.type === 'Return' && <CalendarClock className="h-4 w-4 text-green-500" />}
                         </span>
-                        <div className="flex-1 rounded-xl border border-neutral-100 bg-neutral-50/50 p-3 shadow-sm">
+                        <div className="flex-1 rounded-xl border border-neutral-200 bg-neutral-50 p-3 shadow-lg">
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-sm font-bold text-neutral-900">{mov.type}</p>
                             <Badge variant={mov.status === 'Approved' ? 'active' : 'warning'}>{mov.status}</Badge>
                           </div>
-                          <p className="mt-0.5 text-xs text-neutral-500">
+                          <p className="mt-0.5 text-xs text-neutral-600">
                             {formatDate(mov.date)} • Performed by {mov.performed_by_name || 'System'}
                           </p>
                           <div className="mt-2 text-sm text-neutral-700">
@@ -327,7 +327,7 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                             {mov.type === 'Assignment' && (
                               <p>
                                 Assigned to <span className="font-medium">{mov.assigned_to_name || 'Unknown'}</span> 
-                                {mov.assignment_source_name && <span className="text-neutral-500 text-xs ml-1">(from {mov.assignment_source_name})</span>}
+                                {mov.assignment_source_name && <span className="text-neutral-600 text-xs ml-1">(from {mov.assignment_source_name})</span>}
                               </p>
                             )}
                             {mov.type === 'Transfer' && (
@@ -338,7 +338,7 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                             {mov.type === 'Return' && (
                               <p>
                                 Returned to <span className="font-medium">{mov.returned_to_name || 'Unknown'}</span>
-                                {mov.reason && <span className="text-neutral-500 text-xs ml-2">Reason: {mov.reason}</span>}
+                                {mov.reason && <span className="text-neutral-600 text-xs ml-2">Reason: {mov.reason}</span>}
                               </p>
                             )}
                           </div>
@@ -357,9 +357,9 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                     {[1, 2].map(i => <div key={i} className="h-20 bg-neutral-50 rounded-lg" />)}
                   </div>
                 ) : healthLabels.length === 0 ? (
-                  <div className="text-center py-8 border-2 border-dashed border-neutral-100 rounded-xl">
+                  <div className="text-center py-8 border-2 border-dashed border-neutral-200 rounded-xl">
                     <CheckCircle className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
-                    <p className="text-sm text-neutral-500 italic">No telemetry data recorded.</p>
+                    <p className="text-sm text-neutral-600 italic">No telemetry data recorded.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -367,14 +367,14 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                     {healthLabels.map((lbl, idx) => {
                       const isLatest = idx === 0;
                       return (
-                        <div key={lbl.id} className={`rounded-xl border p-4 ${isLatest ? 'border-primary/30 bg-primary/5 shadow-sm' : 'border-neutral-100 bg-neutral-50'}`}>
+                        <div key={lbl.id} className={`rounded-xl border p-4 ${isLatest ? 'border-primary/30 bg-primary/5 shadow-lg' : 'border-neutral-200 bg-neutral-50'}`}>
                           <div className="flex items-start justify-between mb-3">
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-neutral-900">Score: {lbl.risk_score}</span>
                                 {isLatest && <Badge variant="active">Latest</Badge>}
                               </div>
-                              <p className="text-xs text-neutral-500 mt-1">
+                              <p className="text-xs text-neutral-600 mt-1">
                                 Scanned: {new Date(lbl.scored_at).toLocaleString()}
                               </p>
                             </div>
@@ -384,11 +384,11 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                           </div>
                           
                           {lbl.triggered_rules && lbl.triggered_rules.length > 0 && (
-                            <div className="space-y-1.5 mt-3 pt-3 border-t border-neutral-200/60">
-                              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Triggered Rules</p>
+                            <div className="space-y-1.5 mt-3 pt-3 border-t border-neutral-300/60">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">Triggered Rules</p>
                               <div className="flex flex-col gap-1">
                                 {lbl.triggered_rules.map((r: any, rIdx: number) => (
-                                  <div key={rIdx} className="text-xs flex items-start gap-2 bg-white rounded p-1.5 border border-neutral-100">
+                                  <div key={rIdx} className="text-xs flex items-start gap-2 bg-white rounded p-1.5 border border-neutral-200">
                                     <span className="font-medium text-neutral-700 min-w-[120px]">{r.label}</span>
                                     <span className="text-red-600 break-words">{r.note}</span>
                                   </div>
@@ -398,8 +398,8 @@ function AssetDetailsView({ asset, onBack }: AssetDetailsViewProps) {
                           )}
                           
                           {lbl.recommended_actions && lbl.recommended_actions.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-neutral-200/60">
-                               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1">Recommended Actions</p>
+                            <div className="mt-3 pt-3 border-t border-neutral-300/60">
+                               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600 mb-1">Recommended Actions</p>
                                <ul className="list-disc pl-4 text-xs text-neutral-600 space-y-0.5">
                                  {lbl.recommended_actions.map((act: string, aIdx: number) => (
                                    <li key={aIdx}>{act}</li>
@@ -488,7 +488,7 @@ export default function AssetsPage() {
               <span className="text-sm font-medium text-neutral-700">{row.employee.full_name}</span>
             </>
           ) : (
-            <span className="text-xs italic text-neutral-400">—</span>
+            <span className="text-xs italic text-neutral-600">—</span>
           )}
         </div>
       ),
@@ -513,7 +513,7 @@ export default function AssetsPage() {
         <button
           type="button"
           onClick={() => { setSelectedAsset(row); setShowViewModal(true); }}
-          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
           aria-label="View asset history"
         >
           <Eye className="h-4 w-4" />
@@ -623,7 +623,7 @@ export default function AssetsPage() {
           {/* Header */}
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Assets</h1>
-            <p className="mt-1 text-sm text-neutral-500">Manage and monitor all IT assets</p>
+            <p className="mt-1 text-sm text-neutral-600">Manage and monitor all IT assets</p>
           </div>
 
           {/* Success banner */}
@@ -637,7 +637,7 @@ export default function AssetsPage() {
           {/* Search + Add */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full max-w-sm shrink-0">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-600" />
               <Input
                 id="asset-search"
                 placeholder="Search by model or tag…"

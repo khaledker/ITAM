@@ -102,7 +102,7 @@ const ToastItem = ({ toast, onRemove }: ToastItemProps) => {
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg animate-in slide-in-from-right-full duration-300',
+        'flex items-start gap-3 rounded-lg border px-4 py-3 shadow-xl animate-in slide-in-from-right-full duration-300',
         variantClasses[variant]
       )}
     >

@@ -75,7 +75,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         {closeable && (
           <button
             onClick={onClose}
-            className="flex-shrink-0 text-neutral-500 hover:text-neutral-700 transition-colors"
+            className="flex-shrink-0 text-neutral-600 hover:text-neutral-700 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>

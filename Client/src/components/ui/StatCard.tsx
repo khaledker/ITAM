@@ -19,7 +19,7 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
     <div
       ref={ref}
       className={cn(
-        'rounded-lg border border-neutral-200 bg-white p-4 sm:p-6',
+        'rounded-lg border border-neutral-300 bg-white p-4 sm:p-6',
         className
       )}
     >
@@ -55,7 +55,7 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         </div>
         {icon && (
           <div className="flex-shrink-0">
-            <div className="inline-flex rounded-lg bg-primary bg-primary/10 p-3">
+            <div className="inline-flex rounded-xl bg-neutral-100 p-2.5 text-neutral-500 [&>svg]:h-6 [&>svg]:w-6">
               {icon}
             </div>
           </div>

@@ -61,7 +61,7 @@ const movementColumns: TableColumn<RecentMovement>[] = [
       if (count <= 1) return <span className="font-semibold text-neutral-800">{firstTag || '—'}</span>
       return (
         <span className="font-semibold text-neutral-800">
-          {firstTag} <span className="font-normal text-neutral-400">&amp; {count - 1} more</span>
+          {firstTag} <span className="font-normal text-neutral-600">&amp; {count - 1} more</span>
         </span>
       )
     },
@@ -95,7 +95,7 @@ const movementColumns: TableColumn<RecentMovement>[] = [
 
 function StatSkeleton() {
   return (
-    <div className="animate-pulse rounded-xl border border-neutral-200 bg-white p-5 space-y-3">
+    <div className="animate-pulse rounded-xl border border-neutral-300 bg-white p-5 space-y-3">
       <div className="h-3 w-24 rounded bg-neutral-200" />
       <div className="h-8 w-16 rounded bg-neutral-200" />
     </div>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Dashboard</h1>
-        <p className="text-neutral-500">
+        <p className="text-neutral-600">
           Welcome back, <span className="font-medium text-neutral-700">{user?.full_name ?? 'IT Operations'}</span>
         </p>
       </div>
@@ -158,22 +158,22 @@ export default function DashboardPage() {
             <StatCard
               label="Total Assets"
               value={stats?.total ?? 0}
-              icon={<Server className="h-6 w-6 text-blue-500" />}
+              icon={<Server />}
             />
             <StatCard
               label="Available"
               value={stats?.available ?? 0}
-              icon={<CheckCircle className="h-6 w-6 text-green-500" />}
+              icon={<CheckCircle />}
             />
             <StatCard
               label="Assigned"
               value={stats?.assigned ?? 0}
-              icon={<Clock className="h-6 w-6 text-orange-500" />}
+              icon={<Clock />}
             />
             <StatCard
               label="In Maintenance"
               value={stats?.in_maintenance ?? 0}
-              icon={<Wrench className="h-6 w-6 text-red-500" />}
+              icon={<Wrench />}
             />
           </>
         )}
@@ -182,7 +182,7 @@ export default function DashboardPage() {
       <div className="space-y-8">
         
         {/* Operations */}
-        <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+        <div className="bg-white border border-neutral-300 rounded-xl p-6 shadow-lg space-y-4">
           <h2 className="text-xl font-semibold text-neutral-900">Recent Operations</h2>
 
           {isLoading ? (
@@ -192,7 +192,7 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : movements.length === 0 ? (
-            <p className="text-sm text-neutral-500 py-6 text-center">No operations recorded yet.</p>
+            <p className="text-sm text-neutral-600 py-6 text-center">No operations recorded yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table<RecentMovement>
@@ -208,11 +208,11 @@ export default function DashboardPage() {
         {/* AI Telemetry Widgets */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
-          <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-5">
+          <div className="bg-white border border-neutral-300 rounded-xl p-6 shadow-lg space-y-5">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-semibold text-neutral-900">AI Device Health</h2>
-                <p className="text-sm text-neutral-500">Live telemetry agent overview</p>
+                <p className="text-sm text-neutral-600">Live telemetry agent overview</p>
               </div>
               <Activity className="h-5 w-5 text-indigo-500" />
             </div>
@@ -224,7 +224,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-lg border border-neutral-100">
+                <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-lg border border-neutral-200">
                   <span className="text-sm font-medium text-neutral-600">Total Monitored</span>
                   <span className="font-bold text-neutral-900">{telemetry.summary?.total_monitored || 0}</span>
                 </div>
@@ -251,23 +251,23 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm space-y-4">
+          <div className="bg-white border border-neutral-300 rounded-xl p-6 shadow-lg space-y-4">
             <div>
               <h2 className="text-lg font-semibold text-neutral-900">Priority Alerts</h2>
-              <p className="text-sm text-neutral-500">Top risks requiring attention</p>
+              <p className="text-sm text-neutral-600">Top risks requiring attention</p>
             </div>
 
             {isLoading ? (
                <div className="animate-pulse h-24 rounded-lg bg-neutral-100" />
             ) : criticalAssets.length === 0 ? (
-              <div className="text-center py-6 border border-dashed border-neutral-200 rounded-lg">
+              <div className="text-center py-6 border border-dashed border-neutral-300 rounded-lg">
                 <CheckCircle className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
                 <p className="text-sm text-neutral-600">No critical assets found.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {criticalAssets.map(asset => (
-                  <div key={asset.id} className="border border-red-100 bg-red-50/50 rounded-lg p-3">
+                  <div key={asset.id} className="border border-red-100 bg-red-50 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-semibold text-neutral-900">{asset.asset_tag}</span>
                       <Badge variant={asset.risk_level === 'Critical' ? 'critical' : 'warning'}>

@@ -63,7 +63,7 @@ export function ComponentShowcase() {
           trend={{ value: 4, direction: 'up' }}
         />
 
-        <section className="rounded-lg border border-neutral-200 bg-white p-4">
+        <section className="rounded-lg border border-neutral-300 bg-white p-4">
           <div className="flex flex-col gap-3 sm:flex-row">
             <Input
               value={query}

@@ -4,7 +4,7 @@ import { Button, Input, Select, Checkbox, Table, type TableColumn, Badge } from 
 import { assetsApi, type Asset } from '@/lib/api'
 
 const SectionHeader = ({ icon: Icon, title }: { icon: any, title: string }) => (
-  <div className="flex items-center gap-2 mb-4 border-b border-neutral-200 pb-2">
+  <div className="flex items-center gap-2 mb-4 border-b border-neutral-300 pb-2">
     <div className="rounded-full bg-primary/10 p-1.5 text-primary">
       <Icon className="h-4 w-4" />
     </div>
@@ -84,12 +84,12 @@ export default function SearchPage() {
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
           Advanced Search
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 text-sm text-neutral-600">
           Search for any assets using comprehensive filters and criteria
         </p>
       </div>
 
-      <div className="rounded-xl border border-neutral-300 bg-white shadow-sm p-6 space-y-8">
+      <div className="rounded-xl border border-neutral-300 bg-white shadow-lg p-6 space-y-8">
         
         {/* Team Selection */}
         <section>
@@ -216,7 +216,7 @@ export default function SearchPage() {
               <label className="text-sm font-medium text-neutral-700">User</label>
               <div className="relative mt-1.5">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-neutral-400" />
+                  <Search className="h-4 w-4 text-neutral-600" />
                 </div>
                 <input
                   type="text"
@@ -279,7 +279,7 @@ export default function SearchPage() {
         </section>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-200">
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-300">
           <Button variant="ghost" onClick={handleReset} className="min-w-32">
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset
@@ -297,17 +297,17 @@ export default function SearchPage() {
       </div>
 
       {results && (
-        <div className="border border-neutral-300 bg-white shadow-sm overflow-hidden mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4 flex items-center justify-between">
+        <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+           <div className="border-b border-neutral-300 bg-neutral-50 px-6 py-4 flex items-center justify-between">
              <div className="flex items-center gap-2">
-               <Server className="h-5 w-5 text-neutral-500" />
+               <Server className="h-5 w-5 text-neutral-600" />
                <h2 className="text-lg font-semibold text-neutral-900">Search Results</h2>
              </div>
              <Badge variant="active">{results.length} asset{results.length !== 1 ? 's' : ''} found</Badge>
            </div>
            
            {results.length === 0 ? (
-             <div className="p-10 text-center text-sm text-neutral-500">No assets match your complex criteria.</div>
+             <div className="p-10 text-center text-sm text-neutral-600">No assets match your complex criteria.</div>
            ) : (
              <Table<Asset> columns={columns} rows={results} rowKey="id" hoverable striped className="border-none rounded-none" />
            )}

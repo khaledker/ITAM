@@ -186,7 +186,7 @@ function Table<T = any>({
             <tr>
               <td
                 colSpan={columns.length + (selectable ? 1 : 0)}
-                className="px-4 py-8 text-center text-neutral-500"
+                className="px-4 py-8 text-center text-neutral-600"
               >
                 No data available
               </td>

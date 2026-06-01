@@ -187,7 +187,7 @@ export default function MaintenancePage() {
         return (
           <span className="font-semibold text-neutral-800">
             {first || '—'}
-            {count > 1 && <span className="font-normal text-neutral-400"> &amp; {count - 1} more</span>}
+            {count > 1 && <span className="font-normal text-neutral-600"> &amp; {count - 1} more</span>}
           </span>
         )
       },
@@ -241,7 +241,7 @@ export default function MaintenancePage() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Movement #{detailMovement.id}</h1>
-              <p className="mt-1 text-sm text-neutral-500">Review execution details and assets before approving</p>
+              <p className="mt-1 text-sm text-neutral-600">Review execution details and assets before approving</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -280,8 +280,8 @@ export default function MaintenancePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-neutral-900 border-b border-neutral-100 pb-3 mb-4">Database Impact</h2>
+            <div className="rounded-xl border border-neutral-300 bg-white p-5 shadow-lg">
+              <h2 className="text-lg font-semibold text-neutral-900 border-b border-neutral-200 pb-3 mb-4">Database Impact</h2>
               <div className="flex items-start gap-4">
                 <div className="mt-1 rounded-full bg-blue-50 p-2 text-blue-600"><ArrowRightLeft className="h-5 w-5" /></div>
                 <div>
@@ -290,17 +290,17 @@ export default function MaintenancePage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-neutral-100 bg-neutral-50/50 px-6 py-4 flex items-center justify-between">
+            <div className="rounded-xl border border-neutral-300 bg-white shadow-lg overflow-hidden">
+              <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-neutral-900">Concerned Assets</h2>
                 <Badge variant="inactive">{assetCount} asset{assetCount !== 1 ? 's' : ''}</Badge>
               </div>
               {assetCount === 0 ? (
-                <div className="p-8 text-center text-sm text-neutral-500">No assets listed.</div>
+                <div className="p-8 text-center text-sm text-neutral-600">No assets listed.</div>
               ) : (
-                <div className="overflow-x-auto max-h-[300px] overflow-y-auto border border-neutral-100 rounded-lg">
+                <div className="overflow-x-auto max-h-[300px] overflow-y-auto border border-neutral-200 rounded-lg">
                   <table className="w-full text-left text-sm relative">
-                    <thead className="bg-neutral-50/90 backdrop-blur-sm text-neutral-500 border-b border-neutral-200 sticky top-0 z-10">
+                    <thead className="bg-neutral-50/90 backdrop-blur-sm text-neutral-600 border-b border-neutral-300 sticky top-0 z-10">
                       <tr>
                         <th className="px-6 py-3 font-semibold w-16">#</th>
                         <th className="px-6 py-3 font-semibold">Asset Tag</th>
@@ -309,8 +309,8 @@ export default function MaintenancePage() {
                     </thead>
                     <tbody className="divide-y divide-neutral-100">
                       {Array.from({ length: assetCount }).map((_, idx) => (
-                        <tr key={idx} className="hover:bg-neutral-50/50 transition-colors">
-                          <td className="px-6 py-3 font-mono text-neutral-400">{idx + 1}</td>
+                        <tr key={idx} className="hover:bg-neutral-50 transition-colors">
+                          <td className="px-6 py-3 font-mono text-neutral-600">{idx + 1}</td>
                           <td className="px-6 py-3 font-medium text-neutral-900">{tags[idx] || '—'}</td>
                           <td className="px-6 py-3 text-neutral-600 max-w-xs truncate">{serials[idx] || '—'}</td>
                         </tr>
@@ -322,23 +322,23 @@ export default function MaintenancePage() {
             </div>
           </div>
           <div className="space-y-6">
-            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Movement Meta</h3>
+            <div className="rounded-xl border border-neutral-300 bg-white p-5 shadow-lg">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-600">Movement Meta</h3>
               <div className="space-y-4">
-                <div><p className="text-xs text-neutral-500 mb-1">Status</p><Badge variant={STATUS_VARIANT[detailMovement.status] ?? 'inactive'}>{detailMovement.status}</Badge></div>
-                <div><p className="text-xs text-neutral-500 mb-1">Type</p><Badge variant={TYPE_VARIANT[detailMovement.type] ?? 'inactive'}>{detailMovement.type}</Badge></div>
-                <div><p className="text-xs text-neutral-500 mb-1">Process Date</p><p className="text-sm font-medium text-neutral-900">{formatDate(detailMovement.date)}</p></div>
-                <div><p className="text-xs text-neutral-500 mb-1">Performed By</p><p className="text-sm font-medium text-neutral-900">{detailMovement.performed_by_name ?? '—'}</p></div>
+                <div><p className="text-xs text-neutral-600 mb-1">Status</p><Badge variant={STATUS_VARIANT[detailMovement.status] ?? 'inactive'}>{detailMovement.status}</Badge></div>
+                <div><p className="text-xs text-neutral-600 mb-1">Type</p><Badge variant={TYPE_VARIANT[detailMovement.type] ?? 'inactive'}>{detailMovement.type}</Badge></div>
+                <div><p className="text-xs text-neutral-600 mb-1">Process Date</p><p className="text-sm font-medium text-neutral-900">{formatDate(detailMovement.date)}</p></div>
+                <div><p className="text-xs text-neutral-600 mb-1">Performed By</p><p className="text-sm font-medium text-neutral-900">{detailMovement.performed_by_name ?? '—'}</p></div>
               </div>
             </div>
-            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-500">Reference Details</h3>
+            <div className="rounded-xl border border-neutral-300 bg-white p-5 shadow-lg">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-neutral-600">Reference Details</h3>
               <div className="space-y-3">
                 {movementDetailRows(detailMovement)
                   .filter(r => !['Status', 'Type', 'Date', 'Performed By', 'Movement ID'].includes(r.label))
                   .map(item => (
                     <div key={item.label}>
-                      <p className="text-xs text-neutral-500 mb-0.5">{item.label}</p>
+                      <p className="text-xs text-neutral-600 mb-0.5">{item.label}</p>
                       <p className="text-sm font-medium text-neutral-900">{item.value}</p>
                     </div>
                   ))}
@@ -357,7 +357,7 @@ export default function MaintenancePage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Movements</h1>
-          <p className="mt-1 text-sm text-neutral-500">Review and approve pending asset movements to update asset status in the database</p>
+          <p className="mt-1 text-sm text-neutral-600">Review and approve pending asset movements to update asset status in the database</p>
         </div>
         <Button variant="ghost" size="sm" onClick={load}>
           <RefreshCw className="h-4 w-4" /> Refresh
@@ -381,14 +381,14 @@ export default function MaintenancePage() {
       {loadError && <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">{loadError}</div>}
 
       {/* ── Filter Bar ──────────────────────────────────────── */}
-      <div className="rounded-xl border border-neutral-200 bg-white shadow-sm">
+      <div className="rounded-xl border border-neutral-300 bg-white shadow-lg">
         {/* Status tabs */}
-        <div className="flex items-center gap-0 border-b border-neutral-200 px-4">
+        <div className="flex items-center gap-0 border-b border-neutral-300 px-4">
           {STATUS_TABS.map(tab => (
             <button
               key={tab}
               onClick={() => setStatusTab(tab)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${statusTab === tab ? 'border-primary text-primary' : 'border-transparent text-neutral-500 hover:text-neutral-700'}`}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${statusTab === tab ? 'border-primary text-primary' : 'border-transparent text-neutral-600 hover:text-neutral-700'}`}
             >
               {tab}
               {tab === 'Draft' && draftCount > 0 && (
@@ -402,7 +402,7 @@ export default function MaintenancePage() {
         <div className="flex flex-wrap items-center gap-3 p-4">
           {/* Asset tag search */}
           <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600 pointer-events-none" />
             <Input
               type="text"
               placeholder="Search asset tag…"
@@ -414,7 +414,7 @@ export default function MaintenancePage() {
 
           {/* Type filter */}
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-neutral-400 shrink-0" />
+            <Filter className="h-4 w-4 text-neutral-600 shrink-0" />
             <Select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value as typeof typeFilter)}
@@ -430,7 +430,7 @@ export default function MaintenancePage() {
           >
             {sort === 'newest'
               ? <><SortDesc className="h-4 w-4 text-primary" /> Newest first</>
-              : <><SortAsc className="h-4 w-4 text-neutral-500" /> Oldest first</>
+              : <><SortAsc className="h-4 w-4 text-neutral-600" /> Oldest first</>
             }
           </button>
 
@@ -438,18 +438,18 @@ export default function MaintenancePage() {
           {(statusTab !== 'All' || typeFilter !== 'All' || sort !== 'newest' || search) && (
             <button
               onClick={() => { setStatusTab('All'); setTypeFilter('All'); setSort('newest'); setSearch(''); setSearchInput('') }}
-              className="text-sm text-neutral-400 hover:text-neutral-600 transition underline underline-offset-2"
+              className="text-sm text-neutral-600 hover:text-neutral-600 transition underline underline-offset-2"
             >
               Reset filters
             </button>
           )}
 
-          <span className="ml-auto text-xs text-neutral-400">{movements.length} result{movements.length !== 1 ? 's' : ''}</span>
+          <span className="ml-auto text-xs text-neutral-600">{movements.length} result{movements.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
       {/* Table */}
-      <div className="border border-neutral-300 bg-white shadow-md overflow-hidden">
+      <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden">
         <Table<AssetMovement>
           columns={columns}
           rows={movements}
@@ -461,7 +461,7 @@ export default function MaintenancePage() {
           className="border-none rounded-none"
         />
         {!isLoading && movements.length === 0 && (
-          <p className="py-10 text-center text-sm text-neutral-400">
+          <p className="py-10 text-center text-sm text-neutral-600">
             No movements match the current filters.
           </p>
         )}
