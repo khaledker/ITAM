@@ -290,7 +290,7 @@ export default function ReceptionPage() {
   }
 
   // ── Table columns ─────────────────────────────────────────────────────────
-  const inputCls = 'w-full bg-transparent border border-transparent hover:border-neutral-300 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary rounded-sm px-2 py-1 text-xs text-neutral-800 placeholder:text-neutral-400 focus:outline-none transition-colors'
+  const inputCls = 'w-full bg-transparent border border-transparent hover:border-neutral-300 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary rounded-sm px-2 py-1 text-xs text-neutral-800 placeholder:text-neutral-600 focus:outline-none transition-colors'
 
   const columns: TableColumn<ReceptionRow>[] = [
     {
@@ -317,7 +317,7 @@ export default function ReceptionPage() {
               value={row.modelName || (model ? `${model.name} (${model.brand})` : '')}
               placeholder="Model Name"
               readOnly
-              className={`w-full bg-transparent border border-transparent px-2 py-1 text-xs text-neutral-800 placeholder:text-neutral-400 focus:outline-none rounded-sm ${!row.modelId ? 'text-amber-700 bg-amber-50/50' : ''}`}
+              className={`w-full bg-transparent border border-transparent px-2 py-1 text-xs text-neutral-800 placeholder:text-neutral-600 focus:outline-none rounded-sm ${!row.modelId ? 'text-amber-700 bg-amber-50' : ''}`}
             />
             {!row.modelId && (
               <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -339,7 +339,7 @@ export default function ReceptionPage() {
       key: 'actions', label: '', width: 'w-[6%]',
       render: (_v: any, row: ReceptionRow) => (
         <button type="button" onClick={() => removeRow(row.id)}
-          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+          className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-600 hover:bg-red-50 hover:text-red-600 transition-colors">
           <Trash2 className="h-4 w-4" />
         </button>
       ),
@@ -351,7 +351,7 @@ export default function ReceptionPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Reception</h1>
-        <p className="mt-1 text-sm text-neutral-500">Log incoming assets from suppliers</p>
+        <p className="mt-1 text-sm text-neutral-600">Log incoming assets from suppliers</p>
       </div>
 
       {loadError && (
@@ -417,7 +417,7 @@ export default function ReceptionPage() {
       )}
 
       {/* Form card */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-neutral-300 bg-white p-6 shadow-lg">
         <h2 className="mb-5 text-lg font-semibold text-neutral-900">Reception Details</h2>
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -473,12 +473,12 @@ export default function ReceptionPage() {
         </div>
 
         {/* Meta */}
-        <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-100 pt-4">
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
+        <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-200 pt-4">
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
             <User className="h-4 w-4" />
             <span>Logged in as: <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
             <CalendarClock className="h-4 w-4" />
             <span>Date: <span className="font-medium text-neutral-700">{new Date().toLocaleDateString('fr-DZ')}</span></span>
           </div>
@@ -505,7 +505,7 @@ export default function ReceptionPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">Assets in this Reception</h2>
-            <p className="text-sm text-neutral-500">Add assets manually or import from a CSV file (Tag, Serial Number, Model, Description).</p>
+            <p className="text-sm text-neutral-600">Add assets manually or import from a CSV file (Tag, Serial Number, Model, Description).</p>
           </div>
           <div className="flex items-center gap-3">
             <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
@@ -535,7 +535,7 @@ export default function ReceptionPage() {
           <div className="border border-primary/30 bg-primary/5 rounded-sm p-4 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-neutral-800">New Asset — fill all required fields before adding</p>
-              <button type="button" onClick={cancelDraft} className="text-neutral-400 hover:text-neutral-700 transition-colors">
+              <button type="button" onClick={cancelDraft} className="text-neutral-600 hover:text-neutral-700 transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -548,7 +548,7 @@ export default function ReceptionPage() {
                   value={draft.tag}
                   onChange={e => updateDraft('tag', e.target.value)}
                   placeholder="e.g. DJZ-2026-050"
-                  className={`w-full rounded-sm border px-3 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-1 transition-colors ${draftErrors.tag ? 'border-red-400 focus:border-red-500 focus:ring-red-400 bg-red-50' : 'border-neutral-300 focus:border-primary focus:ring-primary bg-white'}`}
+                  className={`w-full rounded-sm border px-3 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-600 focus:outline-none focus:ring-1 transition-colors ${draftErrors.tag ? 'border-red-400 focus:border-red-500 focus:ring-red-400 bg-red-50' : 'border-neutral-300 focus:border-primary focus:ring-primary bg-white'}`}
                 />
                 {draftErrors.tag && <p className="text-xs text-red-500">{draftErrors.tag}</p>}
               </div>
@@ -560,7 +560,7 @@ export default function ReceptionPage() {
                   value={draft.serialNumber}
                   onChange={e => updateDraft('serialNumber', e.target.value)}
                   placeholder="e.g. SN-XXXXX"
-                  className={`w-full rounded-sm border px-3 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-1 transition-colors ${draftErrors.serialNumber ? 'border-red-400 focus:border-red-500 focus:ring-red-400 bg-red-50' : 'border-neutral-300 focus:border-primary focus:ring-primary bg-white'}`}
+                  className={`w-full rounded-sm border px-3 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-600 focus:outline-none focus:ring-1 transition-colors ${draftErrors.serialNumber ? 'border-red-400 focus:border-red-500 focus:ring-red-400 bg-red-50' : 'border-neutral-300 focus:border-primary focus:ring-primary bg-white'}`}
                 />
                 {draftErrors.serialNumber && <p className="text-xs text-red-500">{draftErrors.serialNumber}</p>}
               </div>
@@ -586,7 +586,7 @@ export default function ReceptionPage() {
                   value={draft.description}
                   onChange={e => updateDraft('description', e.target.value)}
                   placeholder="Optional"
-                  className="w-full rounded-sm border border-neutral-300 px-3 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white transition-colors"
+                  className="w-full rounded-sm border border-neutral-300 px-3 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white transition-colors"
                 />
               </div>
             </div>
@@ -603,7 +603,7 @@ export default function ReceptionPage() {
         )}
 
         {/* ── Asset table ────────────────────────────────────────────────────── */}
-        <div className="border border-neutral-200 bg-white shadow-sm overflow-hidden">
+        <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden">
           <Table<ReceptionRow>
             columns={columns}
             rows={rows}
@@ -616,7 +616,7 @@ export default function ReceptionPage() {
             <div className="text-center py-12 px-4">
               <Upload className="h-8 w-8 mx-auto text-neutral-300 mb-3" />
               <p className="text-base font-medium text-neutral-900">No assets added yet</p>
-              <p className="mt-1 text-sm text-neutral-500">
+              <p className="mt-1 text-sm text-neutral-600">
                 Click <span className="font-medium text-primary">Add Asset</span> to add one manually, or use <span className="font-medium">Import CSV</span> to upload a batch.
               </p>
             </div>
@@ -624,7 +624,7 @@ export default function ReceptionPage() {
         </div>
 
         {rows.length > 0 && (
-          <p className="text-xs text-neutral-400 text-right">{rows.length} asset{rows.length !== 1 ? 's' : ''} in this reception</p>
+          <p className="text-xs text-neutral-600 text-right">{rows.length} asset{rows.length !== 1 ? 's' : ''} in this reception</p>
         )}
       </div>
     </div>

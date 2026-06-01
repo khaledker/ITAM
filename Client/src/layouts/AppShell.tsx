@@ -24,7 +24,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       <aside
         ref={ref}
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-64 bg-white border-r border-neutral-200 transition-transform duration-300 ease-in-out md:static md:translate-x-0',
+          'fixed left-0 top-0 z-40 h-screen w-64 bg-white border-r border-neutral-300 transition-transform duration-300 ease-in-out md:static md:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full md:-translate-x-0',
           className
         )}
@@ -35,7 +35,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       {/* Sidebar toggle button for mobile */}
       <button
         onClick={onToggle}
-        className="fixed bottom-4 right-4 z-50 md:hidden rounded-lg bg-primary p-2 text-white shadow-lg"
+        className="fixed bottom-4 right-4 z-50 md:hidden rounded-lg bg-primary p-2 text-white shadow-xl"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
@@ -55,7 +55,7 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
     <header
       ref={ref}
       className={cn(
-        'border-b border-neutral-200 bg-white px-4 py-3 sm:px-6',
+        'border-b border-neutral-300 bg-white px-4 py-3 sm:px-6',
         className
       )}
     >
@@ -89,7 +89,7 @@ const Breadcrumbs = React.forwardRef<HTMLDivElement, BreadcrumbsProps>(
     >
       {items.map((item, index) => (
         <React.Fragment key={index}>
-          {index > 0 && <span className="text-neutral-400">/</span>}
+          {index > 0 && <span className="text-neutral-600">/</span>}
           {item.href ? (
             <a
               href={item.href}

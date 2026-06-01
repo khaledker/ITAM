@@ -107,7 +107,7 @@ export default function TransferPage() {
     { key: 'tag', label: 'Tag', width: 'w-[15%]',
       render: (v: string) => <span className="font-semibold text-neutral-900">{v || '-'}</span> },
     { key: 'serial_number', label: 'S/N', width: 'w-[15%]',
-      render: (_v: any, row: Asset) => <span className="text-neutral-500">{row.serial_number || row.partNum || '-'}</span> },
+      render: (_v: any, row: Asset) => <span className="text-neutral-600">{row.serial_number || row.partNum || '-'}</span> },
     { key: 'category', label: 'Category', width: 'w-[20%]',
       render: (_v: any, row: Asset) => (
         <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
@@ -126,7 +126,7 @@ export default function TransferPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Transfer</h1>
-        <p className="mt-1 text-sm text-neutral-500">Move assets between locations or warehouses</p>
+        <p className="mt-1 text-sm text-neutral-600">Move assets between locations or warehouses</p>
       </div>
 
       {loadError && (
@@ -145,7 +145,7 @@ export default function TransferPage() {
       )}
 
       {/* Form card */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-neutral-300 bg-white p-6 shadow-lg">
         <h2 className="mb-5 text-lg font-semibold text-neutral-900">Transfer Details</h2>
 
         {/* Transfer Type */}
@@ -167,7 +167,7 @@ export default function TransferPage() {
         <div className="grid grid-cols-1 gap-x-8 gap-y-4 lg:grid-cols-2">
           {/* Source */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Source</h3>
+            <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-200 pb-2">Source</h3>
             <div className="space-y-1.5">
               <label htmlFor="tr-source" className="block text-sm font-medium text-neutral-700">Location</label>
               <Select id="tr-source" value={sourceId} onChange={e => setSourceId(e.target.value)}>
@@ -179,7 +179,7 @@ export default function TransferPage() {
 
           {/* Destination */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Destination</h3>
+            <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-200 pb-2">Destination</h3>
             <div className="space-y-1.5">
               <label htmlFor="tr-dest" className="block text-sm font-medium text-neutral-700">
                 Location <span className="text-red-500">*</span>
@@ -198,7 +198,7 @@ export default function TransferPage() {
 
         {/* Transport */}
         <div className="mt-6 space-y-4">
-          <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-100 pb-2">Transport / Reference</h3>
+          <h3 className="text-sm font-semibold text-neutral-800 border-b border-neutral-200 pb-2">Transport / Reference</h3>
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3">
             <div className="space-y-1.5">
               <label htmlFor="tr-ref" className="block text-sm font-medium text-neutral-700">Reference</label>
@@ -226,12 +226,12 @@ export default function TransferPage() {
         </div>
 
         {/* Meta */}
-        <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-100 pt-4">
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
+        <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-200 pt-4">
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
             <User className="h-4 w-4" />
             <span>Created by: <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
             <CalendarClock className="h-4 w-4" />
             <span>Date: <span className="font-medium text-neutral-700">{new Date().toLocaleDateString('fr-DZ')}</span></span>
           </div>
@@ -251,14 +251,14 @@ export default function TransferPage() {
       </div>
 
       {/* Asset picker */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="rounded-xl border border-neutral-300 bg-white p-6 shadow-lg space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">Assets to Transfer</h2>
-            <p className="text-sm text-neutral-500">{selectedAssetIds.size} asset(s) selected.</p>
+            <p className="text-sm text-neutral-600">{selectedAssetIds.size} asset(s) selected.</p>
           </div>
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600" />
             <Input
               type="text"
               placeholder="Search Tag, S/N, Brand, Category..."

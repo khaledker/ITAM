@@ -34,14 +34,14 @@ export default function LoginPage() {
 
       {/* Background accent circles */}
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-        <div style={{ position: 'absolute', top: '-10rem', right: '-10rem', height: '24rem', width: '24rem', borderRadius: '9999px', backgroundColor: 'rgba(227,0,27,0.05)' }} />
-        <div style={{ position: 'absolute', bottom: '-10rem', left: '-10rem', height: '24rem', width: '24rem', borderRadius: '9999px', backgroundColor: 'rgba(227,0,27,0.05)' }} />
+        <div style={{ position: 'absolute', top: '-10rem', right: '-10rem', height: '24rem', width: '24rem', borderRadius: '9999px', backgroundColor: 'rgba(227,0,27,0.12)' }} />
+        <div style={{ position: 'absolute', bottom: '-10rem', left: '-10rem', height: '24rem', width: '24rem', borderRadius: '9999px', backgroundColor: 'rgba(227,0,27,0.12)' }} />
       </div>
 
       <div style={{ position: 'relative', width: '100%', maxWidth: '28rem' }}>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-2xl border border-neutral-300 overflow-hidden">
 
           {/* Red top stripe */}
           <div style={{ height: '6px', backgroundColor: '#E3001B', width: '100%' }} />
@@ -56,7 +56,7 @@ export default function LoginPage() {
               <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">
                 Welcome back
               </h1>
-              <p className="mt-1 text-sm text-neutral-500">
+              <p className="mt-1 text-sm text-neutral-600">
                 Sign in to Djezzy ITAM Portal
               </p>
             </div>
@@ -78,7 +78,7 @@ export default function LoginPage() {
                   Username
                 </label>
                 <div className="relative mt-1.5">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none z-10" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600 pointer-events-none z-10" />
                   <Input
                     id="user_name"
                     type="text"
@@ -99,7 +99,7 @@ export default function LoginPage() {
                   Password
                 </label>
                 <div className="relative mt-1.5">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none z-10" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600 pointer-events-none z-10" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -114,7 +114,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors bg-transparent border-none cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-600 transition-colors bg-transparent border-none cursor-pointer"
                     tabIndex={-1}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
@@ -153,7 +153,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-neutral-400">
+        <p className="mt-6 text-center text-xs text-neutral-600">
           Djezzy IT Asset Management — Internal use only
         </p>
       </div>

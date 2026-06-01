@@ -66,14 +66,14 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         >
           <div
             className={cn(
-              'mx-auto w-full rounded-lg bg-white shadow-lg',
+              'mx-auto w-full rounded-lg bg-white shadow-xl',
               sizeClasses[size]
             )}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             {(title || closeButton) && (
-              <div className="flex items-start justify-between border-b border-neutral-200 px-6 py-4">
+              <div className="flex items-start justify-between border-b border-neutral-300 px-6 py-4">
                 <div>
                   {title && (
                     <h2 className="text-lg font-semibold text-neutral-900">
@@ -87,7 +87,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                 {closeButton && (
                   <button
                     onClick={onClose}
-                    className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700"
+                    className="rounded-lg p-1 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-700"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -100,7 +100,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
             {/* Footer */}
             {footer && (
-              <div className="border-t border-neutral-200 px-6 py-4">
+              <div className="border-t border-neutral-300 px-6 py-4">
                 {footer}
               </div>
             )}
@@ -209,7 +209,7 @@ const FormModal = React.forwardRef<HTMLDivElement, FormModalProps>(
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {children}
-          <div className="flex justify-end gap-2 border-t border-neutral-200 pt-4">
+          <div className="flex justify-end gap-2 border-t border-neutral-300 pt-4">
             <Button
               type="button"
               variant="secondary"

@@ -54,7 +54,7 @@ const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
         {isVisible && (
           <div
             className={cn(
-              'absolute z-50 rounded-lg bg-neutral-800 px-3 py-2 text-sm text-white shadow-lg whitespace-nowrap',
+              'absolute z-50 rounded-lg bg-neutral-800 px-3 py-2 text-sm text-white shadow-xl whitespace-nowrap',
               sideClasses[side]
             )}
           >

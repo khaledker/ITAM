@@ -246,7 +246,7 @@ export default function UsersPage() {
           <select
             value={v || 'Employee'}
             onChange={(e) => handleRoleChange(row.id, e.target.value as any)}
-            className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs shadow-sm focus:border-primary focus:outline-none"
+            className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs shadow-lg focus:border-primary focus:outline-none"
           >
             <option value="Employee">Employee</option>
             <option value="Manager">Manager</option>
@@ -260,7 +260,7 @@ export default function UsersPage() {
       label: 'Actions',
       width: 'w-[15%]',
       render: (_v: any, row: Employee) => {
-        if (!isAdmin) return <span className="text-neutral-400 text-xs">—</span>
+        if (!isAdmin) return <span className="text-neutral-600 text-xs">—</span>
         
         if (row.role === 'Manager') {
           return (
@@ -268,14 +268,14 @@ export default function UsersPage() {
               variant="secondary"
               size="sm"
               onClick={() => handleManagePermissions(row)}
-              className="flex items-center gap-1.5 py-1 px-2.5 text-xs text-neutral-700 hover:text-primary border-neutral-200 hover:border-primary/40 hover:bg-primary/[0.02]"
+              className="flex items-center gap-1.5 py-1 px-2.5 text-xs text-neutral-700 hover:text-primary border-neutral-300 hover:border-primary/40 hover:bg-primary/[0.02]"
             >
               <Key className="h-3 w-3 text-primary" /> Permissions
             </Button>
           )
         }
         
-        return <span className="text-neutral-400 text-xs">—</span>
+        return <span className="text-neutral-600 text-xs">—</span>
       },
     },
   ]
@@ -319,7 +319,7 @@ export default function UsersPage() {
             variant="ghost"
             size="sm"
             onClick={() => handleRejectRequest(v)}
-            className="border-neutral-200 text-neutral-600 hover:text-red-600 hover:bg-red-50 flex items-center gap-1 py-1 px-2.5 text-xs rounded cursor-pointer"
+            className="border-neutral-300 text-neutral-600 hover:text-red-600 hover:bg-red-50 flex items-center gap-1 py-1 px-2.5 text-xs rounded cursor-pointer"
           >
             <ThumbsDown className="h-3 w-3" /> Reject
           </Button>
@@ -333,12 +333,12 @@ export default function UsersPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Users</h1>
-          <p className="mt-1 text-sm text-neutral-500">Manage employee access, system roles, and manager scopes.</p>
+          <p className="mt-1 text-sm text-neutral-600">Manage employee access, system roles, and manager scopes.</p>
         </div>
         {isAdmin && (
           <Button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-1.5 bg-[#E3001B] hover:bg-[#c20017] text-white py-2 px-4 rounded-lg font-semibold shadow-sm transition-colors border-none cursor-pointer"
+            className="flex items-center gap-1.5 bg-[#E3001B] hover:bg-[#c20017] text-white py-2 px-4 rounded-lg font-semibold shadow-lg transition-colors border-none cursor-pointer"
           >
             <Plus className="h-4 w-4" /> Add User
           </Button>
@@ -347,14 +347,14 @@ export default function UsersPage() {
 
       {/* Tabs */}
       {isAdmin && (
-        <div className="flex border-b border-neutral-200">
+        <div className="flex border-b border-neutral-300">
           <button
             onClick={() => setActiveTab('active')}
             className={cn(
               "px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-[2px] cursor-pointer bg-transparent border-none",
               activeTab === 'active'
                 ? "border-primary text-primary"
-                : "border-transparent text-neutral-500 hover:text-neutral-700"
+                : "border-transparent text-neutral-600 hover:text-neutral-700"
             )}
           >
             Active Users ({employees.length})
@@ -365,7 +365,7 @@ export default function UsersPage() {
               "px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-[2px] flex items-center gap-2 cursor-pointer bg-transparent border-none",
               activeTab === 'pending'
                 ? "border-primary text-primary"
-                : "border-transparent text-neutral-500 hover:text-neutral-700"
+                : "border-transparent text-neutral-600 hover:text-neutral-700"
             )}
           >
             Pending Requests
@@ -405,21 +405,21 @@ export default function UsersPage() {
           {/* Search & Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600" />
               <input
                 type="text"
                 placeholder="Search by name, username, or email…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-neutral-200 bg-white py-2 pl-9 pr-4 text-sm text-neutral-800 shadow-sm placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+                className="w-full rounded-lg border border-neutral-300 bg-white py-2 pl-9 pr-4 text-sm text-neutral-800 shadow-lg placeholder:text-neutral-600 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
               />
             </div>
             <div className="relative">
-              <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+              <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600" />
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value as any)}
-                className="appearance-none rounded-lg border border-neutral-200 bg-white py-2 pl-9 pr-8 text-sm text-neutral-700 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors cursor-pointer"
+                className="appearance-none rounded-lg border border-neutral-300 bg-white py-2 pl-9 pr-8 text-sm text-neutral-700 shadow-lg focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors cursor-pointer"
               >
                 <option value="All">All Roles</option>
                 <option value="Admin">Admin</option>
@@ -427,12 +427,12 @@ export default function UsersPage() {
                 <option value="Employee">Employee</option>
               </select>
             </div>
-            <span className="self-center text-xs text-neutral-400 whitespace-nowrap">
+            <span className="self-center text-xs text-neutral-600 whitespace-nowrap">
               {filteredEmployees.length} of {employees.length} users
             </span>
           </div>
 
-          <div className="border border-neutral-200 bg-white shadow-sm overflow-hidden rounded-lg">
+          <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden rounded-lg">
             <Table<Employee>
               columns={columns}
               rows={filteredEmployees}
@@ -445,7 +445,7 @@ export default function UsersPage() {
           </div>
         </>
       ) : (
-        <div className="border border-neutral-200 bg-white shadow-sm overflow-hidden rounded-lg">
+        <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden rounded-lg">
           <Table<Employee>
             columns={pendingColumns}
             rows={pendingRequests}
@@ -456,7 +456,7 @@ export default function UsersPage() {
             className="border-none rounded-none"
           />
           {pendingRequests.length === 0 && !isLoading && (
-            <div className="text-center py-12 text-neutral-500 text-sm">
+            <div className="text-center py-12 text-neutral-600 text-sm">
               No pending registration requests at the moment.
             </div>
           )}
@@ -474,7 +474,7 @@ export default function UsersPage() {
         <div className="space-y-6 py-2">
           {/* Functionality Permissions */}
           <div>
-            <h3 className="text-sm font-semibold text-neutral-900 border-b border-neutral-100 pb-2 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-neutral-900 border-b border-neutral-200 pb-2 mb-3 flex items-center gap-2">
               <Shield className="h-4 w-4 text-primary" />
               <span>1. Functional Permissions</span>
             </h3>
@@ -494,8 +494,8 @@ export default function UsersPage() {
                     className={cn(
                       'flex items-start gap-3 p-3 rounded-lg border text-left cursor-pointer transition-all hover:bg-neutral-50',
                       checked
-                        ? 'border-primary bg-primary/[0.01] text-primary-dark shadow-sm'
-                        : 'border-neutral-200 text-neutral-700'
+                        ? 'border-primary bg-primary/[0.01] text-primary-dark shadow-lg'
+                        : 'border-neutral-300 text-neutral-700'
                     )}
                   >
                     <input
@@ -512,7 +512,7 @@ export default function UsersPage() {
                     />
                     <div className="flex flex-col">
                       <span className="font-semibold text-xs text-neutral-900">{p.label}</span>
-                      <span className="text-[10.5px] text-neutral-400 mt-0.5 leading-normal">{p.desc}</span>
+                      <span className="text-[10.5px] text-neutral-600 mt-0.5 leading-normal">{p.desc}</span>
                     </div>
                   </label>
                 )
@@ -522,19 +522,19 @@ export default function UsersPage() {
 
           {/* Location / Region Scoping */}
           <div>
-            <h3 className="text-sm font-semibold text-neutral-900 border-b border-neutral-100 pb-2 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-neutral-900 border-b border-neutral-200 pb-2 mb-3 flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary" />
               <span>2. Warehouse & Regional Scoping</span>
             </h3>
             
-            <p className="text-[11px] text-neutral-500 mb-3 bg-neutral-50 p-2.5 rounded border border-neutral-100 leading-normal">
+            <p className="text-[11px] text-neutral-600 mb-3 bg-neutral-50 p-2.5 rounded border border-neutral-200 leading-normal">
               <strong>Scoping Rule:</strong> Managers will only be able to consult, assign, return, or transfer assets located at the specific warehouses or branches selected below.
             </p>
 
             {allLocations.length === 0 ? (
-              <p className="text-xs text-neutral-400 italic">No locations configured in the database.</p>
+              <p className="text-xs text-neutral-600 italic">No locations configured in the database.</p>
             ) : (
-              <div className="max-h-[220px] overflow-y-auto border border-neutral-200 rounded-lg divide-y divide-neutral-100 bg-white">
+              <div className="max-h-[220px] overflow-y-auto border border-neutral-300 rounded-lg divide-y divide-neutral-100 bg-white">
                 {allLocations.map((loc) => {
                   const checked = assignedLocs.includes(loc.id)
                   return (
@@ -560,13 +560,13 @@ export default function UsersPage() {
                         />
                         <div className="flex flex-col">
                           <span className="font-semibold text-neutral-800">{loc.label}</span>
-                          <span className="text-[10px] text-neutral-400 mt-0.5">{loc.code}</span>
+                          <span className="text-[10px] text-neutral-600 mt-0.5">{loc.code}</span>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-2">
                         {loc.type && (
-                          <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[9.5px] font-medium text-neutral-600 border border-neutral-200">
+                          <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[9.5px] font-medium text-neutral-600 border border-neutral-300">
                             {loc.type}
                           </span>
                         )}
@@ -584,7 +584,7 @@ export default function UsersPage() {
           </div>
 
           {/* Save / Cancel buttons */}
-          <div className="flex justify-end gap-2 border-t border-neutral-200 pt-4 mt-2">
+          <div className="flex justify-end gap-2 border-t border-neutral-300 pt-4 mt-2">
             <Button
               variant="secondary"
               onClick={() => setIsPermModalOpen(false)}
@@ -717,7 +717,7 @@ export default function UsersPage() {
             />
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-neutral-200 pt-4 mt-4">
+          <div className="flex justify-end gap-2 border-t border-neutral-300 pt-4 mt-4">
             <Button
               variant="secondary"
               onClick={() => setIsAddModalOpen(false)}

@@ -8,7 +8,7 @@ const badgeVariants = CVA(
     variants: {
       variant: {  
         active: 'bg-success bg-opacity-10 text-success border border-success border-opacity-30',
-        inactive: 'bg-neutral-100 text-neutral-700 border border-neutral-200',
+        inactive: 'bg-neutral-100 text-neutral-700 border border-neutral-300',
         warning: 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-30',
         critical: 'bg-error bg-opacity-10 text-error border border-error border-opacity-30',
         maintenance: 'bg-maintenance bg-opacity-10 text-maintenance border border-maintenance border-opacity-30',

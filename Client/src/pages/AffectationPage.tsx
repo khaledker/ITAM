@@ -100,7 +100,7 @@ export default function AffectationPage() {
     { key: 'tag', label: 'Tag', width: 'w-[15%]',
       render: (v: string) => <span className="font-semibold text-neutral-900">{v || '-'}</span> },
     { key: 'serial_number', label: 'S/N', width: 'w-[15%]',
-      render: (_v: any, row: Asset) => <span className="text-neutral-500">{row.serial_number || row.partNum || '-'}</span> },
+      render: (_v: any, row: Asset) => <span className="text-neutral-600">{row.serial_number || row.partNum || '-'}</span> },
     { key: 'category', label: 'Category', width: 'w-[20%]',
       render: (_v: any, row: Asset) => (
         <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
@@ -119,7 +119,7 @@ export default function AffectationPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Affectation</h1>
-        <p className="mt-1 text-sm text-neutral-500">Assign assets to employees</p>
+        <p className="mt-1 text-sm text-neutral-600">Assign assets to employees</p>
       </div>
 
       {loadError && (
@@ -139,7 +139,7 @@ export default function AffectationPage() {
       )}
 
       {/* Form card */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-neutral-300 bg-white p-6 shadow-lg">
         <h2 className="mb-5 text-lg font-semibold text-neutral-900">Affectation Details</h2>
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -206,12 +206,12 @@ export default function AffectationPage() {
         </div>
 
         {/* Meta */}
-        <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-100 pt-4">
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
+        <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-200 pt-4">
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
             <User className="h-4 w-4" />
             <span>Created by: <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
             <CalendarClock className="h-4 w-4" />
             <span>Created at: <span className="font-medium text-neutral-700">{new Date().toLocaleDateString('fr-DZ')}</span></span>
           </div>
@@ -232,14 +232,14 @@ export default function AffectationPage() {
       </div>
 
       {/* Selectable Asset Table */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="rounded-xl border border-neutral-300 bg-white p-6 shadow-lg space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-neutral-900">Assets to Assign</h2>
-            <p className="text-sm text-neutral-500">{selectedAssetIds.size} asset(s) selected.</p>
+            <p className="text-sm text-neutral-600">{selectedAssetIds.size} asset(s) selected.</p>
           </div>
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600" />
             <Input
               type="text"
               placeholder="Search Tag, S/N, Brand, Category..."

@@ -92,7 +92,7 @@ const TopBar = React.forwardRef<HTMLDivElement, TopBarProps>(
     <div
       ref={ref}
       className={cn(
-        'relative z-10 flex items-center justify-between border-b border-neutral-300 bg-white px-4 py-3 sm:px-6 shadow-sm',
+        'relative z-10 flex items-center justify-between border-b border-neutral-300 bg-white px-4 py-3 sm:px-6 shadow-lg',
         className
       )}
     >
