@@ -11,11 +11,11 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import AssetsPage from './pages/AssetsPage'
 import SearchPage from './pages/SearchPage'
-import AffectationPage from './pages/AffectationPage'
+import AssignmentPage from './pages/AssignmentPage'
 import ReceptionPage from './pages/ReceptionPage'
 import TransferPage from './pages/TransferPage'
 import RetourPage from './pages/RetourPage'
-import MaintenancePage from './pages/MaintenancePage'
+import MovementsPage from './pages/MovementsPage'
 import MonitoringPage from './pages/MonitoringPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
@@ -60,11 +60,11 @@ function AppLayout() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/assets" element={<AssetsPage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/affectation" element={<AffectationPage />} />
+            <Route path="/assignment" element={<AssignmentPage />} />
             <Route path="/reception" element={<ReceptionPage />} />
             <Route path="/transfer" element={<TransferPage />} />
             <Route path="/retour" element={<RetourPage />} />
-            <Route path="/maintenance" element={<MaintenancePage />} />
+            <Route path="/movements" element={<MovementsPage />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/users" element={<UsersPage />} />

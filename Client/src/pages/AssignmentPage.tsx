@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function AffectationPage() {
+export default function AssignmentPage() {
   const { user } = useAuth()
 
   // ── Remote data ───────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ export default function AffectationPage() {
       // Refresh available assets
       assetsApi.getAll({ status: 'Available' }).then(setAvailableAssets)
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Failed to save affectation.')
+      setSubmitError(err instanceof Error ? err.message : 'Failed to Save Assignment.')
     } finally {
       setIsSaving(false)
     }
@@ -118,7 +118,7 @@ export default function AffectationPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Affectation</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Assignment</h1>
         <p className="mt-1 text-sm text-neutral-600">Assign assets to employees</p>
       </div>
 
@@ -128,7 +128,7 @@ export default function AffectationPage() {
       {submitSuccessId !== null && (
         <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
           <CheckCircle className="h-4 w-4 shrink-0" />
-          <span>Affectation saved successfully as Draft. An Admin/Manager must approve it.</span>
+          <span>Assignment saved successfully as Draft. An Admin/Manager must approve it.</span>
         </div>
       )}
       {submitError && (
@@ -140,7 +140,7 @@ export default function AffectationPage() {
 
       {/* Form card */}
       <div className="rounded-xl border border-neutral-300 bg-white p-6 shadow-lg">
-        <h2 className="mb-5 text-lg font-semibold text-neutral-900">Affectation Details</h2>
+        <h2 className="mb-5 text-lg font-semibold text-neutral-900">Assignment Details</h2>
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
 
@@ -220,7 +220,7 @@ export default function AffectationPage() {
         {/* Actions */}
         <div className="mt-5 flex items-center gap-3">
           <Button id="aff-save-btn" variant="primary" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Saving…' : 'Save Affectation'}
+            {isSaving ? 'Saving…' : 'Save Assignment'}
           </Button>
           <Button id="aff-cancel-btn" variant="ghost" onClick={() => {
             setSelectedAssetIds(new Set()); setAssignedTo(''); setSourceId('');
