@@ -29,14 +29,12 @@ const primaryNav: NavItem[] = [
   { label: "Assignment", icon: UserCheck, to: "/assignment" },
   { label: "Reception", icon: PackageCheck, to: "/reception" },
   { label: "Transfer", icon: ArrowRightLeft, to: "/transfer" },
-  { label: "Retour", icon: RotateCcw, to: "/retour" },
+  { label: "Return", icon: RotateCcw, to: "/return" },
   { label: "Movements", icon: ClipboardList, to: "/movements" },
   { label: "Monitoring", icon: Activity, to: "/monitoring" },
   { label: "Reports", icon: BarChart2, to: "/reports" },
   { label: "Users", icon: Users, to: "/users" },
 ];
-
-const settingsItem: NavItem = { label: "Settings", icon: SettingsIcon, to: "/settings" };
 
 const getItemClassName = (isActive: boolean) => {
   if (isActive) {

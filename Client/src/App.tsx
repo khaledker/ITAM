@@ -14,7 +14,7 @@ import SearchPage from './pages/SearchPage'
 import AssignmentPage from './pages/AssignmentPage'
 import ReceptionPage from './pages/ReceptionPage'
 import TransferPage from './pages/TransferPage'
-import RetourPage from './pages/RetourPage'
+import ReturnPage from './pages/ReturnPage'
 import MovementsPage from './pages/MovementsPage'
 import MonitoringPage from './pages/MonitoringPage'
 import ReportsPage from './pages/ReportsPage'
@@ -63,7 +63,7 @@ function AppLayout() {
             <Route path="/assignment" element={<AssignmentPage />} />
             <Route path="/reception" element={<ReceptionPage />} />
             <Route path="/transfer" element={<TransferPage />} />
-            <Route path="/retour" element={<RetourPage />} />
+            <Route path="/return" element={<ReturnPage />} />
             <Route path="/movements" element={<MovementsPage />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
             <Route path="/reports" element={<ReportsPage />} />
