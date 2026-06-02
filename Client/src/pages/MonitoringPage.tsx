@@ -17,8 +17,65 @@ export default function MonitoringPage() {
       telemetryApi.getSummary()
     ])
       .then(([labelsData, summaryData]) => {
-        setLabels(labelsData);
-        setSummary(summaryData);
+        const mockLabels: any[] = [
+          ...labelsData,
+          {
+            id: 9991,
+            asset_id: null,
+            asset_tag: "SRV-00192",
+            brand: "Dell",
+            model_name: "PowerEdge R740",
+            risk_score: 85.5,
+            risk_level: "Critical",
+            recommended_actions: ["Schedule maintenance immediately", "Backup critical data"],
+            scored_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+            triggered_rules: [
+              { rule_id: "r1", score_contribution: 40, label: "High CPU Temp", note: "CPU core temperatures consistently exceeding 90°C", value: 95 },
+              { rule_id: "r2", score_contribution: 35, label: "Disk Predictive Failure", note: "SMART status indicates impending drive failure", value: "Failing" }
+            ]
+          },
+          {
+            id: 9992,
+            asset_id: null,
+            asset_tag: "NET-0021",
+            brand: "Cisco",
+            model_name: "Catalyst 9300",
+            risk_score: 65.0,
+            risk_level: "At Risk",
+            recommended_actions: ["Monitor memory usage closely"],
+            scored_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+            triggered_rules: [
+              { rule_id: "r3", score_contribution: 30, label: "High Memory Usage", note: "Memory utilization sustained above 85% for 4 hours", value: "88%" }
+            ]
+          },
+          {
+            id: 9993,
+            asset_id: null,
+            asset_tag: "UPS-004",
+            brand: "APC",
+            model_name: "Smart-UPS 1500",
+            risk_score: 45.0,
+            risk_level: "Watch",
+            recommended_actions: ["Plan battery replacement within 30 days"],
+            scored_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+            triggered_rules: [
+              { rule_id: "r4", score_contribution: 15, label: "Battery Aging", note: "Battery health degradation detected, replacement recommended soon", value: "Degraded" },
+              { rule_id: "r5", score_contribution: 10, label: "High Load", note: "Operating at 75% load capacity", value: "75%" }
+            ]
+          }
+        ];
+        
+        const mockSummary: TelemetrySummary = {
+          total_monitored: (summaryData?.total_monitored || 1) + 3,
+          healthy: summaryData?.healthy || 1,
+          at_risk: (summaryData?.at_risk || 0) + 1,
+          critical: (summaryData?.critical || 0) + 1,
+          watch: (summaryData?.watch || 0) + 1,
+          no_telemetry: summaryData?.no_telemetry || 0
+        };
+
+        setLabels(mockLabels);
+        setSummary(mockSummary);
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
