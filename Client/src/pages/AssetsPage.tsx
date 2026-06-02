@@ -575,7 +575,10 @@ export default function AssetsPage() {
       result = result.filter(
         (a) =>
           a.modele?.nom?.toLowerCase().includes(q) ||
-          a.tag.toLowerCase().includes(q)
+          a.tag?.toLowerCase().includes(q) ||
+          a.serial_number?.toLowerCase().includes(q) ||
+          a.modele?.categorie?.toLowerCase().includes(q) ||
+          a.modele?.marque?.toLowerCase().includes(q)
       )
     }
 
@@ -635,15 +638,16 @@ export default function AssetsPage() {
           )}
 
           {/* Search + Add */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full max-w-sm shrink-0">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-600" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600" />
               <Input
+                type="text"
                 id="asset-search"
-                placeholder="Search by model or tag…"
+                placeholder="Search Tag, S/N, Brand, Category..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className="pl-9 w-full"
               />
             </div>
             {isAdminOrManager && (

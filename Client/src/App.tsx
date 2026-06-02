@@ -42,14 +42,14 @@ function AppLayout() {
 
   return (
     <div className="h-screen bg-slate-100 text-slate-900 flex flex-col overflow-hidden">
-      <TopBar 
-        userName={user?.full_name || "IT Operations"} 
-        userInitials={user?.full_name ? user.full_name.charAt(0) : "IT"} 
+      <TopBar
+        userName={user?.full_name || "IT Operations"}
+        userInitials={user?.full_name ? user.full_name.charAt(0) : "IT"}
         notificationCount={0}
         onLogout={logout}
       >
         <p className="text-xl font-bold tracking-tight text-[#E3001B]">ITAM</p>
-      </TopBar> 
+      </TopBar>
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
@@ -81,9 +81,9 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <Routes>
-          <Route path="/login"    element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/*"        element={<AppLayout />} />
+          <Route path="/*" element={<AppLayout />} />
         </Routes>
       </ToastProvider>
     </AuthProvider>
