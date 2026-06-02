@@ -72,7 +72,7 @@ const TYPE_OPTIONS = ['All', 'Reception', 'Assignment', 'Transfer', 'Return'] as
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function MaintenancePage() {
+export default function MovementsPage() {
   const { user } = useAuth()
   const isAdminOrManager = user?.role === 'Admin' || user?.role === 'Manager'
 
