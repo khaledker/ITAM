@@ -1,5 +1,5 @@
 import React from 'react'
-import { Bell, LogOut, Settings } from 'lucide-react'
+import { Bell, LogOut } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export interface UserAvatarProps {
@@ -79,10 +79,7 @@ const TopBar = React.forwardRef<HTMLDivElement, TopBarProps>(
     {
       userName,
       userInitials = 'U',
-      notificationCount,
       onUserClick,
-      onNotificationClick,
-      onSettingsClick,
       onLogout,
       children,
       className,

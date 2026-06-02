@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function RetourPage() {
+export default function ReturnPage() {
   const { user } = useAuth()
 
   // ── Remote data ───────────────────────────────────────────────────────────
@@ -112,7 +112,7 @@ export default function RetourPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Retour</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Return</h1>
         <p className="mt-1 text-sm text-neutral-600">Return assigned assets back to a warehouse</p>
       </div>
 
@@ -177,10 +177,10 @@ export default function RetourPage() {
 
         {/* Actions */}
         <div className="mt-5 flex items-center gap-3">
-          <Button id="retour-save-btn" variant="primary" onClick={handleSave} disabled={isSaving}>
+          <Button id="return-save-btn" variant="primary" onClick={handleSave} disabled={isSaving}>
             {isSaving ? 'Saving…' : 'Save Return'}
           </Button>
-          <Button id="retour-cancel-btn" variant="ghost" onClick={() => {
+          <Button id="return-cancel-btn" variant="ghost" onClick={() => {
             setSelectedAssetIds(new Set()); setReturnedToId(''); setPerformedBy('');
             setReason(''); setSubmitSuccessId(null); setSubmitError(null);
           }}>Cancel</Button>
