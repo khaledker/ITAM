@@ -40,13 +40,26 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 // ── Auth ──────────────────────────────────────────────────
 export const authApi = {
   login: (user_name: string, password: string) =>
-    request<{ token: string; employee: Employee }>('/auth/login', {
+    request<{ token: string; user: User }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ user_name, password }),
       skipAuth: true,
     }),
 
-  me: () => request<Employee>('/auth/me'),
+  me: () => request<User>('/auth/me'),
+};
+
+// ── Users ─────────────────────────────────────────────────
+export const usersApi = {
+  getAll: () => request<User[]>('/users'),
+  create: (body: Partial<User>) => request<User>('/users', { method: 'POST', body: JSON.stringify(body) }),
+  updateRole: (id: number, role: 'Admin' | 'Manager' | 'User') => request<User>(`/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
+  getPermissions: (id: number) => request<{ permissions: string[]; locationIds: number[] }>(`/users/${id}/permissions`),
+  updatePermissions: (id: number, body: { permissions: string[]; locationIds: number[] }) =>
+    request<{ permissions: string[]; locationIds: number[] }>(`/users/${id}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
 };
 
 // ── Assets ────────────────────────────────────────────────
@@ -122,13 +135,6 @@ export const employeesApi = {
   create: (body: Partial<Employee>) => request<Employee>('/employees', { method: 'POST', body: JSON.stringify(body) }),
   update: (id: number, body: Partial<Employee>) => request<Employee>(`/employees/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   remove: (id: number) => request<void>(`/employees/${id}`, { method: 'DELETE' }),
-  updateRole: (id: number, role: 'Admin' | 'Manager' | 'Employee') => request<Employee>(`/employees/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
-  getPermissions: (id: number) => request<{ permissions: string[]; locationIds: number[] }>(`/employees/${id}/permissions`),
-  updatePermissions: (id: number, body: { permissions: string[]; locationIds: number[] }) =>
-    request<{ permissions: string[]; locationIds: number[] }>(`/employees/${id}/permissions`, {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    }),
 };
 
 // ── Departments ───────────────────────────────────────────
@@ -172,19 +178,26 @@ export const telemetryApi = {
 };
 
 // ── Shared types ──────────────────────────────────────────
-export interface Employee {
+export interface User {
   id: number;
   user_name: string;
   full_name: string;
   email: string;
-  role: 'Admin' | 'Manager' | 'Employee';
+  role: 'Admin' | 'Manager' | 'User';
   status: 'pending' | 'active' | 'rejected';
+  created_at?: string;
+  permissions?: string[];
+  locationIds?: number[];
+  password?: string;
+}
+
+export interface Employee {
+  id: number;
+  full_name: string;
+  email: string;
   department_id: number | null;
   department_name?: string | null;
-  reviewed_by_name?: string | null;
   created_at?: string;
-  reviewed_at?: string | null;
-  password?: string;
 }
 
 export interface Asset {
@@ -335,10 +348,10 @@ export interface TelemetrySummary {
 
 // ── Registration ──────────────────────────────────────────
 export const registrationApi = {
-  submit: (body: Partial<Employee>) => request<{ message: string }>('/auth/register', { method: 'POST', body: JSON.stringify(body), skipAuth: true }),
+  submit: (body: Partial<User>) => request<{ message: string }>('/auth/register', { method: 'POST', body: JSON.stringify(body), skipAuth: true }),
   getAll: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request<Employee[]>(`/auth/registrations${query}`);
+    return request<User[]>(`/auth/registrations${query}`);
   },
   approve: (id: number) => request<{ message: string }>(`/auth/registrations/${id}/approve`, { method: 'PATCH' }),
   reject: (id: number) => request<{ message: string }>(`/auth/registrations/${id}/reject`, { method: 'PATCH' }),

@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { authApi, type Employee } from '@/lib/api';
+import { authApi, type User } from '@/lib/api';
 
 // ── Types ─────────────────────────────────────────────────
 interface AuthState {
-  user: Employee | null;
+  user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -39,10 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Verify with the server — /auth/me returns 401 if token is expired
     authApi.me()
-      .then((employee) => {
-        setState({ user: employee, token, isAuthenticated: true, isLoading: false });
+      .then((meUser) => {
+        setState({ user: meUser, token, isAuthenticated: true, isLoading: false });
         // Refresh cached user in case role/data changed
-        localStorage.setItem('itam_user', JSON.stringify(employee));
+        localStorage.setItem('itam_user', JSON.stringify(meUser));
       })
       .catch(() => {
         // Token is invalid or expired — clear everything
@@ -53,12 +53,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (user_name: string, password: string) => {
-    const { token, employee } = await authApi.login(user_name, password);
+    const { token, user: loggedInUser } = await authApi.login(user_name, password);
 
     localStorage.setItem('itam_token', token);
-    localStorage.setItem('itam_user', JSON.stringify(employee));
+    localStorage.setItem('itam_user', JSON.stringify(loggedInUser));
 
-    setState({ user: employee, token, isAuthenticated: true, isLoading: false });
+    setState({ user: loggedInUser, token, isAuthenticated: true, isLoading: false });
   };
 
   const logout = () => {

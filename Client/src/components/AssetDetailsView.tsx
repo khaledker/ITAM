@@ -3,8 +3,8 @@ import { CheckCircle, Plus, User, RotateCcw, CalendarClock } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge';
 import { assetsApi, telemetryApi, type Asset, type AssetMovement } from '@/lib/api';
 
-const statusVariant: Record<string, 'success' | 'warning' | 'critical' | 'inactive'> = {
-  Available: 'success',
+const statusVariant: Record<string, 'active' | 'warning' | 'critical' | 'inactive'> = {
+  Available: 'active',
   Assigned: 'inactive',
   inMaintenance: 'warning',
   retired: 'critical',

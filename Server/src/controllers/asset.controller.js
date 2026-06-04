@@ -2,8 +2,8 @@ const svc = require('../services/asset.service');
 
 // Helper: extract location scoping from request
 const getScopeOptions = (req) => {
-  if (req.employee && req.employee.role === 'Manager' && req.employee.locationIds) {
-    return { scopeLocationIds: req.employee.locationIds };
+  if (req.user && req.user.role === 'Manager' && req.user.locationIds) {
+    return { scopeLocationIds: req.user.locationIds };
   }
   return {};
 };

@@ -1,6 +1,6 @@
 const { body } = require('express-validator');
 
-const VALID_TYPES = ['AdministrativeBlock', 'TrainingRoom', 'Warehouse', 'CallCenter'];
+const VALID_TYPES = ['AdministrativeBlock', 'Warehouse'];
 
 const create = [
   body('code')

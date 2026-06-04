@@ -18,14 +18,14 @@ const getAll = async (req, res, next) => {
 
 const approve = async (req, res, next) => {
   try {
-    const result = await svc.approve(req.params.id, req.employee.id);
+    const result = await svc.approve(req.params.id, req.user.id);
     res.json(result);
   } catch (err) { next(err); }
 };
 
 const reject = async (req, res, next) => {
   try {
-    const result = await svc.reject(req.params.id, req.employee.id);
+    const result = await svc.reject(req.params.id, req.user.id);
     res.json(result);
   } catch (err) { next(err); }
 };

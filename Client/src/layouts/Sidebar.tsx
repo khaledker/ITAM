@@ -7,7 +7,6 @@ import {
   ArrowRightLeft,
   UserCheck,
   Server,
-  Settings as SettingsIcon,
   Users,
   ClipboardList,
   RotateCcw,

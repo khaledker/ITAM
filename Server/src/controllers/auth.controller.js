@@ -24,7 +24,7 @@ const register = async (req, res, next) => {
 
 // Returns the logged-in employee's info from the JWT
 const me = (req, res) => {
-  res.json(req.employee);
+  res.json(req.user);
 };
 
 module.exports = { login, register, me };

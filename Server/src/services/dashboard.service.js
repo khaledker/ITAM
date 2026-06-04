@@ -36,7 +36,7 @@ const getRecentMovements = async ({ scopeLocationIds } = {}) => {
       mv.status,
       SUBSTRING_INDEX(GROUP_CONCAT(a.tag ORDER BY a.tag), ',', 3) AS asset_tag,
       COUNT(mi.asset_id) AS asset_count,
-      e.full_name AS performed_by,
+      u.full_name AS performed_by,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
         WHEN asn.id IS NOT NULL THEN 'Assignment'
@@ -46,7 +46,7 @@ const getRecentMovements = async ({ scopeLocationIds } = {}) => {
     FROM AssetMovement mv
     JOIN MovementItem mi ON mi.movement_id = mv.id
     JOIN Asset a ON a.id = mi.asset_id
-    JOIN Employee e ON e.id = mv.performed_by
+    JOIN Users u ON u.id = mv.performed_by
     LEFT JOIN Reception   r   ON r.id   = mv.id
     LEFT JOIN Assignment  asn ON asn.id = mv.id
     LEFT JOIN Transfer    t   ON t.id   = mv.id

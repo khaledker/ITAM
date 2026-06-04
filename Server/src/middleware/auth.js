@@ -18,9 +18,9 @@ const protect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Fetch latest employee data from the database
+    // Fetch latest user data from the database
     const [rows] = await db.query(
-      'SELECT id, user_name, email, role, status FROM Employee WHERE id = ?',
+      'SELECT id, user_name, email, role, status FROM Users WHERE id = ?',
       [decoded.id]
     );
 
@@ -28,22 +28,22 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'User no longer exists.' });
     }
 
-    const employee = rows[0];
+    const user = rows[0];
 
     // Check account status
-    if (employee.status !== 'active') {
+    if (user.status !== 'active') {
       return res.status(403).json({
-        message: `Account is ${employee.status}. Contact administrator.`
+        message: `Account is ${user.status}. Contact administrator.`
       });
     }
 
-    req.employee = employee;
+    req.user = user;
 
     // For Managers, eagerly load permissions + assigned locations
-    if (employee.role === 'Manager') {
-      const perms = await permissionService.getPermissions(employee.id);
-      req.employee.permissions = perms.permissions;
-      req.employee.locationIds = perms.locationIds;
+    if (user.role === 'Manager') {
+      const perms = await permissionService.getPermissions(user.id);
+      req.user.permissions = perms.permissions;
+      req.user.locationIds = perms.locationIds;
     }
 
     next();
@@ -57,7 +57,7 @@ const protect = async (req, res, next) => {
  */
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!req.employee || !roles.includes(req.employee.role)) {
+    if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({
         message: `Access denied. Required role: ${roles.join(' or ')}.`
       });
@@ -72,30 +72,30 @@ const authorize = (...roles) => {
  */
 const requirePermission = (...permissions) => {
   return async (req, res, next) => {
-    if (!req.employee) {
+    if (!req.user) {
       return res.status(401).json({ message: 'Authentication required.' });
     }
 
     // Admin always has full access
-    if (req.employee.role === 'Admin') {
+    if (req.user.role === 'Admin') {
       return next();
     }
 
-    // Employee role — basic access only (create drafts, view own assets)
-    if (req.employee.role === 'Employee') {
-      // Optional: Block employees from certain operations entirely
-      const employeeAllowed = ['consultation'];
-      const hasAccess = permissions.some(p => employeeAllowed.includes(p));
+    // User role — basic access only (create drafts, view own assets)
+    if (req.user.role === 'User') {
+      // Optional: Block users from certain operations entirely
+      const userAllowed = ['consultation'];
+      const hasAccess = permissions.some(p => userAllowed.includes(p));
       if (!hasAccess) {
         return res.status(403).json({
-          message: 'Employees cannot perform this operation.'
+          message: 'Users cannot perform this operation.'
         });
       }
       return next();
     }
 
     // Manager — check granular permissions
-    const userPerms = req.employee.permissions || [];
+    const userPerms = req.user.permissions || [];
 
     // Implicit consultation for any manager with at least one permission
     const effectivePerms = userPerms.length > 0
@@ -126,13 +126,13 @@ const requirePermission = (...permissions) => {
 const requireLocationAccess = (source = 'body', fields = 'location_id') => {
   return (req, res, next) => {
     // Admin bypasses location check
-    if (req.employee.role === 'Admin') return next();
+    if (req.user.role === 'Admin') return next();
 
-    // Employees don't have location restrictions
-    if (req.employee.role === 'Employee') return next();
+    // Users don't have location restrictions
+    if (req.user.role === 'User') return next();
 
     // Manager location check
-    const managerLocations = req.employee.locationIds || [];
+    const managerLocations = req.user.locationIds || [];
 
     // No locations assigned = no access to any location operations
     if (managerLocations.length === 0) {

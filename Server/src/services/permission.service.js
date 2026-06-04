@@ -7,14 +7,14 @@ const VALID_PERMISSIONS = ['consultation', 'reception', 'assignment', 'transfer'
  * Get a manager's permissions and assigned locations.
  * Returns { permissions: string[], locationIds: number[] }
  */
-const getPermissions = async (employeeId) => {
+const getPermissions = async (userId) => {
   const [permRows] = await db.query(
-    'SELECT permission FROM ManagerPermission WHERE employee_id = ?',
-    [employeeId]
+    'SELECT permission FROM ManagerPermission WHERE user_id = ?',
+    [userId]
   );
   const [locRows] = await db.query(
-    'SELECT location_id FROM ManagerLocation WHERE employee_id = ?',
-    [employeeId]
+    'SELECT location_id FROM ManagerLocation WHERE user_id = ?',
+    [userId]
   );
   return {
     permissions: permRows.map(r => r.permission),
@@ -25,17 +25,17 @@ const getPermissions = async (employeeId) => {
 /**
  * Replace all permissions for a manager.
  */
-const setPermissions = async (employeeId, permissions) => {
+const setPermissions = async (userId, permissions) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
-    await conn.query('DELETE FROM ManagerPermission WHERE employee_id = ?', [employeeId]);
+    await conn.query('DELETE FROM ManagerPermission WHERE user_id = ?', [userId]);
 
     if (permissions && permissions.length > 0) {
       const valid = permissions.filter(p => VALID_PERMISSIONS.includes(p));
       if (valid.length > 0) {
-        const values = valid.map(p => [employeeId, p]);
-        await conn.query('INSERT INTO ManagerPermission (employee_id, permission) VALUES ?', [values]);
+        const values = valid.map(p => [userId, p]);
+        await conn.query('INSERT INTO ManagerPermission (user_id, permission) VALUES ?', [values]);
       }
     }
 
@@ -51,15 +51,15 @@ const setPermissions = async (employeeId, permissions) => {
 /**
  * Replace all assigned locations for a manager.
  */
-const setLocations = async (employeeId, locationIds) => {
+const setLocations = async (userId, locationIds) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
-    await conn.query('DELETE FROM ManagerLocation WHERE employee_id = ?', [employeeId]);
+    await conn.query('DELETE FROM ManagerLocation WHERE user_id = ?', [userId]);
 
     if (locationIds && locationIds.length > 0) {
-      const values = locationIds.map(lid => [employeeId, lid]);
-      await conn.query('INSERT INTO ManagerLocation (employee_id, location_id) VALUES ?', [values]);
+      const values = locationIds.map(lid => [userId, lid]);
+      await conn.query('INSERT INTO ManagerLocation (user_id, location_id) VALUES ?', [values]);
     }
 
     await conn.commit();
@@ -74,26 +74,26 @@ const setLocations = async (employeeId, locationIds) => {
 /**
  * Set both permissions and locations in one call.
  */
-const setAll = async (employeeId, { permissions, locationIds }) => {
+const setAll = async (userId, { permissions, locationIds }) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
     // Permissions
-    await conn.query('DELETE FROM ManagerPermission WHERE employee_id = ?', [employeeId]);
+    await conn.query('DELETE FROM ManagerPermission WHERE user_id = ?', [userId]);
     if (permissions && permissions.length > 0) {
       const valid = permissions.filter(p => VALID_PERMISSIONS.includes(p));
       if (valid.length > 0) {
-        const pValues = valid.map(p => [employeeId, p]);
-        await conn.query('INSERT INTO ManagerPermission (employee_id, permission) VALUES ?', [pValues]);
+        const pValues = valid.map(p => [userId, p]);
+        await conn.query('INSERT INTO ManagerPermission (user_id, permission) VALUES ?', [pValues]);
       }
     }
 
     // Locations
-    await conn.query('DELETE FROM ManagerLocation WHERE employee_id = ?', [employeeId]);
+    await conn.query('DELETE FROM ManagerLocation WHERE user_id = ?', [userId]);
     if (locationIds && locationIds.length > 0) {
-      const lValues = locationIds.map(lid => [employeeId, lid]);
-      await conn.query('INSERT INTO ManagerLocation (employee_id, location_id) VALUES ?', [lValues]);
+      const lValues = locationIds.map(lid => [userId, lid]);
+      await conn.query('INSERT INTO ManagerLocation (user_id, location_id) VALUES ?', [lValues]);
     }
 
     await conn.commit();
@@ -108,10 +108,10 @@ const setAll = async (employeeId, { permissions, locationIds }) => {
 /**
  * Check if a manager has a specific permission.
  */
-const hasPermission = async (employeeId, permission) => {
+const hasPermission = async (userId, permission) => {
   const [rows] = await db.query(
-    'SELECT 1 FROM ManagerPermission WHERE employee_id = ? AND permission = ? LIMIT 1',
-    [employeeId, permission]
+    'SELECT 1 FROM ManagerPermission WHERE user_id = ? AND permission = ? LIMIT 1',
+    [userId, permission]
   );
   return rows.length > 0;
 };
@@ -119,10 +119,10 @@ const hasPermission = async (employeeId, permission) => {
 /**
  * Get the list of location IDs assigned to a manager.
  */
-const getLocationIds = async (employeeId) => {
+const getLocationIds = async (userId) => {
   const [rows] = await db.query(
-    'SELECT location_id FROM ManagerLocation WHERE employee_id = ?',
-    [employeeId]
+    'SELECT location_id FROM ManagerLocation WHERE user_id = ?',
+    [userId]
   );
   return rows.map(r => r.location_id);
 };
