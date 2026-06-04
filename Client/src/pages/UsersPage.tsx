@@ -361,13 +361,72 @@ export default function UsersPage() {
         </div>
         {isAdmin && (
           <Button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-1.5 bg-[#E3001B] hover:bg-[#c20017] text-white py-2 px-4 rounded-lg font-semibold shadow-lg transition-colors border-none cursor-pointer"
+            onClick={() => setIsAddModalOpen(v => !v)}
+            className={cn(
+              "flex items-center gap-1.5 py-2 px-4 rounded-lg font-semibold shadow-lg transition-all border-none cursor-pointer",
+              isAddModalOpen
+                ? "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
+                : "bg-[#E3001B] hover:bg-[#c20017] text-white"
+            )}
           >
-            <Plus className="h-4 w-4" /> Add User
+            <Plus className={cn("h-4 w-4 transition-transform", isAddModalOpen && "rotate-45")} />
+            {isAddModalOpen ? 'Cancel' : 'Add User'}
           </Button>
         )}
       </div>
+
+      {/* ── Inline Add User Panel ───────────────────────────── */}
+      {isAdmin && isAddModalOpen && (
+        <div className="rounded-xl border border-neutral-300 bg-white shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-neutral-50">
+            <div>
+              <h2 className="text-base font-bold text-neutral-900">Add New User</h2>
+              <p className="text-xs text-neutral-600 mt-0.5">Directly create an employee, manager, or administrator account.</p>
+            </div>
+          </div>
+          <form onSubmit={handleAddUserSubmit} className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="add_fullname" className="block text-xs font-semibold text-neutral-700 mb-1">Full Name</label>
+                <Input id="add_fullname" type="text" placeholder="e.g. Mahdi Benhamada" value={addFullName} onChange={(e) => setAddFullName(e.target.value)} required disabled={isAddingUser} />
+              </div>
+              <div>
+                <label htmlFor="add_username" className="block text-xs font-semibold text-neutral-700 mb-1">Username</label>
+                <Input id="add_username" type="text" placeholder="e.g. mahdi.ben" value={addUserName} onChange={(e) => setAddUserName(e.target.value)} required disabled={isAddingUser} />
+              </div>
+              <div>
+                <label htmlFor="add_email" className="block text-xs font-semibold text-neutral-700 mb-1">Email Address</label>
+                <Input id="add_email" type="email" placeholder="e.g. m.benhamada@djezzy.dz" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} required disabled={isAddingUser} />
+              </div>
+              <div>
+                <label htmlFor="add_dept" className="block text-xs font-semibold text-neutral-700 mb-1">Department</label>
+                <select id="add_dept" value={addDepartmentId} onChange={(e) => setAddDepartmentId(e.target.value)} disabled={isAddingUser} className="block w-full h-10 rounded-md border border-neutral-300 bg-white py-2 px-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors">
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (<option key={dept.id} value={dept.id}>{dept.libelle}</option>))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="add_role" className="block text-xs font-semibold text-neutral-700 mb-1">System Role</label>
+                <select id="add_role" value={addRole} onChange={(e) => setAddRole(e.target.value as any)} required disabled={isAddingUser} className="block w-full h-10 rounded-md border border-neutral-300 bg-white py-2 px-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors">
+                  <option value="User">User</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="add_pass" className="block text-xs font-semibold text-neutral-700 mb-1">Password <span className="font-normal text-neutral-500">(optional — defaults to Djezzy@123)</span></label>
+                <Input id="add_pass" type="text" placeholder="Leave blank for default" value={addPassword} onChange={(e) => setAddPassword(e.target.value)} disabled={isAddingUser} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-5 pt-4 border-t border-neutral-200">
+              <Button variant="secondary" type="button" onClick={() => setIsAddModalOpen(false)} disabled={isAddingUser}>Cancel</Button>
+              <Button type="submit" disabled={isAddingUser} className="bg-[#E3001B] hover:bg-[#c20017] text-white border-none cursor-pointer font-semibold">
+                {isAddingUser ? 'Adding...' : 'Add User'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Tabs */}
       {isAdmin && (
@@ -649,140 +708,6 @@ export default function UsersPage() {
         </div>
       </Modal>
 
-      {/* Add User Modal */}
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Add New User"
-        description="Directly create an employee, manager, or administrator account."
-        size="md"
-      >
-        <form onSubmit={handleAddUserSubmit} className="space-y-4 py-2">
-          <div>
-            <label htmlFor="add_fullname" className="block text-xs font-semibold text-neutral-700">
-              Full Name
-            </label>
-            <Input
-              id="add_fullname"
-              type="text"
-              placeholder="e.g. Mahdi Benhamada"
-              value={addFullName}
-              onChange={(e) => setAddFullName(e.target.value)}
-              required
-              disabled={isAddingUser}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="add_username" className="block text-xs font-semibold text-neutral-700">
-              Username
-            </label>
-            <Input
-              id="add_username"
-              type="text"
-              placeholder="e.g. mahdi.ben"
-              value={addUserName}
-              onChange={(e) => setAddUserName(e.target.value)}
-              required
-              disabled={isAddingUser}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="add_email" className="block text-xs font-semibold text-neutral-700">
-              Email Address
-            </label>
-            <Input
-              id="add_email"
-              type="email"
-              placeholder="e.g. m.benhamada@djezzy.dz"
-              value={addEmail}
-              onChange={(e) => setAddEmail(e.target.value)}
-              required
-              disabled={isAddingUser}
-              className="mt-1"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="add_dept" className="block text-xs font-semibold text-neutral-700">
-                Department
-              </label>
-              <select
-                id="add_dept"
-                value={addDepartmentId}
-                onChange={(e) => setAddDepartmentId(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-neutral-300 bg-white py-2 px-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                required
-                disabled={isAddingUser}
-                style={{ height: '2.5rem' }}
-              >
-                <option value="">Select Department</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.libelle}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="add_role" className="block text-xs font-semibold text-neutral-700">
-                System Role
-              </label>
-              <select
-                id="add_role"
-                value={addRole}
-                onChange={(e) => setAddRole(e.target.value as any)}
-                className="mt-1 block w-full rounded-md border border-neutral-300 bg-white py-2 px-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                required
-                disabled={isAddingUser}
-                style={{ height: '2.5rem' }}
-              >
-                <option value="User">User</option>
-                <option value="Manager">Manager</option>
-                <option value="Admin">Admin</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="add_pass" className="block text-xs font-semibold text-neutral-700">
-              Password (Optional - Defaults to Djezzy@123)
-            </label>
-            <Input
-              id="add_pass"
-              type="text"
-              placeholder="e.g. customSecretPassword123"
-              value={addPassword}
-              onChange={(e) => setAddPassword(e.target.value)}
-              disabled={isAddingUser}
-              className="mt-1"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 border-t border-neutral-300 pt-4 mt-4">
-            <Button
-              variant="secondary"
-              onClick={() => setIsAddModalOpen(false)}
-              disabled={isAddingUser}
-              type="button"
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={isAddingUser}
-              type="submit"
-              className="bg-[#E3001B] hover:bg-[#c20017] text-white border-none cursor-pointer font-semibold"
-            >
-              {isAddingUser ? 'Adding User...' : 'Add User'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   )
 }

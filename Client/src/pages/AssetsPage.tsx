@@ -21,7 +21,7 @@ interface AssetCreateBody {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const STATUS_OPTIONS = ['All', 'Available', 'Assigned', 'In Maintenance', 'Retired'] as const
-const CATEGORY_OPTIONS = ['All', 'Network', 'Server', 'UPS', 'Workstation', 'Printer', 'Laptop', 'Desktop', 'Printer'] as const
+const CATEGORY_OPTIONS = ['All', 'Network', 'Server', 'UPS', 'Workstation', 'Printer', 'Laptop', 'Desktop', 'Monitor'] as const
 
 const statusLabel: Record<AssetStatus, string> = {
   Available: 'Available',
