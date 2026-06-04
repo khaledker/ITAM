@@ -263,7 +263,7 @@ export default function UsersPage() {
       width: 'w-[15%]',
       render: (_v: any, row: User) => {
         if (!isAdmin) return <span className="text-neutral-600 text-xs">—</span>
-        
+
         if (row.role === 'Manager') {
           return (
             <Button
@@ -276,7 +276,7 @@ export default function UsersPage() {
             </Button>
           )
         }
-        
+
         return <span className="text-neutral-600 text-xs">—</span>
       },
     },
@@ -584,7 +584,7 @@ export default function UsersPage() {
               <Shield className="h-4 w-4 text-primary" />
               <span>1. Functional Permissions</span>
             </h3>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { key: 'consultation', label: 'Consultation', desc: 'Allows viewing general asset lists and dashboard statistics.' },
@@ -632,7 +632,7 @@ export default function UsersPage() {
               <MapPin className="h-4 w-4 text-primary" />
               <span>2. Warehouse & Regional Scoping</span>
             </h3>
-            
+
             <p className="text-[11px] text-neutral-600 mb-3 bg-neutral-50 p-2.5 rounded border border-neutral-200 leading-normal">
               <strong>Scoping Rule:</strong> Managers will only be able to consult, assign, return, or transfer assets located at the specific warehouses or branches selected below.
             </p>
@@ -669,7 +669,7 @@ export default function UsersPage() {
                           <span className="text-[10px] text-neutral-600 mt-0.5">{loc.code}</span>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         {loc.type && (
                           <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[9.5px] font-medium text-neutral-600 border border-neutral-300">
