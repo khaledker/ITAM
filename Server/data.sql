@@ -76,23 +76,20 @@ INSERT INTO AssetModel (id, name, code, brand, category, part_number) VALUES
 --    id=2 Manager
 --    id=3 User
 -- ────────────────────────────────────────────────────────
-INSERT INTO Users (id, user_name, full_name, email, password, status, role) VALUES
-(1, 'admin.sys',   'System Administrator', 'admin@itam.local',
-    '$2b$10$GKFcFbH7GYLKCr7XrnC5T.K7I1hlB1yiKSmZP3N5OsEKRCY9F1qd6',  -- Admin@1234
-    'active', 'Admin'),
-(2, 'm.belkacem',  'Mohamed Belkacem',     'm.belkacem@itam.local',
-    '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',  -- Pass@1234
-    'active', 'Manager'),
-(3, 'k.user',      'Karim User',           'k.user@itam.local',
-    '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',  -- Pass@1234
-    'active', 'User');
-
 INSERT INTO Employee (id, full_name, email, department_id) VALUES
-(3, 'Sofia Rahmani', 's.rahmani@itam.local', 2),
-(4, 'Karim Haddad',  'k.haddad@itam.local',  1),
-(5, 'Amira Mekki',   'a.mekki@itam.local',   3),
-(6, 'Riad Bouzid',   'r.bouzid@itam.local',  4),
-(7, 'Leila Hamza',   'l.hamza@itam.local',   2);
+(1, 'System Administrator', 'admin@itam.local', 1),
+(2, 'Mohamed Belkacem',     'm.belkacem@itam.local', 1),
+(3, 'Sofia Rahmani',        's.rahmani@itam.local', 2),
+(4, 'Karim Haddad',         'k.haddad@itam.local',  1),
+(5, 'Amira Mekki',          'a.mekki@itam.local',   3),
+(6, 'Riad Bouzid',          'r.bouzid@itam.local',  4),
+(7, 'Leila Hamza',          'l.hamza@itam.local',   2),
+(8, 'Karim User',           'k.user@itam.local',    1);
+
+INSERT INTO Users (id, user_name, employee_id, password, status, role) VALUES
+(1, 'admin.sys',   1, '$2b$10$GKFcFbH7GYLKCr7XrnC5T.K7I1hlB1yiKSmZP3N5OsEKRCY9F1qd6', 'active', 'Admin'),
+(2, 'm.belkacem',  2, '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy', 'active', 'Manager'),
+(3, 'k.user',      8, '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy', 'active', 'User');
 
 INSERT INTO ManagerPermission (user_id, permission) VALUES
 (2, 'consultation'), (2, 'reception'), (2, 'assignment'), (2, 'transfer'), (2, 'return');

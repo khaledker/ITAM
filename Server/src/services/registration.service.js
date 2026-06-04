@@ -6,26 +6,50 @@ const bcrypt = require('bcryptjs');
  * Creates a Users record with status = 'pending'.
  */
 const createRequest = async ({ user_name, full_name, email, password }) => {
-  // Check for duplicate username / email in Users table
-  const [existingUser] = await db.query(
-    'SELECT id, status FROM Users WHERE user_name = ? OR email = ?',
-    [user_name, email]
-  );
-  
-  // Block if an active or pending account already exists
-  const blocking = existingUser.filter(e => e.status === 'active' || e.status === 'pending');
-  if (blocking.length > 0) {
-    const err = new Error('An account with this username or email already exists.');
-    err.statusCode = 409;
-    throw err;
-  }
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  const hashed = await bcrypt.hash(password, 10);
-  const [result] = await db.query(
-    'INSERT INTO Users (user_name, full_name, email, password, role, status) VALUES (?, ?, ?, ?, ?, ?)',
-    [user_name, full_name, email, hashed, 'User', 'pending']
-  );
-  return { id: result.insertId, user_name, full_name, email, status: 'pending' };
+    // Check for duplicate username in Users or email in Employee/Users
+    const [existingUser] = await connection.query(
+      `SELECT u.id, u.status 
+       FROM Users u 
+       JOIN Employee e ON u.employee_id = e.id 
+       WHERE u.user_name = ? OR e.email = ?`,
+      [user_name, email]
+    );
+    
+    // Block if an active or pending account already exists
+    const blocking = existingUser.filter(e => e.status === 'active' || e.status === 'pending');
+    if (blocking.length > 0) {
+      const err = new Error('An account with this username or email already exists.');
+      err.statusCode = 409;
+      throw err;
+    }
+
+    let employee_id;
+    const [existingEmp] = await connection.query('SELECT id FROM Employee WHERE email = ?', [email]);
+    if (existingEmp.length > 0) {
+      employee_id = existingEmp[0].id;
+    } else {
+      const [empResult] = await connection.query('INSERT INTO Employee (full_name, email) VALUES (?, ?)', [full_name, email]);
+      employee_id = empResult.insertId;
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    const [result] = await connection.query(
+      'INSERT INTO Users (user_name, employee_id, password, role, status) VALUES (?, ?, ?, ?, ?)',
+      [user_name, employee_id, hashed, 'User', 'pending']
+    );
+
+    await connection.commit();
+    return { id: result.insertId, user_name, full_name, email, status: 'pending' };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 /**
@@ -33,9 +57,10 @@ const createRequest = async ({ user_name, full_name, email, password }) => {
  */
 const findAll = async ({ status } = {}) => {
   let query = `
-    SELECT u.id, u.user_name, u.full_name, u.email, u.status,
+    SELECT u.id, u.user_name, e.full_name, e.email, u.status,
            u.created_at, u.role
     FROM Users u
+    JOIN Employee e ON u.employee_id = e.id
   `;
   const params = [];
 
@@ -56,7 +81,10 @@ const findAll = async ({ status } = {}) => {
  * Approve a pending user — set status to 'active'.
  */
 const approve = async (requestId, adminId) => {
-  const [rows] = await db.query('SELECT * FROM Users WHERE id = ?', [requestId]);
+  const [rows] = await db.query(
+    'SELECT u.*, e.full_name FROM Users u JOIN Employee e ON u.employee_id = e.id WHERE u.id = ?', 
+    [requestId]
+  );
   if (rows.length === 0) {
     const err = new Error('User not found.');
     err.statusCode = 404;
@@ -82,7 +110,10 @@ const approve = async (requestId, adminId) => {
  * Reject a pending user.
  */
 const reject = async (requestId, adminId) => {
-  const [rows] = await db.query('SELECT * FROM Users WHERE id = ?', [requestId]);
+  const [rows] = await db.query(
+    'SELECT u.*, e.full_name FROM Users u JOIN Employee e ON u.employee_id = e.id WHERE u.id = ?', 
+    [requestId]
+  );
   if (rows.length === 0) {
     const err = new Error('User not found.');
     err.statusCode = 404;
