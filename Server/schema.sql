@@ -61,11 +61,11 @@ CREATE TABLE AssetModel (
 );
 
 -- --------------------------------------------------------
--- 5. EMPLOYEE  (depends on Department)
---    role enum: Admin | Manager | Employee
+-- 5. USERS (System Administrators and Managers)
+--    role enum: Admin | Manager | User
 -- --------------------------------------------------------
 
-CREATE TABLE Employee (
+CREATE TABLE Users (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     user_name     VARCHAR(100) NOT NULL UNIQUE,
     full_name     VARCHAR(150) NOT NULL,
@@ -73,11 +73,21 @@ CREATE TABLE Employee (
     password      VARCHAR(255) NOT NULL DEFAULT '',
     status        VARCHAR(20)  NOT NULL DEFAULT 'active'
                       CHECK (status IN ('pending', 'active', 'rejected')),
-    role          VARCHAR(50)  NOT NULL DEFAULT 'Employee'
-                      CHECK (role IN ('Admin', 'Manager', 'Employee')),
+    role          VARCHAR(50)  NOT NULL DEFAULT 'User'
+                      CHECK (role IN ('Admin', 'Manager', 'User')),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- --------------------------------------------------------
+-- 5b. EMPLOYEE  (depends on Department)
+--     Normal staff who receive assets
+-- --------------------------------------------------------
+
+CREATE TABLE Employee (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    full_name     VARCHAR(150) NOT NULL,
+    email         VARCHAR(150) NOT NULL UNIQUE,
     department_id INT,
-    reviewed_by   INT,
-    reviewed_at   TIMESTAMP NULL,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id) REFERENCES Department(id)
 );
@@ -114,7 +124,7 @@ CREATE TABLE AssetMovement (
     status       VARCHAR(50) DEFAULT 'Draft'
                      CHECK (status IN ('Draft', 'Approved', 'Returned', 'Rejected')),
     performed_by INT NOT NULL,
-    FOREIGN KEY (performed_by) REFERENCES Employee(id)
+    FOREIGN KEY (performed_by) REFERENCES Users(id)
 );
 
 CREATE TABLE MovementItem (
@@ -192,11 +202,11 @@ CREATE TABLE AssetReturn (
 
 CREATE TABLE ManagerPermission (
     id            INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id   INT NOT NULL,
+    user_id       INT NOT NULL,
     permission    VARCHAR(50) NOT NULL
                       CHECK (permission IN ('consultation', 'reception', 'assignment', 'transfer', 'return')),
-    UNIQUE KEY uq_mgr_perm (employee_id, permission),
-    FOREIGN KEY (employee_id) REFERENCES Employee(id) ON DELETE CASCADE
+    UNIQUE KEY uq_mgr_perm (user_id, permission),
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
 -- --------------------------------------------------------
@@ -205,10 +215,10 @@ CREATE TABLE ManagerPermission (
 
 CREATE TABLE ManagerLocation (
     id            INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id   INT NOT NULL,
+    user_id       INT NOT NULL,
     location_id   INT NOT NULL,
-    UNIQUE KEY uq_mgr_loc (employee_id, location_id),
-    FOREIGN KEY (employee_id) REFERENCES Employee(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_mgr_loc (user_id, location_id),
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES Location(id) ON DELETE CASCADE
 );
 
