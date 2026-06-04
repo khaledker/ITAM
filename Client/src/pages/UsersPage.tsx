@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ShieldAlert, CheckCircle, XCircle, Key, Shield, MapPin, Search, Filter, ThumbsUp, ThumbsDown, Plus } from 'lucide-react'
 import { Badge, Table, Button, Modal, Input, type TableColumn } from '@/components'
-import { usersApi, locationsApi, departmentsApi, registrationApi, type User, type Location, type Department } from '@/lib/api'
+import { usersApi, locationsApi, departmentsApi, registrationApi, employeesApi, type User, type Location, type Department, type Employee } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/utils/cn'
 
@@ -15,7 +15,8 @@ export default function UsersPage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active')
+  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'directory'>('active')
+  const [hrEmployees, setHrEmployees] = useState<Employee[]>([])
   const [pendingRequests, setPendingRequests] = useState<User[]>([])
   const [pendingCount, setPendingCount] = useState(0)
 
@@ -65,7 +66,9 @@ export default function UsersPage() {
     setIsLoading(true)
     setError(null)
     try {
-      setEmployees(await usersApi.getAll())
+      const [usrData, empData] = await Promise.all([usersApi.getAll(), employeesApi.getAll()])
+      setEmployees(usrData)
+      setHrEmployees(empData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users.')
     } finally {
@@ -327,6 +330,28 @@ export default function UsersPage() {
     },
   ]
 
+  const hrEmployeeColumns: TableColumn<Employee>[] = [
+    {
+      key: 'full_name',
+      label: 'Full Name',
+      width: 'w-[30%]',
+      render: (v: string) => <span className="font-semibold text-neutral-900">{v}</span>,
+    },
+    { key: 'email', label: 'Email', width: 'w-[30%]' },
+    {
+      key: 'department_name',
+      label: 'Department',
+      width: 'w-[25%]',
+      render: (_v: any, row: any) => row.department_name || '—',
+    },
+    {
+      key: 'created_at',
+      label: 'Added On',
+      width: 'w-[15%]',
+      render: (v: string) => new Date(v).toLocaleDateString(undefined, { dateStyle: 'medium' }),
+    },
+  ]
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -373,6 +398,17 @@ export default function UsersPage() {
                 {pendingCount}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab('directory')}
+            className={cn(
+              "px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-[2px] cursor-pointer bg-transparent border-none",
+              activeTab === 'directory'
+                ? "border-primary text-primary"
+                : "border-transparent text-neutral-600 hover:text-neutral-700"
+            )}
+          >
+            HR Directory ({hrEmployees.length})
           </button>
         </div>
       )}
@@ -443,6 +479,18 @@ export default function UsersPage() {
             />
           </div>
         </>
+      ) : activeTab === 'directory' ? (
+        <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden rounded-lg">
+          <Table<Employee>
+            columns={hrEmployeeColumns}
+            rows={hrEmployees}
+            rowKey="id"
+            loading={isLoading}
+            hoverable
+            striped
+            className="border-none rounded-none"
+          />
+        </div>
       ) : (
         <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden rounded-lg">
           <Table<User>
