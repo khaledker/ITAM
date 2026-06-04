@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ShieldAlert, CheckCircle, XCircle, Key, Shield, MapPin, Search, Filter, ThumbsUp, ThumbsDown, Plus } from 'lucide-react'
 import { Badge, Table, Button, Modal, Input, type TableColumn } from '@/components'
-import { employeesApi, locationsApi, departmentsApi, registrationApi, type Employee, type Location, type Department } from '@/lib/api'
+import { usersApi, locationsApi, departmentsApi, registrationApi, type User, type Location, type Department } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/utils/cn'
 
@@ -9,19 +9,19 @@ export default function UsersPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'Admin'
 
-  const [employees, setEmployees] = useState<Employee[]>([])
+  const [employees, setEmployees] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
   // Tabs
   const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active')
-  const [pendingRequests, setPendingRequests] = useState<Employee[]>([])
+  const [pendingRequests, setPendingRequests] = useState<User[]>([])
   const [pendingCount, setPendingCount] = useState(0)
 
   // Granular Permission Modal states
   const [isPermModalOpen, setIsPermModalOpen] = useState(false)
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
+  const [selectedEmployee, setSelectedEmployee] = useState<User | null>(null)
   const [allLocations, setAllLocations] = useState<Location[]>([])
   const [assignedPerms, setAssignedPerms] = useState<string[]>([])
   const [assignedLocs, setAssignedLocs] = useState<number[]>([])
@@ -33,14 +33,14 @@ export default function UsersPage() {
   const [addUserName, setAddUserName] = useState('')
   const [addEmail, setAddEmail] = useState('')
   const [addDepartmentId, setAddDepartmentId] = useState('')
-  const [addRole, setAddRole] = useState<'Admin' | 'Manager' | 'Employee'>('Employee')
+  const [addRole, setAddRole] = useState<'Admin' | 'Manager' | 'User'>('User')
   const [addPassword, setAddPassword] = useState('')
   const [isAddingUser, setIsAddingUser] = useState(false)
   const [departments, setDepartments] = useState<Department[]>([])
 
   // Search & filter
   const [searchQuery, setSearchQuery] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'All' | 'Admin' | 'Manager' | 'Employee'>('All')
+  const [roleFilter, setRoleFilter] = useState<'All' | 'Admin' | 'Manager' | 'User'>('All')
 
   // Client-side filtered rows
   const filteredEmployees = useMemo(() => {
@@ -65,7 +65,7 @@ export default function UsersPage() {
     setIsLoading(true)
     setError(null)
     try {
-      setEmployees(await employeesApi.getAll())
+      setEmployees(await usersApi.getAll())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users.')
     } finally {
@@ -112,10 +112,10 @@ export default function UsersPage() {
     setTimeout(() => setSuccess(null), 4000)
   }
 
-  // Toggle role between Employee / Manager / Admin
-  const handleRoleChange = async (id: number, newRole: 'Admin' | 'Manager' | 'Employee') => {
+  // Toggle role between User / Manager / Admin
+  const handleRoleChange = async (id: number, newRole: 'Admin' | 'Manager' | 'User') => {
     try {
-      await employeesApi.updateRole(id, newRole)
+      await usersApi.updateRole(id, newRole)
       showSuccess(`Role updated to ${newRole}.`)
       load()
     } catch (err) {
@@ -124,14 +124,14 @@ export default function UsersPage() {
   }
 
   // Open manage permissions modal for a Manager
-  const handleManagePermissions = async (employee: Employee) => {
+  const handleManagePermissions = async (employee: User) => {
     setSelectedEmployee(employee)
     setAssignedPerms([])
     setAssignedLocs([])
     setIsPermModalOpen(true)
     setError(null)
     try {
-      const data = await employeesApi.getPermissions(employee.id)
+      const data = await usersApi.getPermissions(employee.id)
       setAssignedPerms(data.permissions || [])
       setAssignedLocs(data.locationIds || [])
     } catch (err) {
@@ -145,7 +145,7 @@ export default function UsersPage() {
     setIsSavingPerms(true)
     setError(null)
     try {
-      await employeesApi.updatePermissions(selectedEmployee.id, {
+      await usersApi.updatePermissions(selectedEmployee.id, {
         permissions: assignedPerms,
         locationIds: assignedLocs,
       })
@@ -188,11 +188,10 @@ export default function UsersPage() {
     setIsAddingUser(true)
     setError(null)
     try {
-      await employeesApi.create({
+      await usersApi.create({
         full_name: addFullName.trim(),
         user_name: addUserName.trim(),
         email: addEmail.trim(),
-        department_id: addDepartmentId ? Number(addDepartmentId) : null,
         status: 'active',
         password: addPassword || undefined,
         role: addRole,
@@ -204,7 +203,7 @@ export default function UsersPage() {
       setAddUserName('')
       setAddEmail('')
       setAddDepartmentId('')
-      setAddRole('Employee')
+      setAddRole('User')
       setAddPassword('')
       await load()
     } catch (err) {
@@ -214,7 +213,7 @@ export default function UsersPage() {
     }
   }
 
-  const columns: TableColumn<Employee>[] = [
+  const columns: TableColumn<User>[] = [
     {
       key: 'full_name',
       label: 'Full Name',
@@ -233,22 +232,22 @@ export default function UsersPage() {
       key: 'role',
       label: 'System Role',
       width: 'w-[15%]',
-      render: (v: string, row: Employee) => {
+      render: (v: string, row: User) => {
         const canEdit = isAdmin && row.id !== user?.id
         if (!canEdit) {
           return (
             <Badge variant={v === 'Admin' ? 'critical' : v === 'Manager' ? 'warning' : 'inactive'}>
-              {v || 'Employee'}
+              {v || 'User'}
             </Badge>
           )
         }
         return (
           <select
-            value={v || 'Employee'}
+            value={v || 'User'}
             onChange={(e) => handleRoleChange(row.id, e.target.value as any)}
             className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs shadow-lg focus:border-primary focus:outline-none"
           >
-            <option value="Employee">Employee</option>
+            <option value="User">User</option>
             <option value="Manager">Manager</option>
             <option value="Admin">Admin</option>
           </select>
@@ -259,7 +258,7 @@ export default function UsersPage() {
       key: 'id',
       label: 'Actions',
       width: 'w-[15%]',
-      render: (_v: any, row: Employee) => {
+      render: (_v: any, row: User) => {
         if (!isAdmin) return <span className="text-neutral-600 text-xs">—</span>
         
         if (row.role === 'Manager') {
@@ -280,7 +279,7 @@ export default function UsersPage() {
     },
   ]
 
-  const pendingColumns: TableColumn<Employee>[] = [
+  const pendingColumns: TableColumn<User>[] = [
     {
       key: 'full_name',
       label: 'Full Name',
@@ -424,7 +423,7 @@ export default function UsersPage() {
                 <option value="All">All Roles</option>
                 <option value="Admin">Admin</option>
                 <option value="Manager">Manager</option>
-                <option value="Employee">Employee</option>
+                <option value="User">User</option>
               </select>
             </div>
             <span className="self-center text-xs text-neutral-600 whitespace-nowrap">
@@ -433,7 +432,7 @@ export default function UsersPage() {
           </div>
 
           <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden rounded-lg">
-            <Table<Employee>
+            <Table<User>
               columns={columns}
               rows={filteredEmployees}
               rowKey="id"
@@ -446,7 +445,7 @@ export default function UsersPage() {
         </>
       ) : (
         <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden rounded-lg">
-          <Table<Employee>
+          <Table<User>
             columns={pendingColumns}
             rows={pendingRequests}
             rowKey="id"
@@ -695,7 +694,7 @@ export default function UsersPage() {
                 disabled={isAddingUser}
                 style={{ height: '2.5rem' }}
               >
-                <option value="Employee">Employee</option>
+                <option value="User">User</option>
                 <option value="Manager">Manager</option>
                 <option value="Admin">Admin</option>
               </select>

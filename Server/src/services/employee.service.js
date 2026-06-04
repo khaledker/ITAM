@@ -1,16 +1,11 @@
 const db = require('../config/db');
-const bcrypt = require('bcryptjs');
 
 const findAll = async () => {
   const [rows] = await db.query(`
-    SELECT e.id, e.user_name, e.full_name, e.email, e.status, e.role,
-           e.created_at, e.reviewed_at,
-           d.id AS department_id, d.code AS department_code, d.libelle AS department_name,
-           r.full_name AS reviewed_by_name
+    SELECT e.id, e.full_name, e.email, e.created_at,
+           d.id AS department_id, d.code AS department_code, d.libelle AS department_name
     FROM Employee e
     LEFT JOIN Department d ON e.department_id = d.id
-    LEFT JOIN Employee r ON e.reviewed_by = r.id
-    WHERE e.status = 'active'
     ORDER BY e.full_name
   `);
   return rows;
@@ -18,32 +13,27 @@ const findAll = async () => {
 
 const findById = async (id) => {
   const [rows] = await db.query(`
-    SELECT e.id, e.user_name, e.full_name, e.email, e.status, e.role,
-           e.created_at, e.reviewed_at,
-           d.id AS department_id, d.code AS department_code, d.libelle AS department_name,
-           r.full_name AS reviewed_by_name
+    SELECT e.id, e.full_name, e.email, e.created_at,
+           d.id AS department_id, d.code AS department_code, d.libelle AS department_name
     FROM Employee e
     LEFT JOIN Department d ON e.department_id = d.id
-    LEFT JOIN Employee r ON e.reviewed_by = r.id
     WHERE e.id = ?
   `, [id]);
   return rows[0] || null;
 };
 
-const create = async ({ user_name, full_name, email, department_id, status, password, role }) => {
-  const pwd = password || 'Djezzy@123';
-  const hashed = await bcrypt.hash(pwd, 10);
+const create = async ({ full_name, email, department_id }) => {
   const [result] = await db.query(
-    'INSERT INTO Employee (user_name, full_name, email, department_id, status, password, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [user_name, full_name, email, department_id || null, status || 'active', hashed, role || 'Employee']
+    'INSERT INTO Employee (full_name, email, department_id) VALUES (?, ?, ?)',
+    [full_name, email, department_id || null]
   );
   return findById(result.insertId);
 };
 
-const update = async (id, { full_name, email, department_id, status }) => {
+const update = async (id, { full_name, email, department_id }) => {
   await db.query(
-    'UPDATE Employee SET full_name = ?, email = ?, department_id = ?, status = ? WHERE id = ?',
-    [full_name, email, department_id || null, status || 'active', id]
+    'UPDATE Employee SET full_name = ?, email = ?, department_id = ? WHERE id = ?',
+    [full_name, email, department_id || null, id]
   );
   return findById(id);
 };
@@ -89,15 +79,4 @@ const getAssignedAssets = async (employeeId) => {
   }));
 };
 
-const updateRole = async (id, role) => {
-  const validRoles = ['Admin', 'Manager', 'Employee'];
-  if (!validRoles.includes(role)) {
-    const err = new Error(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
-    err.statusCode = 400;
-    throw err;
-  }
-  await db.query('UPDATE Employee SET role = ? WHERE id = ?', [role, id]);
-  return findById(id);
-};
-
-module.exports = { findAll, findById, create, update, remove, getAssignedAssets, updateRole };
+module.exports = { findAll, findById, create, update, remove, getAssignedAssets };

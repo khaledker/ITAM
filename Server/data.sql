@@ -26,6 +26,7 @@ TRUNCATE TABLE MovementItem;
 TRUNCATE TABLE AssetMovement;
 TRUNCATE TABLE Asset;
 TRUNCATE TABLE Employee;
+TRUNCATE TABLE Users;
 TRUNCATE TABLE AssetModel;
 TRUNCATE TABLE Location;
 TRUNCATE TABLE Supplier;
@@ -55,8 +56,8 @@ INSERT INTO Supplier (id, name, code, tel, contact) VALUES
 INSERT INTO Location (id, code, region, label, site, type) VALUES
 (1, 'WH-ALG',   'Algiers', 'Main Warehouse',       'HQ',       'Warehouse'),
 (2, 'ADM-ALG',  'Algiers', 'Admin Block A',         'HQ',       'AdministrativeBlock'),
-(3, 'CC-ORN',   'Oran',    'Call Center Oran',      'Oran Site','CallCenter'),
-(4, 'TR-BLI',   'Blida',   'Training Room Blida',   'Blida Site','TrainingRoom'),
+(3, 'CC-ORN',   'Oran',    'Admin Block Oran',      'Oran Site','AdministrativeBlock'),
+(4, 'TR-BLI',   'Blida',   'Warehouse Blida',       'Blida Site','Warehouse'),
 (5, 'WH-ORN',   'Oran',    'Oran Warehouse',        'Oran Site','Warehouse');
 
 -- ────────────────────────────────────────────────────────
@@ -70,33 +71,34 @@ INSERT INTO AssetModel (id, name, code, brand, category, part_number) VALUES
 (5, 'UltraSharp U2422H', 'MOD-U2422',  'Dell',    'Monitor',  'DL-U2422');
 
 -- ────────────────────────────────────────────────────────
--- 5. EMPLOYEES  (7 rows)
---    id=1  Admin    – password: Admin@1234
---    id=2  Manager  – password: Pass@1234
---    id=3..7 Employee – password: Pass@1234
+-- 5. USERS AND EMPLOYEES
+--    id=1 Admin
+--    id=2 Manager
+--    id=3 User
 -- ────────────────────────────────────────────────────────
-INSERT INTO Employee (id, user_name, full_name, email, password, status, role, department_id) VALUES
+INSERT INTO Users (id, user_name, full_name, email, password, status, role) VALUES
 (1, 'admin.sys',   'System Administrator', 'admin@itam.local',
     '$2b$10$GKFcFbH7GYLKCr7XrnC5T.K7I1hlB1yiKSmZP3N5OsEKRCY9F1qd6',  -- Admin@1234
-    'active', 'Admin', 1),
+    'active', 'Admin'),
 (2, 'm.belkacem',  'Mohamed Belkacem',     'm.belkacem@itam.local',
     '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',  -- Pass@1234
-    'active', 'Manager', 1),
-(3, 's.rahmani',   'Sofia Rahmani',        's.rahmani@itam.local',
-    '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    'active', 'Employee', 2),
-(4, 'k.haddad',    'Karim Haddad',         'k.haddad@itam.local',
-    '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    'active', 'Employee', 1),
-(5, 'a.mekki',     'Amira Mekki',          'a.mekki@itam.local',
-    '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    'active', 'Employee', 3),
-(6, 'r.bouzid',    'Riad Bouzid',          'r.bouzid@itam.local',
-    '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    'rejected', 'Employee', 4),   -- rejected – tests status filter
-(7, 'l.hamza',     'Leila Hamza',          'l.hamza@itam.local',
-    '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',
-    'active', 'Employee', 2);
+    'active', 'Manager'),
+(3, 'k.user',      'Karim User',           'k.user@itam.local',
+    '$2b$10$XKmqzFEAUvIRq3LgCJJBm.XhunJedjBLaELH6DZX8b9/SNx1Vq8Dy',  -- Pass@1234
+    'active', 'User');
+
+INSERT INTO Employee (id, full_name, email, department_id) VALUES
+(3, 'Sofia Rahmani', 's.rahmani@itam.local', 2),
+(4, 'Karim Haddad',  'k.haddad@itam.local',  1),
+(5, 'Amira Mekki',   'a.mekki@itam.local',   3),
+(6, 'Riad Bouzid',   'r.bouzid@itam.local',  4),
+(7, 'Leila Hamza',   'l.hamza@itam.local',   2);
+
+INSERT INTO ManagerPermission (user_id, permission) VALUES
+(2, 'consultation'), (2, 'reception'), (2, 'assignment'), (2, 'transfer'), (2, 'return');
+
+INSERT INTO ManagerLocation (user_id, location_id) VALUES
+(2, 1), (2, 2), (2, 3), (2, 4), (2, 5);
 
 -- ────────────────────────────────────────────────────────
 -- 6. ASSETS  (10 rows – all 4 statuses represented)

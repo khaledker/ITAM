@@ -33,7 +33,7 @@ CREATE TABLE Supplier (
 
 -- --------------------------------------------------------
 -- 3. LOCATION
---    Enum: AdministrativeBlock | TrainingRoom | Warehouse | CallCenter
+--    Enum: AdministrativeBlock | Warehouse
 -- --------------------------------------------------------
 
 CREATE TABLE Location (
@@ -43,7 +43,7 @@ CREATE TABLE Location (
     label  VARCHAR(150) NOT NULL,
     site   VARCHAR(150),
     type   VARCHAR(50)
-        CHECK (type IN ('AdministrativeBlock', 'TrainingRoom', 'Warehouse', 'CallCenter'))
+        CHECK (type IN ('AdministrativeBlock', 'Warehouse'))
 );
 
 -- --------------------------------------------------------

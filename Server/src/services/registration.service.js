@@ -3,17 +3,17 @@ const bcrypt = require('bcryptjs');
 
 /**
  * Submit a new registration request (public, no auth).
- * Creates an Employee record with status = 'pending'.
+ * Creates a Users record with status = 'pending'.
  */
-const createRequest = async ({ user_name, full_name, email, password, department_id }) => {
-  // Check for duplicate username / email in Employee table
-  const [existingEmp] = await db.query(
-    'SELECT id, status FROM Employee WHERE user_name = ? OR email = ?',
+const createRequest = async ({ user_name, full_name, email, password }) => {
+  // Check for duplicate username / email in Users table
+  const [existingUser] = await db.query(
+    'SELECT id, status FROM Users WHERE user_name = ? OR email = ?',
     [user_name, email]
   );
   
   // Block if an active or pending account already exists
-  const blocking = existingEmp.filter(e => e.status === 'active' || e.status === 'pending');
+  const blocking = existingUser.filter(e => e.status === 'active' || e.status === 'pending');
   if (blocking.length > 0) {
     const err = new Error('An account with this username or email already exists.');
     err.statusCode = 409;
@@ -22,97 +22,93 @@ const createRequest = async ({ user_name, full_name, email, password, department
 
   const hashed = await bcrypt.hash(password, 10);
   const [result] = await db.query(
-    'INSERT INTO Employee (user_name, full_name, email, password, department_id, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [user_name, full_name, email, hashed, department_id || null, 'Employee', 'pending']
+    'INSERT INTO Users (user_name, full_name, email, password, role, status) VALUES (?, ?, ?, ?, ?, ?)',
+    [user_name, full_name, email, hashed, 'User', 'pending']
   );
   return { id: result.insertId, user_name, full_name, email, status: 'pending' };
 };
 
 /**
- * List registration requests (pending employees), optionally filtered by status.
+ * List registration requests (pending users), optionally filtered by status.
  */
 const findAll = async ({ status } = {}) => {
   let query = `
-    SELECT e.id, e.user_name, e.full_name, e.email, e.status,
-           e.created_at, e.reviewed_at,
-           d.libelle AS department_name, d.id AS department_id,
-           r.full_name AS reviewed_by_name
-    FROM Employee e
-    LEFT JOIN Department d ON e.department_id = d.id
-    LEFT JOIN Employee r ON e.reviewed_by = r.id
+    SELECT u.id, u.user_name, u.full_name, u.email, u.status,
+           u.created_at, u.role
+    FROM Users u
   `;
   const params = [];
 
   if (status) {
-    query += ' WHERE e.status = ?';
+    query += ' WHERE u.status = ?';
     params.push(status);
   } else {
-    // By default show non-active employees (pending/rejected)
-    query += " WHERE e.status IN ('pending', 'rejected')";
+    // By default show non-active users (pending/rejected)
+    query += " WHERE u.status IN ('pending', 'rejected')";
   }
 
-  query += ' ORDER BY e.created_at DESC';
+  query += ' ORDER BY u.created_at DESC';
   const [rows] = await db.query(query, params);
   return rows;
 };
 
 /**
- * Approve a pending employee — set status to 'active'.
+ * Approve a pending user — set status to 'active'.
  */
 const approve = async (requestId, adminId) => {
-  const [rows] = await db.query('SELECT * FROM Employee WHERE id = ?', [requestId]);
+  const [rows] = await db.query('SELECT * FROM Users WHERE id = ?', [requestId]);
   if (rows.length === 0) {
-    const err = new Error('Employee not found.');
+    const err = new Error('User not found.');
     err.statusCode = 404;
     throw err;
   }
 
-  const emp = rows[0];
-  if (emp.status !== 'pending') {
-    const err = new Error(`This employee has already been ${emp.status}.`);
+  const user = rows[0];
+  if (user.status !== 'pending') {
+    const err = new Error(`This user has already been ${user.status}.`);
     err.statusCode = 400;
     throw err;
   }
 
   await db.query(
-    'UPDATE Employee SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?',
-    ['active', adminId, requestId]
+    'UPDATE Users SET status = ? WHERE id = ?',
+    ['active', requestId]
   );
 
-  return { message: `Registration for ${emp.full_name} approved. Account is now active.` };
+  return { message: `Registration for ${user.full_name} approved. Account is now active.` };
 };
 
 /**
- * Reject a pending employee.
+ * Reject a pending user.
  */
 const reject = async (requestId, adminId) => {
-  const [rows] = await db.query('SELECT * FROM Employee WHERE id = ?', [requestId]);
+  const [rows] = await db.query('SELECT * FROM Users WHERE id = ?', [requestId]);
   if (rows.length === 0) {
-    const err = new Error('Employee not found.');
+    const err = new Error('User not found.');
     err.statusCode = 404;
     throw err;
   }
 
-  const emp = rows[0];
-  if (emp.status !== 'pending') {
-    const err = new Error(`This employee has already been ${emp.status}.`);
+  const user = rows[0];
+  if (user.status !== 'pending') {
+    const err = new Error(`This user has already been ${user.status}.`);
     err.statusCode = 400;
     throw err;
   }
 
   await db.query(
-    'UPDATE Employee SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?',
-    ['rejected', adminId, requestId]
+    'UPDATE Users SET status = ? WHERE id = ?',
+    ['rejected', requestId]
   );
 
-  return { message: `Registration for ${emp.full_name} rejected.` };
+  return { message: `Registration for ${user.full_name} rejected.` };
 };
 
 /**
- * Get count of pending employees (for badge).
+ * Get count of pending users (for badge).
  */
 const getPendingCount = async () => {
-  const [rows] = await db.query("SELECT COUNT(*) AS count FROM Employee WHERE status = 'pending'");
+  const [rows] = await db.query("SELECT COUNT(*) AS count FROM Users WHERE status = 'pending'");
   return rows[0].count;
 };
 
