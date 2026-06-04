@@ -65,22 +65,10 @@ CREATE TABLE AssetModel (
 --    role enum: Admin | Manager | User
 -- --------------------------------------------------------
 
-CREATE TABLE Users (
-    id            INT AUTO_INCREMENT PRIMARY KEY,
-    user_name     VARCHAR(100) NOT NULL UNIQUE,
-    full_name     VARCHAR(150) NOT NULL,
-    email         VARCHAR(150) NOT NULL UNIQUE,
-    password      VARCHAR(255) NOT NULL DEFAULT '',
-    status        VARCHAR(20)  NOT NULL DEFAULT 'active'
-                      CHECK (status IN ('pending', 'active', 'rejected')),
-    role          VARCHAR(50)  NOT NULL DEFAULT 'User'
-                      CHECK (role IN ('Admin', 'Manager', 'User')),
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- --------------------------------------------------------
--- 5b. EMPLOYEE  (depends on Department)
---     Normal staff who receive assets
+-- 5a. EMPLOYEE  (depends on Department)
+--     Normal staff who receive assets. This is the master
+--     directory of all personnel.
 -- --------------------------------------------------------
 
 CREATE TABLE Employee (
@@ -90,6 +78,25 @@ CREATE TABLE Employee (
     department_id INT,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id) REFERENCES Department(id)
+);
+
+-- --------------------------------------------------------
+-- 5b. USERS (depends on Employee)
+--     System credentials. A User is an Employee who has
+--     been granted access to the ITAM app.
+-- --------------------------------------------------------
+
+CREATE TABLE Users (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    user_name     VARCHAR(100) NOT NULL UNIQUE,
+    employee_id   INT NOT NULL,
+    password      VARCHAR(255) NOT NULL DEFAULT '',
+    status        VARCHAR(20)  NOT NULL DEFAULT 'active'
+                      CHECK (status IN ('pending', 'active', 'rejected')),
+    role          VARCHAR(50)  NOT NULL DEFAULT 'User'
+                      CHECK (role IN ('Admin', 'Manager', 'User')),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES Employee(id)
 );
 
 -- --------------------------------------------------------

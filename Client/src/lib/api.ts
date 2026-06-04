@@ -348,11 +348,11 @@ export interface TelemetrySummary {
 
 // ── Registration ──────────────────────────────────────────
 export const registrationApi = {
-  submit: (body: Partial<User>) => request<{ message: string }>('/auth/register', { method: 'POST', body: JSON.stringify(body), skipAuth: true }),
+  submit: (body: Partial<User>) => request<{ message: string }>('/registration', { method: 'POST', body: JSON.stringify(body), skipAuth: true }),
   getAll: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request<User[]>(`/auth/registrations${query}`);
+    return request<User[]>(`/registration${query}`);
   },
-  approve: (id: number) => request<{ message: string }>(`/auth/registrations/${id}/approve`, { method: 'PATCH' }),
-  reject: (id: number) => request<{ message: string }>(`/auth/registrations/${id}/reject`, { method: 'PATCH' }),
+  approve: (id: number) => request<{ message: string }>(`/registration/${id}/approve`, { method: 'PATCH' }),
+  reject: (id: number) => request<{ message: string }>(`/registration/${id}/reject`, { method: 'PATCH' }),
 };

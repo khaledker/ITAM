@@ -12,7 +12,7 @@ const findById = async (id) => {
       GROUP_CONCAT(am.brand SEPARATOR '||') AS brands,
       GROUP_CONCAT(am.name SEPARATOR '||') AS model_names,
       GROUP_CONCAT(am.category SEPARATOR '||') AS categories,
-      u.full_name AS performed_by_name,
+      e_perf.full_name AS performed_by_name,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
         WHEN asn.id IS NOT NULL THEN 'Assignment'
@@ -31,6 +31,7 @@ const findById = async (id) => {
     JOIN Asset a ON mi.asset_id = a.id
     JOIN AssetModel am ON am.id = a.model_id
     JOIN Users u ON mv.performed_by = u.id
+    JOIN Employee e_perf ON e_perf.id = u.employee_id
     LEFT JOIN Reception   r   ON r.id   = mv.id
     LEFT JOIN Supplier    sup ON r.supplier_id = sup.id
     LEFT JOIN Location    loc_r ON r.destination_id = loc_r.id
@@ -57,7 +58,7 @@ const findAll = async ({ type, status, asset_id, search, sort, scopeLocationIds 
       SUBSTRING_INDEX(GROUP_CONCAT(a.tag ORDER BY a.tag SEPARATOR ','), ',', 3) AS tag,
       COUNT(mi.asset_id) AS asset_count,
       GROUP_CONCAT(a.serial_number) AS serial_numbers,
-      u.full_name AS performed_by_name,
+      e_perf.full_name AS performed_by_name,
       CASE
         WHEN r.id   IS NOT NULL THEN 'Reception'
         WHEN asn.id IS NOT NULL THEN 'Assignment'
@@ -68,6 +69,7 @@ const findAll = async ({ type, status, asset_id, search, sort, scopeLocationIds 
     JOIN MovementItem mi ON mv.id = mi.movement_id
     JOIN Asset a ON mi.asset_id = a.id
     JOIN Users u ON mv.performed_by = u.id
+    JOIN Employee e_perf ON e_perf.id = u.employee_id
     LEFT JOIN Reception   r   ON r.id   = mv.id
     LEFT JOIN Assignment  asn ON asn.id = mv.id
     LEFT JOIN Transfer    t   ON t.id   = mv.id
