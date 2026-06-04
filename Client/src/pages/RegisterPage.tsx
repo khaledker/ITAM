@@ -46,6 +46,7 @@ export default function RegisterPage() {
         user_name: userName.trim(),
         email: email.trim(),
         password,
+        department_id: departmentId ? Number(departmentId) : undefined,
       })
       setIsSuccess(true)
     } catch (err) {

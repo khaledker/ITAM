@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
  * Submit a new registration request (public, no auth).
  * Creates a Users record with status = 'pending'.
  */
-const createRequest = async ({ user_name, full_name, email, password }) => {
+const createRequest = async ({ user_name, full_name, email, password, department_id }) => {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
@@ -31,8 +31,15 @@ const createRequest = async ({ user_name, full_name, email, password }) => {
     const [existingEmp] = await connection.query('SELECT id FROM Employee WHERE email = ?', [email]);
     if (existingEmp.length > 0) {
       employee_id = existingEmp[0].id;
+      // Optionally update their department if provided
+      if (department_id) {
+        await connection.query('UPDATE Employee SET department_id = ? WHERE id = ?', [department_id, employee_id]);
+      }
     } else {
-      const [empResult] = await connection.query('INSERT INTO Employee (full_name, email) VALUES (?, ?)', [full_name, email]);
+      const [empResult] = await connection.query(
+        'INSERT INTO Employee (full_name, email, department_id) VALUES (?, ?, ?)', 
+        [full_name, email, department_id || null]
+      );
       employee_id = empResult.insertId;
     }
 

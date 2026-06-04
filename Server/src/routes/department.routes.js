@@ -4,9 +4,11 @@ const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const v        = require('../validators/department.validator');
 
+// Public routes
+router.get('/',              ctrl.getAll);         // Public (used for registration form)
+
 router.use(protect);
 
-router.get('/',              ctrl.getAll);         // All roles
 router.get('/:id',           ctrl.getOne);         // All roles
 router.get('/:id/employees', ctrl.getEmployees);   // All roles
 

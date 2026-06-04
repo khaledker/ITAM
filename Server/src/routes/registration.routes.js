@@ -5,7 +5,7 @@ const validate = require('../middleware/validate');
 const v        = require('../validators/auth.validator');
 
 // Public self-registration endpoint
-router.post('/', v.selfRegister, validate, ctrl.submitRequest);
+router.post('/submit', v.selfRegister, validate, ctrl.submitRequest);
 
 // Protected routes (Admin only)
 router.use(protect);

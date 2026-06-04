@@ -30,8 +30,15 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
       localStorage.removeItem('itam_token');
       localStorage.removeItem('itam_user');
     }
+    // If there are detailed validation errors, append them to the message
+    let errorMsg = data.message || 'Something went wrong.';
+    if (data.errors && Array.isArray(data.errors)) {
+      const details = data.errors.map((e: any) => e.message).join(' | ');
+      errorMsg = `${errorMsg} ${details}`;
+    }
+
     // Throw the server's error message so callers can display it
-    throw new Error(data.message || 'Something went wrong.');
+    throw new Error(errorMsg);
   }
 
   return data as T;
@@ -348,7 +355,7 @@ export interface TelemetrySummary {
 
 // ── Registration ──────────────────────────────────────────
 export const registrationApi = {
-  submit: (body: Partial<User>) => request<{ message: string }>('/registration', { method: 'POST', body: JSON.stringify(body), skipAuth: true }),
+  submit: (body: Partial<User>) => request<{ message: string }>('/registration/submit', { method: 'POST', body: JSON.stringify(body), skipAuth: true }),
   getAll: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
     return request<User[]>(`/registration${query}`);
