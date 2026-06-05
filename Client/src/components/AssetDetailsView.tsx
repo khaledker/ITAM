@@ -203,9 +203,11 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* Render the latest label prominent, then historical */}
                     {healthLabels.map((lbl, idx) => {
                       const isLatest = idx === 0;
+                      const serviceInfoRules = lbl.triggered_rules?.filter((r: any) => r.rule_id === 'SV_INFO') || [];
+                      const actualRules = lbl.triggered_rules?.filter((r: any) => r.rule_id !== 'SV_INFO') || [];
+                      
                       return (
                         <div key={lbl.id} className={`rounded-xl border p-4 ${isLatest ? 'border-primary/30 bg-primary/5 shadow-lg' : 'border-neutral-200 bg-neutral-50'}`}>
                           <div className="flex items-start justify-between mb-3">
@@ -223,11 +225,26 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
                             </Badge>
                           </div>
                           
-                          {lbl.triggered_rules && lbl.triggered_rules.length > 0 && (
+                          {serviceInfoRules.length > 0 && (
+                            <div className="space-y-1.5 mt-3 pt-3 border-t border-neutral-300/60">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-green-700">Monitored Services</p>
+                              <div className="flex flex-col gap-1">
+                                {serviceInfoRules.map((r: any, rIdx: number) => (
+                                  <div key={rIdx} className="text-xs flex items-center gap-2 bg-green-50/50 rounded p-1.5 border border-green-200">
+                                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                                    <span className="font-medium text-green-800 min-w-[150px]">{r.label}</span>
+                                    <span className="text-green-700">{r.note}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {actualRules.length > 0 && (
                             <div className="space-y-1.5 mt-3 pt-3 border-t border-neutral-300/60">
                               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">Triggered Rules</p>
                               <div className="flex flex-col gap-1">
-                                {lbl.triggered_rules.map((r: any, rIdx: number) => (
+                                {actualRules.map((r: any, rIdx: number) => (
                                   <div key={rIdx} className="text-xs flex items-start gap-2 bg-white rounded p-1.5 border border-neutral-200">
                                     <span className="font-medium text-neutral-700 min-w-[120px]">{r.label}</span>
                                     <span className="text-red-600 break-words">{r.note}</span>
