@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, Plus, User, RotateCcw, CalendarClock } from 'lucide-react';
 
 function RiskScoreChart({ labels }: { labels: any[] }) {
-  const data = [...labels].reverse().map(l => ({
+  const data = [...labels].slice(0, 15).reverse().map(l => ({
     time: new Date(l.scored_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     score: Number(l.risk_score),
   }));
@@ -114,10 +114,18 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
       }]);
       setIsLoadingHealth(false);
     } else {
-      telemetryApi.getLabelHistory(asset.tag)
-        .then(res => setHealthLabels(res || []))
-        .catch(() => setHealthLabels([]))
-        .finally(() => setIsLoadingHealth(false));
+      const fetchTelemetry = () => {
+        telemetryApi.getLabelHistory(asset.tag)
+          .then(res => setHealthLabels(res || []))
+          .catch(() => setHealthLabels([]))
+          .finally(() => setIsLoadingHealth(false));
+      };
+      
+      fetchTelemetry(); // Initial fetch
+      
+      // Real-time polling every 10 seconds
+      const interval = setInterval(fetchTelemetry, 10000);
+      return () => clearInterval(interval);
     }
   }, [asset.id, asset.tag]);
 
