@@ -72,6 +72,7 @@ export default function Sidebar() {
               <li key={item.label}>
                 <NavLink
                   to={item.to}
+                  state={{ _key: Date.now() }}
                   className={({ isActive }) =>
                     `flex items-center py-3 text-sm font-medium transition-colors ${
                       isCollapsed ? "justify-center px-0" : "gap-3 pl-5 pr-6"

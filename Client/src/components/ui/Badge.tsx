@@ -13,6 +13,7 @@ const badgeVariants = CVA(
         critical: 'bg-error bg-opacity-10 text-error border border-error border-opacity-30',
         maintenance: 'bg-maintenance bg-opacity-10 text-maintenance border border-maintenance border-opacity-30',
         assigned: 'bg-assigned bg-opacity-10 text-assigned border border-assigned border-opacity-30',
+        transit: 'bg-blue-100 text-blue-700 border border-blue-300',
       },
     },
     defaultVariants: {

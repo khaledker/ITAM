@@ -22,10 +22,14 @@ function formatList(value?: string | null): string[] {
 
 function movementActionText(m: AssetMovement): string {
   if (m.status === 'Rejected') return 'This movement was rejected and will not change asset status, location, or assignment data.'
+  if (m.status === 'Returned' && m.type === 'Transfer') return 'This transfer has been confirmed. The assets have arrived at their destination.'
   if (m.status === 'Draft') return 'This movement is waiting for approval. Approving it applies the database changes described below. Rejecting it keeps the assets unchanged.'
   if (m.type === 'Reception') return 'Approving this reception marks the listed assets as available and places them in the selected destination location.'
   if (m.type === 'Assignment') return 'Approving this assignment links the listed assets to the selected employee and updates their status to assigned.'
-  if (m.type === 'Transfer') return 'Approving this transfer moves the listed assets to the selected destination location without changing ownership.'
+  if (m.type === 'Transfer') {
+    if (m.status === 'Approved') return 'This transfer is currently In Transit. Confirming arrival will mark the assets as available at the destination. Canceling it will revert them.'
+    return 'Approving this transfer marks the assets as In Transit towards the destination location.'
+  }
   return 'Approving this return marks the listed assets as available again, clears the employee assignment, and updates the return location.'
 }
 
@@ -167,6 +171,20 @@ export default function MovementsPage() {
     }
   }
 
+  const handleConfirm = async (id: number) => {
+    setProcessingId(id); setActionError(null)
+    try {
+      const updated = await movementsApi.confirm(id)
+      setDetailMovement(prev => (prev?.id === id ? updated : prev))
+      setActionSuccess(`Transfer #${id} confirmed — assets marked as arrived.`)
+      void load()
+    } catch (err) { setActionError(err instanceof Error ? err.message : 'Failed to confirm.')
+    } finally {
+      setProcessingId(null)
+      setTimeout(() => setActionSuccess(null), 5000)
+    }
+  }
+
   const draftCount = movements.filter(m => m.status === 'Draft').length
 
   // ── Table columns ─────────────────────────────────────────
@@ -268,6 +286,24 @@ export default function MovementsPage() {
                   className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
                 >
                   <CheckCircle className="h-4 w-4" /> Approve
+                </button>
+              </>
+            )}
+            {isAdminOrManager && detailMovement.type === 'Transfer' && detailMovement.status === 'Approved' && (
+              <>
+                <button
+                  disabled={processingId === detailMovement.id}
+                  onClick={() => void handleReject(detailMovement.id)}
+                  className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+                >
+                  <XCircle className="h-4 w-4" /> Cancel Transfer
+                </button>
+                <button
+                  disabled={processingId === detailMovement.id}
+                  onClick={() => void handleConfirm(detailMovement.id)}
+                  className="inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
+                >
+                  <CheckCircle className="h-4 w-4" /> Confirm Arrival
                 </button>
               </>
             )}

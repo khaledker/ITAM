@@ -69,4 +69,18 @@ const getStats = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getAll, getOne, create, update, remove, getHistory, getStats };
+// PATCH /api/assets/:id/status — direct FSM transitions
+const updateStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ message: 'status is required.' });
+    const result = await svc.updateStatus(req.params.id, status);
+    if (!result) return res.status(404).json({ message: 'Asset not found.' });
+    res.json(result);
+  } catch (err) {
+    if (err.statusCode === 400) return res.status(400).json({ message: err.message });
+    next(err);
+  }
+};
+
+module.exports = { getAll, getOne, create, update, remove, getHistory, getStats, updateStatus };

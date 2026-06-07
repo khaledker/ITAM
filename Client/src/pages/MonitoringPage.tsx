@@ -107,7 +107,7 @@ export default function MonitoringPage() {
       id: selectedLabel.asset_id || 9999,
       tag: selectedLabel.asset_tag,
       partNum: 'N/A',
-      etat: selectedLabel.risk_level === 'Critical' ? 'inMaintenance' : 'Available',
+      etat: selectedLabel.asset_status || 'Available',
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
       modele: { 
         nom: selectedLabel.model_name || 'Unknown', 

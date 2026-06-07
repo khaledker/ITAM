@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, Plus, User, RotateCcw, CalendarClock } from 'lucide-react';
+import { CheckCircle, Plus, User, RotateCcw, CalendarClock, Wrench, AlertTriangle, XCircle } from 'lucide-react';
 
 function RiskScoreChart({ labels }: { labels: any[] }) {
   const data = [...labels].slice(0, 15).reverse().map(l => ({
@@ -54,11 +54,14 @@ function RiskScoreChart({ labels }: { labels: any[] }) {
   );
 }
 import { Badge } from '@/components/ui/Badge';
+import { ConfirmModal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
 import { assetsApi, telemetryApi, type Asset, type AssetMovement } from '@/lib/api';
 
-const statusVariant: Record<string, 'active' | 'warning' | 'critical' | 'inactive'> = {
+const statusVariant: Record<string, 'active' | 'warning' | 'critical' | 'inactive' | 'default'> = {
   Available: 'active',
   Assigned: 'inactive',
+  InTransit: 'transit',
   inMaintenance: 'warning',
   retired: 'critical',
 };
@@ -66,6 +69,7 @@ const statusVariant: Record<string, 'active' | 'warning' | 'critical' | 'inactiv
 const statusLabel: Record<string, string> = {
   Available: 'Available',
   Assigned: 'Assigned',
+  InTransit: 'In Transit',
   inMaintenance: 'In Maintenance',
   retired: 'Retired',
 };
@@ -86,6 +90,10 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
   const [healthLabels, setHealthLabels] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isLoadingHealth, setIsLoadingHealth] = useState(true);
+  const [currentAsset, setCurrentAsset] = useState<Asset>(asset);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusToConfirm, setStatusToConfirm] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     setIsLoadingHistory(true);
@@ -129,6 +137,34 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
     }
   }, [asset.id, asset.tag]);
 
+  const handleStatusChange = async (newStatus: string) => {
+    setStatusLoading(true);
+    try {
+      const updated = await assetsApi.updateStatus(currentAsset.id, newStatus);
+      setCurrentAsset(updated);
+      addToast({ type: 'success', message: `Asset status successfully updated to "${newStatus}".` });
+    } catch (err: any) {
+      addToast({ type: 'error', message: err.message || 'Failed to update status' });
+    } finally {
+      setStatusLoading(false);
+      setStatusToConfirm(null);
+    }
+  };
+
+  // Determine which status actions are available based on current state
+  const getStatusActions = () => {
+    const s = currentAsset.etat;
+    const actions: { label: string; status: string; variant: string; icon: any }[] = [];
+    if (s === 'Available' || s === 'Assigned') {
+      actions.push({ label: 'Flag for Maintenance', status: 'inMaintenance', variant: 'warning', icon: Wrench });
+      actions.push({ label: 'Retire Asset', status: 'retired', variant: 'critical', icon: XCircle });
+    }
+    if (s === 'inMaintenance') {
+      actions.push({ label: 'Issue Resolved — Mark Available', status: 'Available', variant: 'active', icon: CheckCircle });
+    }
+    return actions;
+  };
+
   return (
     <div className="flex flex-col space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center gap-4 border-b border-neutral-200 pb-4">
@@ -148,7 +184,7 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-1">
               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">Status</p>
-              <Badge variant={statusVariant[asset.etat]}>{statusLabel[asset.etat]}</Badge>
+              <Badge variant={statusVariant[currentAsset.etat]}>{statusLabel[currentAsset.etat]}</Badge>
             </div>
             <div className="space-y-1">
               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">Assigned To</p>
@@ -163,6 +199,43 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
               <p className="text-sm font-medium text-neutral-900">{asset.createdAt ? formatDate(asset.createdAt) : '—'}</p>
             </div>
           </div>
+
+          {/* Status Actions */}
+          {getStatusActions().length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-200">
+              <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 self-center mr-2">Actions:</span>
+              {getStatusActions().map(action => (
+                <button
+                  key={action.status}
+                  onClick={() => setStatusToConfirm(action.status)}
+                  disabled={statusLoading}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                    action.variant === 'warning'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                      : action.variant === 'critical'
+                      ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                >
+                  <action.icon className="h-3.5 w-3.5" />
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <ConfirmModal
+            isOpen={statusToConfirm !== null}
+            onClose={() => setStatusToConfirm(null)}
+            title="Confirm Status Change"
+            description={`Are you sure you want to change this asset's status to "${statusToConfirm}"? This will be recorded immediately.`}
+            confirmText="Yes, Update Status"
+            cancelText="Cancel"
+            isDangerous={statusToConfirm === 'retired'}
+            onConfirm={() => {
+              if (statusToConfirm) handleStatusChange(statusToConfirm);
+            }}
+          />
 
           {/* Tabs */}
           <div className="border-b border-neutral-300">

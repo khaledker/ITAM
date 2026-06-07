@@ -13,6 +13,7 @@ router.get('/:id/history',  requirePermission('consultation'), ctrl.getHistory);
 
 router.post('/',            authorize('Admin', 'Manager'), v.create, validate, ctrl.create);        // Admin + Manager
 router.put('/:id',          authorize('Admin', 'Manager'), v.update, validate, ctrl.update);        // Admin + Manager
+router.patch('/:id/status', authorize('Admin', 'Manager'), ctrl.updateStatus);                      // Admin + Manager — FSM transitions
 router.delete('/:id',       authorize('Admin'),            ctrl.remove);                            // Admin only
 
 module.exports = router;

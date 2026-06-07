@@ -66,6 +66,13 @@ const reject = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// PATCH /api/movements/:id/confirm (for Transfer)
+const confirm = async (req, res, next) => {
+  try {
+    res.json(await svc.updateStatus(req.params.id, 'Returned'));
+  } catch (err) { next(err); }
+};
+
 // GET /api/movements/:id/ticket
 const downloadTicket = async (req, res, next) => {
   try {
@@ -87,4 +94,4 @@ const downloadTicket = async (req, res, next) => {
   }
 };
 
-module.exports = { getAll, getOne, createReception, createAssignment, createTransfer, createReturn, approve, reject, downloadTicket };
+module.exports = { getAll, getOne, createReception, createAssignment, createTransfer, createReturn, approve, reject, confirm, downloadTicket };

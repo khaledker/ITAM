@@ -1,5 +1,5 @@
 import { ToastProvider } from '@/components'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { TopBar } from './layouts/TopBar'
 import Sidebar from './layouts/Sidebar'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -22,6 +22,7 @@ import UsersPage from './pages/UsersPage'
 
 function AppLayout() {
   const { isAuthenticated, isLoading, user, logout } = useAuth()
+  const location = useLocation()
 
   if (isLoading) {
     return (
@@ -55,7 +56,7 @@ function AppLayout() {
         <Sidebar />
 
         <main className="flex-1 overflow-y-auto p-6">
-          <Routes>
+          <Routes key={location.key}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/assets" element={<AssetsPage />} />
