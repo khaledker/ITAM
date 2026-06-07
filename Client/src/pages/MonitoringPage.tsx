@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, ShieldAlert, Activity, CheckCircle } from "lucide-react";
 import { StatCard, Select, Button, Badge, Table, type TableColumn, AssetDetailsView } from "@/components";
 import { telemetryApi, type DeviceHealthLabel, type TelemetrySummary, type Asset } from "@/lib/api";
@@ -8,7 +9,13 @@ export default function MonitoringPage() {
   const [labels, setLabels] = useState<DeviceHealthLabel[]>([]);
   const [summary, setSummary] = useState<TelemetrySummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedLabel, setSelectedLabel] = useState<any | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedAssetTag = searchParams.get('asset');
+
+  const selectedLabel = useMemo(() => {
+    if (!selectedAssetTag) return null;
+    return labels.find(l => l.asset_tag === selectedAssetTag) || null;
+  }, [selectedAssetTag, labels]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -121,7 +128,10 @@ export default function MonitoringPage() {
       <div className="space-y-6">
         <AssetDetailsView 
           asset={assetObj} 
-          onBack={() => setSelectedLabel(null)} 
+          onBack={() => {
+            searchParams.delete('asset');
+            setSearchParams(searchParams);
+          }} 
           defaultTab="health"
         />
       </div>
@@ -205,7 +215,10 @@ export default function MonitoringPage() {
             rowKey="id"
             loading={isLoading}
             hoverable
-            onRowClick={(row) => setSelectedLabel(row)}
+            onRowClick={(row) => {
+          searchParams.set('asset', row.asset_tag);
+          setSearchParams(searchParams);
+        }}
           />
         </div>
       </div>
