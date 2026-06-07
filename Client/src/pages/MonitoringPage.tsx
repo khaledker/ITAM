@@ -112,7 +112,7 @@ export default function MonitoringPage() {
       modele: { 
         nom: selectedLabel.model_name || 'Unknown', 
         marque: selectedLabel.brand || 'Unknown', 
-        categorie: 'Computer' 
+        categorie: selectedLabel.category_name || 'Computer' 
       },
       employee: null
     };

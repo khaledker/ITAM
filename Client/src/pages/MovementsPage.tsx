@@ -232,7 +232,7 @@ export default function MovementsPage() {
           >
             <Eye className="h-3.5 w-3.5" /> Review
           </button>
-          {row.status === 'Approved' && (
+          {['Approved', 'Completed', 'Returned'].includes(row.status) && (
             <button
               onClick={e => { e.stopPropagation(); void movementsApi.openTicket(row.id) }}
               className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
@@ -274,7 +274,7 @@ export default function MovementsPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {detailMovement.status === 'Approved' && (
+            {['Approved', 'Completed', 'Returned'].includes(detailMovement.status) && (
               <button
                 onClick={() => void movementsApi.openTicket(detailMovement.id)}
                 className="inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
