@@ -1,7 +1,18 @@
 const svc = require('../services/movement.service');
 
+// Helper: extract location scoping from request
+const getScopeOptions = (req) => {
+  if (req.user && req.user.role === 'Manager' && req.user.locationIds) {
+    return { scopeLocationIds: req.user.locationIds };
+  }
+  return {};
+};
+
 const getAll = async (req, res, next) => {
-  try { res.json(await svc.findAll(req.query)); } catch (err) { next(err); }
+  try {
+    const filters = { ...req.query, ...getScopeOptions(req) };
+    res.json(await svc.findAll(filters));
+  } catch (err) { next(err); }
 };
 
 const getOne = async (req, res, next) => {
