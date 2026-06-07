@@ -20,7 +20,7 @@ const protect = async (req, res, next) => {
     
     // Fetch latest user data from the database
     const [rows] = await db.query(
-      `SELECT u.id, u.user_name, e.email, u.role, u.status 
+      `SELECT u.id, u.user_name, e.full_name, e.email, u.role, u.status 
        FROM Users u 
        JOIN Employee e ON u.employee_id = e.id 
        WHERE u.id = ?`,
