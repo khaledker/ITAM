@@ -22,7 +22,7 @@ function formatList(value?: string | null): string[] {
 
 function movementActionText(m: AssetMovement): string {
   if (m.status === 'Rejected') return 'This movement was rejected and will not change asset status, location, or assignment data.'
-  if (m.status === 'Returned' && m.type === 'Transfer') return 'This transfer has been confirmed. The assets have arrived at their destination.'
+  if (m.status === 'Completed' && m.type === 'Transfer') return 'This transfer has been confirmed. The assets have arrived at their destination.'
   if (m.status === 'Draft') return 'This movement is waiting for approval. Approving it applies the database changes described below. Rejecting it keeps the assets unchanged.'
   if (m.type === 'Reception') return 'Approving this reception marks the listed assets as available and places them in the selected destination location.'
   if (m.type === 'Assignment') return 'Approving this assignment links the listed assets to the selected employee and updates their status to assigned.'
@@ -68,10 +68,10 @@ const TYPE_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critical
   Reception: 'active', Assignment: 'warning', Transfer: 'inactive', Return: 'maintenance',
 }
 const STATUS_VARIANT: Record<string, 'active' | 'inactive' | 'warning' | 'critical' | 'maintenance'> = {
-  Draft: 'warning', Approved: 'active', Rejected: 'critical', Returned: 'maintenance',
+  Draft: 'warning', Approved: 'active', Rejected: 'critical', Returned: 'maintenance', Completed: 'active',
 }
 
-const STATUS_TABS = ['All', 'Draft', 'Approved', 'Rejected'] as const
+const STATUS_TABS = ['All', 'Draft', 'Approved', 'Completed', 'Rejected'] as const
 const TYPE_OPTIONS = ['All', 'Reception', 'Assignment', 'Transfer', 'Return'] as const
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -306,13 +306,13 @@ export default function MovementsPage() {
             )}
             {detailMovement.type === 'Transfer' && detailMovement.status === 'Approved' && (
               <>
-                {canManageSource && (
+                {(canManageSource || canManageDest) && (
                   <button
                     disabled={processingId === detailMovement.id}
                     onClick={() => void handleReject(detailMovement.id)}
                     className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
                   >
-                    <XCircle className="h-4 w-4" /> Cancel Transfer
+                    <XCircle className="h-4 w-4" /> {canManageSource ? 'Cancel Transfer' : 'Reject Delivery'}
                   </button>
                 )}
                 {canManageDest && (

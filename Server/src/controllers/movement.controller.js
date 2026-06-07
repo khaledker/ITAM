@@ -80,7 +80,7 @@ const reject = async (req, res, next) => {
 // PATCH /api/movements/:id/confirm (for Transfer)
 const confirm = async (req, res, next) => {
   try {
-    res.json(await svc.updateStatus(req.params.id, 'Returned'));
+    res.json(await svc.updateStatus(req.params.id, 'Completed'));
   } catch (err) { next(err); }
 };
 
