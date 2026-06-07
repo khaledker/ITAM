@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, Plus, User, RotateCcw, CalendarClock, Wrench, AlertTriangle, XCircle } from 'lucide-react';
 
-function RiskScoreChart({ labels }: { labels: any[] }) {
+function MetricChart({ labels, extractValue, color, maxVal }: { labels: any[], extractValue: (l: any) => number, color: string, maxVal: number }) {
   const data = [...labels].slice(0, 15).reverse().map(l => ({
     time: new Date(l.scored_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    score: Number(l.risk_score),
+    score: extractValue(l),
   }));
 
   if (data.length < 2) return (
@@ -14,37 +14,46 @@ function RiskScoreChart({ labels }: { labels: any[] }) {
   );
 
   const W = 500, H = 160, PAD = 30;
-  const minS = 0, maxS = 100;
+  const minS = 0, maxS = maxVal;
   const xStep = (W - PAD * 2) / (data.length - 1);
   const toY = (s: number) => PAD + (H - PAD * 2) * (1 - (s - minS) / (maxS - minS));
   const toX = (i: number) => PAD + i * xStep;
 
-  const points = data.map((d, i) => `${toX(i)},${toY(d.score)}`).join(' ');
-  const fillPoints = `${toX(0)},${H} ${points} ${toX(data.length - 1)},${H}`;
+  const pathD = data.reduce((acc, d, i, a) => {
+    if (i === 0) return `M ${toX(i)},${toY(d.score)}`;
+    const prev = a[i - 1];
+    const cp1x = toX(i - 1) + (toX(i) - toX(i - 1)) / 2;
+    const cp1y = toY(prev.score);
+    const cp2x = toX(i - 1) + (toX(i) - toX(i - 1)) / 2;
+    const cp2y = toY(d.score);
+    return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${toX(i)},${toY(d.score)}`;
+  }, '');
+
+  const fillD = `${pathD} L ${toX(data.length - 1)},${H} L ${toX(0)},${H} Z`;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 160 }}>
       <defs>
-        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
+        <linearGradient id={`chartGrad-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       {/* Grid lines */}
-      {[0, 25, 50, 75, 100].map(v => (
+      {[0, maxVal * 0.25, maxVal * 0.5, maxVal * 0.75, maxVal].map(v => (
         <g key={v}>
           <line x1={PAD} y1={toY(v)} x2={W - PAD} y2={toY(v)} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 2" />
-          <text x={PAD - 6} y={toY(v) + 4} fontSize="10" fill="#9ca3af" textAnchor="end">{v}</text>
+          <text x={PAD - 6} y={toY(v) + 4} fontSize="10" fill="#9ca3af" textAnchor="end">{Math.round(v)}</text>
         </g>
       ))}
       {/* Fill area */}
-      <polygon points={fillPoints} fill="url(#chartGrad)" />
+      <path d={fillD} fill={`url(#chartGrad-${color.replace('#', '')})`} />
       {/* Line */}
-      <polyline points={points} fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
       {/* Dots + tooltips */}
       {data.map((d, i) => (
         <g key={i}>
-          <circle cx={toX(i)} cy={toY(d.score)} r="4" fill="#0ea5e9" stroke="white" strokeWidth="2" />
+          <circle cx={toX(i)} cy={toY(d.score)} r="4" fill={color} stroke="white" strokeWidth="2" />
           {(i === 0 || i === data.length - 1) && (
             <text x={toX(i)} y={H - 6} fontSize="9" fill="#6b7280" textAnchor="middle">{d.time}</text>
           )}
@@ -337,17 +346,36 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Health Graph */}
-                    <div className="w-full p-4 border rounded-xl bg-white shadow-sm">
-                      <h3 className="text-sm font-bold text-neutral-700 mb-3">Risk Score History (0–100)</h3>
-                      <RiskScoreChart labels={healthLabels} />
+                    {/* Charts Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      {/* Risk Score Graph */}
+                      <div className="w-full p-4 border rounded-xl bg-white shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-700 mb-3">Risk Score History (0–100)</h3>
+                        <MetricChart labels={healthLabels} extractValue={l => Number(l.risk_score)} color="#0ea5e9" maxVal={100} />
+                      </div>
+                      {/* Live CPU Graph */}
+                      <div className="w-full p-4 border rounded-xl bg-white shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-700 mb-3">Live CPU Usage (%)</h3>
+                        <MetricChart labels={healthLabels} extractValue={l => {
+                          const r = l.triggered_rules?.find((r: any) => r.rule_id === 'RAW_CPU');
+                          return r ? Number(r.value) : 0;
+                        }} color="#f59e0b" maxVal={100} />
+                      </div>
+                      {/* Live RAM Graph */}
+                      <div className="w-full p-4 border rounded-xl bg-white shadow-sm">
+                        <h3 className="text-sm font-bold text-neutral-700 mb-3">Live RAM Usage (%)</h3>
+                        <MetricChart labels={healthLabels} extractValue={l => {
+                          const r = l.triggered_rules?.find((r: any) => r.rule_id === 'RAW_RAM');
+                          return r ? Number(r.value) : 0;
+                        }} color="#8b5cf6" maxVal={100} />
+                      </div>
                     </div>
 
                     <div className="space-y-4">
                     {healthLabels.map((lbl, idx) => {
                       const isLatest = idx === 0;
                       const serviceInfoRules = lbl.triggered_rules?.filter((r: any) => r.rule_id === 'SV_INFO') || [];
-                      const actualRules = lbl.triggered_rules?.filter((r: any) => r.rule_id !== 'SV_INFO') || [];
+                      const actualRules = lbl.triggered_rules?.filter((r: any) => r.rule_id !== 'SV_INFO' && r.rule_id !== 'RAW_CPU' && r.rule_id !== 'RAW_RAM') || [];
                       
                       return (
                         <div key={lbl.id} className={`rounded-xl border p-4 ${isLatest ? 'border-primary/30 bg-primary/5 shadow-lg' : 'border-neutral-200 bg-neutral-50'}`}>
