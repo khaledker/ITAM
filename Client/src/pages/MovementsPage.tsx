@@ -250,6 +250,17 @@ export default function MovementsPage() {
     const tags = formatList(detailMovement.tag)
     const serials = formatList(detailMovement.serial_numbers)
     const assetCount = Math.max(tags.length, serials.length)
+    
+    // Check location permissions based on movement type
+    const isAdmin = user?.role === 'Admin'
+    const locs = user?.locationIds || []
+    
+    // For generic drafts (Reception, Return, Assignment) where location checking is loose in UI
+    const canApproveGeneric = isAdminOrManager
+    
+    // For Transfers specifically
+    const canManageSource = isAdmin || (detailMovement.transfer_source_id && locs.includes(detailMovement.transfer_source_id))
+    const canManageDest = isAdmin || (detailMovement.transfer_dest_id && locs.includes(detailMovement.transfer_dest_id))
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -271,40 +282,48 @@ export default function MovementsPage() {
                 <Printer className="h-4 w-4" /> Print Ticket
               </button>
             )}
-            {isAdminOrManager && detailMovement.status === 'Draft' && (
+            {detailMovement.status === 'Draft' && (
               <>
-                <button
-                  disabled={processingId === detailMovement.id}
-                  onClick={() => void handleReject(detailMovement.id)}
-                  className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
-                >
-                  <XCircle className="h-4 w-4" /> Reject
-                </button>
-                <button
-                  disabled={processingId === detailMovement.id}
-                  onClick={() => void handleApprove(detailMovement.id)}
-                  className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
-                >
-                  <CheckCircle className="h-4 w-4" /> Approve
-                </button>
+                {((detailMovement.type !== 'Transfer' && canApproveGeneric) || (detailMovement.type === 'Transfer' && canManageSource)) && (
+                  <>
+                    <button
+                      disabled={processingId === detailMovement.id}
+                      onClick={() => void handleReject(detailMovement.id)}
+                      className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+                    >
+                      <XCircle className="h-4 w-4" /> Reject
+                    </button>
+                    <button
+                      disabled={processingId === detailMovement.id}
+                      onClick={() => void handleApprove(detailMovement.id)}
+                      className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+                    >
+                      <CheckCircle className="h-4 w-4" /> Approve
+                    </button>
+                  </>
+                )}
               </>
             )}
-            {isAdminOrManager && detailMovement.type === 'Transfer' && detailMovement.status === 'Approved' && (
+            {detailMovement.type === 'Transfer' && detailMovement.status === 'Approved' && (
               <>
-                <button
-                  disabled={processingId === detailMovement.id}
-                  onClick={() => void handleReject(detailMovement.id)}
-                  className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
-                >
-                  <XCircle className="h-4 w-4" /> Cancel Transfer
-                </button>
-                <button
-                  disabled={processingId === detailMovement.id}
-                  onClick={() => void handleConfirm(detailMovement.id)}
-                  className="inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
-                >
-                  <CheckCircle className="h-4 w-4" /> Confirm Arrival
-                </button>
+                {canManageSource && (
+                  <button
+                    disabled={processingId === detailMovement.id}
+                    onClick={() => void handleReject(detailMovement.id)}
+                    className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+                  >
+                    <XCircle className="h-4 w-4" /> Cancel Transfer
+                  </button>
+                )}
+                {canManageDest && (
+                  <button
+                    disabled={processingId === detailMovement.id}
+                    onClick={() => void handleConfirm(detailMovement.id)}
+                    className="inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
+                  >
+                    <CheckCircle className="h-4 w-4" /> Confirm Arrival
+                  </button>
+                )}
               </>
             )}
           </div>
