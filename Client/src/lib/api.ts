@@ -80,6 +80,7 @@ export const assetsApi = {
   getHistory: (id: number) => request<AssetMovement[]>(`/assets/${id}/history`),
   create: (body: Partial<Asset>) => request<Asset>('/assets', { method: 'POST', body: JSON.stringify(body) }),
   update: (id: number, body: Partial<Asset>) => request<Asset>(`/assets/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  updateStatus: (id: number, status: string) => request<Asset>(`/assets/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   remove: (id: number) => request<void>(`/assets/${id}`, { method: 'DELETE' }),
 };
 
@@ -96,6 +97,7 @@ export const movementsApi = {
   createReturn: (body: object) => request<AssetMovement>('/movements/return', { method: 'POST', body: JSON.stringify(body) }),
   approve: (id: number) => request<AssetMovement>(`/movements/${id}/approve`, { method: 'PATCH' }),
   reject: (id: number) => request<AssetMovement>(`/movements/${id}/reject`, { method: 'PATCH' }),
+  confirm: (id: number) => request<AssetMovement>(`/movements/${id}/confirm`, { method: 'PATCH' }),
   downloadTicket: async (id: number) => {
     const token = localStorage.getItem('itam_token');
     const res = await fetch(`http://localhost:3000/api/movements/${id}/ticket`, {
@@ -212,7 +214,7 @@ export interface Asset {
   tag: string;
   partNum: string;
   serial_number?: string;
-  etat: 'Available' | 'Assigned' | 'inMaintenance' | 'retired';
+  etat: 'Available' | 'Assigned' | 'InTransit' | 'inMaintenance' | 'retired';
   createdAt: string;
   modele: { nom: string; marque: string; categorie: string };
   employee?: { id: number; full_name: string } | null;

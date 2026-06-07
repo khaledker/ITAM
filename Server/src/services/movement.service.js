@@ -286,9 +286,11 @@ const updateStatus = async (id, newStatus) => {
           ['Assigned', mv.assigned_to, assetIds]
         );
       } else if (mv.type === 'Transfer') {
+        // Per state diagram: transfer approved → InTransit
+        // Transfer confirmed (Returned status) → Available at new location
         await conn.query(
-          'UPDATE Asset SET location_id = ? WHERE id IN (?)',
-          [mv.t_dest, assetIds]
+          'UPDATE Asset SET status = ? WHERE id IN (?)',
+          ['InTransit', assetIds]
         );
       } else if (mv.type === 'Return') {
         await conn.query(
@@ -296,6 +298,23 @@ const updateStatus = async (id, newStatus) => {
           ['Available', mv.returned_to, assetIds]
         );
       }
+    }
+
+    // Transfer confirmed/rejected: move to final location or revert
+    if (newStatus === 'Returned' && mv.type === 'Transfer' && assetIds.length > 0) {
+      // "Returned" on a Transfer = transfer confirmed/received at destination
+      await conn.query(
+        'UPDATE Asset SET status = ?, location_id = ? WHERE id IN (?)',
+        ['Available', mv.t_dest, assetIds]
+      );
+    }
+
+    if (newStatus === 'Rejected' && mv.type === 'Transfer' && assetIds.length > 0) {
+      // Transfer rejected → revert InTransit back to Available
+      await conn.query(
+        'UPDATE Asset SET status = ? WHERE id IN (?)',
+        ['Available', assetIds]
+      );
     }
 
     await conn.commit();
@@ -313,4 +332,3 @@ module.exports = {
   createReception, createAssignment, createTransfer, createReturn,
   updateStatus,
 };
-

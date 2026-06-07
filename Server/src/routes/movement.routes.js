@@ -54,5 +54,6 @@ router.post('/return',
 // Only Admin + Manager can approve or reject
 router.patch('/:id/approve', authorize('Admin', 'Manager'), ctrl.approve);
 router.patch('/:id/reject',  authorize('Admin', 'Manager'), ctrl.reject);
+router.patch('/:id/confirm', authorize('Admin', 'Manager'), ctrl.confirm);
 
 module.exports = router;

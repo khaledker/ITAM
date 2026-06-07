@@ -162,4 +162,47 @@ const getStats = async ({ scopeLocationIds } = {}) => {
   return rows[0];
 };
 
-module.exports = { findAll, findById, create, update, remove, getMovementHistory, getStats };
+// ── Direct status transition (FSM) ───────────────────────
+// These are NOT movement-based transitions. They are direct
+// admin actions on the Asset.status field for:
+//   Available/Assigned → inMaintenance  (admin/employee reports issue)
+//   inMaintenance      → Available      (issue resolved)
+//   Available/Assigned → retired        (decommissioned)
+const ALLOWED_TRANSITIONS = {
+  'Available':     ['inMaintenance', 'retired'],
+  'Assigned':      ['inMaintenance', 'retired'],
+  'inMaintenance': ['Available'],
+  'InTransit':     [],   // Only movement system controls this
+  'retired':       [],   // Terminal state
+};
+
+const updateStatus = async (id, newStatus) => {
+  const asset = await findById(id);
+  if (!asset) return null;
+
+  const currentStatus = asset.status || asset.etat;
+  const allowed = ALLOWED_TRANSITIONS[currentStatus] || [];
+
+  if (!allowed.includes(newStatus)) {
+    const err = new Error(
+      `Cannot transition from '${currentStatus}' to '${newStatus}'. ` +
+      `Allowed: ${allowed.length ? allowed.join(', ') : 'none (terminal state)'}`
+    );
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // If resolving maintenance → Available, clear employee assignment
+  if (currentStatus === 'inMaintenance' && newStatus === 'Available') {
+    await db.query(
+      'UPDATE Asset SET status = ?, employee_id = NULL WHERE id = ?',
+      [newStatus, id]
+    );
+  } else {
+    await db.query('UPDATE Asset SET status = ? WHERE id = ?', [newStatus, id]);
+  }
+
+  return findById(id);
+};
+
+module.exports = { findAll, findById, create, update, remove, getMovementHistory, getStats, updateStatus };

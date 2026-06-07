@@ -109,7 +109,7 @@ CREATE TABLE Asset (
     serial_number VARCHAR(100) NOT NULL UNIQUE,
     tag           VARCHAR(100) NOT NULL UNIQUE,
     status        VARCHAR(50)  DEFAULT 'Available'
-                      CHECK (status IN ('Available', 'Assigned', 'inMaintenance', 'retired')),
+                      CHECK (status IN ('Available', 'Assigned', 'InTransit', 'inMaintenance', 'retired')),
     date_acq      DATE,
     description   VARCHAR(255),
     model_id      INT NOT NULL,
