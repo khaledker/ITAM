@@ -80,9 +80,10 @@ const findAll = async ({ type, status, asset_id, search, sort, scopeLocationIds 
 
   // Region/warehouse scoping for Managers
   if (scopeLocationIds && scopeLocationIds.length > 0) {
-    // Managers can see movements if the asset is in their location, OR if they are the destination of a transfer
-    query += ' AND (a.location_id IN (?) OR t.destination_id IN (?))';
-    params.push(scopeLocationIds, scopeLocationIds);
+    // Managers can see movements if the asset is currently in their location, 
+    // OR if their location was involved in the movement historically (source/dest)
+    query += ' AND (a.location_id IN (?) OR t.destination_id IN (?) OR t.source_id IN (?) OR asn.source_id IN (?) OR ar.returned_to IN (?) OR r.destination_id IN (?))';
+    params.push(scopeLocationIds, scopeLocationIds, scopeLocationIds, scopeLocationIds, scopeLocationIds, scopeLocationIds);
   }
 
   if (status)   { query += ' AND mv.status = ?';   params.push(status);   }

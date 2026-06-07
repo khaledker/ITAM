@@ -89,7 +89,9 @@ const downloadTicket = async (req, res, next) => {
   try {
     const mv = await svc.findById(req.params.id);
     if (!mv) return res.status(404).json({ message: 'Movement not found.' });
-    if (mv.status !== 'Approved') return res.status(400).json({ message: 'Cannot generate ticket for an unapproved movement.' });
+    if (mv.status === 'Draft' || mv.status === 'Rejected') {
+      return res.status(400).json({ message: 'Cannot generate ticket for Draft or Rejected movements.' });
+    }
 
     const pdfService = require('../services/pdf.service');
     

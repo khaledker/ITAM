@@ -62,7 +62,7 @@ class TelemetryService {
   static async getLatestLabels(riskLevel = null) {
     let query = `
       SELECT d.*, a.id as asset_id, a.serial_number, a.status as asset_status, 
-             am.name as model_name, am.brand,
+             am.name as model_name, am.brand, am.category as category_name,
              loc.label as location_name
       FROM DeviceHealthLabel d
       JOIN (
