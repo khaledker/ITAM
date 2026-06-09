@@ -268,6 +268,11 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
                 }`}
               >
                 Telemetry Health
+                {healthLabels.length > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-[11px] font-bold rounded-full bg-primary/10 text-primary">
+                    {healthLabels.length}
+                  </span>
+                )}
               </button>
             </nav>
           </div>
