@@ -35,7 +35,6 @@ export default function AssignmentPage() {
   // ── Form state ────────────────────────────────────────────────────────────
   const [assignedTo, setAssignedTo] = useState('')       // employee id
   const [sourceId, setSourceId] = useState('')           // location id
-  const [expectedReturn, setExpectedReturn] = useState('')
   const [observations, setObservations] = useState('')
 
   // ── Selected asset list ───────────────────────────────────────────────────
@@ -78,13 +77,11 @@ export default function AssignmentPage() {
         performed_by: user.id,
         assigned_to: Number(assignedTo),
         source_id: sourceId ? Number(sourceId) : null,
-        expected_return: expectedReturn || null,
       })
       setSubmitSuccessId(createdMv.id)
       setSelectedAssetIds(new Set())
       setAssignedTo('')
       setSourceId('')
-      setExpectedReturn('')
       setObservations('')
       // Refresh available assets
       assetsApi.getAll({ status: 'Available' }).then(setAvailableAssets)
@@ -179,19 +176,6 @@ export default function AssignmentPage() {
             </Select>
           </div>
 
-          {/* Expected Return */}
-          <div className="space-y-1.5">
-            <label htmlFor="aff-return" className="block text-sm font-medium text-neutral-700">
-              Expected Return Date
-            </label>
-            <Input
-              id="aff-return"
-              type="date"
-              value={expectedReturn}
-              onChange={e => setExpectedReturn(e.target.value)}
-            />
-          </div>
-
           {/* Observations */}
           <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
             <label htmlFor="aff-obs" className="block text-sm font-medium text-neutral-700">Observations</label>
@@ -224,7 +208,7 @@ export default function AssignmentPage() {
           </Button>
           <Button id="aff-cancel-btn" variant="ghost" onClick={() => {
             setSelectedAssetIds(new Set()); setAssignedTo(''); setSourceId('');
-            setExpectedReturn(''); setObservations(''); setSubmitSuccessId(null); setSubmitError(null);
+            setObservations(''); setSubmitSuccessId(null); setSubmitError(null);
           }}>
             Cancel
           </Button>

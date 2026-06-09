@@ -66,10 +66,10 @@ class TelemetryService {
              loc.label as location_name
       FROM DeviceHealthLabel d
       JOIN (
-          SELECT asset_tag, MAX(scored_at) as max_scored_at
+          SELECT MAX(id) as max_id
           FROM DeviceHealthLabel
           GROUP BY asset_tag
-      ) latest ON d.asset_tag = latest.asset_tag AND d.scored_at = latest.max_scored_at
+      ) latest ON d.id = latest.max_id
       LEFT JOIN Asset a ON d.asset_id = a.id
       LEFT JOIN AssetModel am ON a.model_id = am.id
       LEFT JOIN Location loc ON a.location_id = loc.id
@@ -100,6 +100,7 @@ class TelemetryService {
       SELECT * FROM DeviceHealthLabel
       WHERE asset_tag = ?
       ORDER BY scored_at DESC
+      LIMIT 100
     `;
     const [rows] = await db.query(query, [assetTag]);
     
