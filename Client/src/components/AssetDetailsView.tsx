@@ -394,7 +394,7 @@ export function AssetDetailsView({ asset, onBack, defaultTab = 'history' }: Asse
                                 Scanned: {new Date(lbl.scored_at).toLocaleString()}
                               </p>
                             </div>
-                            <Badge variant={lbl.risk_level === 'Critical' ? 'critical' : lbl.risk_level === 'At Risk' ? 'warning' : 'active'}>
+                            <Badge variant={lbl.risk_level === 'Critical' ? 'critical' : (lbl.risk_level === 'At Risk' || lbl.risk_level === 'Watch') ? 'warning' : 'active'}>
                               {lbl.risk_level}
                             </Badge>
                           </div>

@@ -17,7 +17,7 @@ export default function ReportsPage() {
     setIsGenerating(true)
     try {
       const assets = await assetsApi.getAll()
-      
+
       // Basic CSV generation
       const headers = ['ID', 'Tag', 'Serial Number', 'Status', 'Model', 'Brand', 'Category', 'Location']
       const rows = assets.map(a => [
@@ -30,12 +30,12 @@ export default function ReportsPage() {
         a.modele?.categorie || '',
         (a as any).location_label || '' // We don't strictly type location_label on Asset yet, but it's there
       ])
-      
+
       const csvContent = [
         headers.join(','),
         ...rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       ].join('\n')
-      
+
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
       const url = URL.createObjectURL(blob)
@@ -86,7 +86,7 @@ export default function ReportsPage() {
             <h3 className="text-lg font-semibold text-neutral-900">Database Snapshot</h3>
             <p className="mt-1 text-sm text-neutral-600">Quick overview of current system health.</p>
           </div>
-          
+
           {stats ? (
             <div className="mt-2 w-full grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="rounded-lg bg-neutral-50 p-4 border border-neutral-200">
@@ -107,7 +107,7 @@ export default function ReportsPage() {
               </div>
             </div>
           ) : (
-             <div className="text-sm text-neutral-600">Loading snapshot data…</div>
+            <div className="text-sm text-neutral-600">Loading snapshot data…</div>
           )}
         </div>
       </div>
