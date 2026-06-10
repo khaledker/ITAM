@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import { User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
 import { Button, Textarea, Table, type TableColumn, Input, Select } from '@/components'
-import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
-import type { Asset, Employee, Location } from '@/lib/api'
+import { assetsApi, locationsApi, movementsApi } from '@/lib/api'
+import type { Asset, Location } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -13,19 +13,17 @@ export default function ReturnPage() {
   const { user } = useAuth()
 
   // ── Remote data ───────────────────────────────────────────────────────────
-  const [employees, setEmployees] = useState<Employee[]>([])
+
   const [locations, setLocations] = useState<Location[]>([])
   const [assignedAssets, setAssignedAssets] = useState<Asset[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     Promise.all([
-      employeesApi.getAll(),
       locationsApi.getAll(),
       assetsApi.getAll({ status: 'Assigned' }),
     ])
-      .then(([emps, locs, assets]) => {
-        setEmployees(emps)
+      .then(([locs, assets]) => {
         setLocations(locs)
         setAssignedAssets(assets)
       })
@@ -34,7 +32,6 @@ export default function ReturnPage() {
 
   // ── Form state ────────────────────────────────────────────────────────────
   const [returnedToId, setReturnedToId] = useState('')   // location id
-  const [performedBy, setPerformedBy] = useState('')     // employee override
   const [reason, setReason] = useState('')
 
   // ── Asset picker ──────────────────────────────────────────────────────────
@@ -60,7 +57,7 @@ export default function ReturnPage() {
   const [submitSuccessId, setSubmitSuccessId] = useState<number | null>(null)
 
   const handleSave = async () => {
-    const actorId = performedBy ? Number(performedBy) : user?.id
+    const actorId = user?.id
     if (!actorId) { setSubmitError('Could not determine who is performing this return.'); return }
     if (selectedAssetIds.size === 0) { setSubmitError('Select at least one asset to return.'); return }
 
@@ -79,7 +76,7 @@ export default function ReturnPage() {
       })
       setSubmitSuccessId(createdMv.id)
       setSelectedAssetIds(new Set())
-      setReturnedToId(''); setPerformedBy(''); setReason('')
+      setReturnedToId(''); setReason('')
       // Refresh assigned assets
       assetsApi.getAll({ status: 'Assigned' }).then(setAssignedAssets)
     } catch (err) {
@@ -92,20 +89,30 @@ export default function ReturnPage() {
   // ── Table columns ─────────────────────────────────────────────────────────
 
   const columns: TableColumn<Asset>[] = [
-    { key: 'tag', label: 'Tag', width: 'w-[15%]',
-      render: (v: string) => <span className="font-semibold text-neutral-900">{v || '-'}</span> },
-    { key: 'serial_number', label: 'S/N', width: 'w-[15%]',
-      render: (_v: any, row: Asset) => <span className="text-neutral-600">{row.serial_number || row.partNum || '-'}</span> },
-    { key: 'category', label: 'Category', width: 'w-[20%]',
+    {
+      key: 'tag', label: 'Tag', width: 'w-[15%]',
+      render: (v: string) => <span className="font-semibold text-neutral-900">{v || '-'}</span>
+    },
+    {
+      key: 'serial_number', label: 'S/N', width: 'w-[15%]',
+      render: (_v: any, row: Asset) => <span className="text-neutral-600">{row.serial_number || row.partNum || '-'}</span>
+    },
+    {
+      key: 'category', label: 'Category', width: 'w-[20%]',
       render: (_v: any, row: Asset) => (
         <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
           {row.modele?.categorie || '-'}
         </span>
-      ) },
-    { key: 'brand', label: 'Brand', width: 'w-[20%]',
-      render: (_v: any, row: Asset) => row.modele?.marque || '-' },
-    { key: 'modelName', label: 'Model', width: 'w-[30%]',
-      render: (_v: any, row: Asset) => row.modele?.nom || '-' },
+      )
+    },
+    {
+      key: 'brand', label: 'Brand', width: 'w-[20%]',
+      render: (_v: any, row: Asset) => row.modele?.marque || '-'
+    },
+    {
+      key: 'modelName', label: 'Model', width: 'w-[30%]',
+      render: (_v: any, row: Asset) => row.modele?.nom || '-'
+    },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -146,14 +153,7 @@ export default function ReturnPage() {
             </Select>
           </div>
 
-          {/* Performed By */}
-          <div className="space-y-1.5">
-            <label htmlFor="ret-by" className="block text-sm font-medium text-neutral-700">Performed By</label>
-            <Select id="ret-by" value={performedBy} onChange={e => setPerformedBy(e.target.value)}>
-              <option value="">— Defaults to you —</option>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
-            </Select>
-          </div>
+
 
           {/* Reason */}
           <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
@@ -167,7 +167,7 @@ export default function ReturnPage() {
         <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-200 pt-4">
           <div className="flex items-center gap-2 text-sm text-neutral-600">
             <User className="h-4 w-4" />
-            <span>Logged in as: <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
+            <span>Created by : <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
           </div>
           <div className="flex items-center gap-2 text-sm text-neutral-600">
             <CalendarClock className="h-4 w-4" />
@@ -181,7 +181,7 @@ export default function ReturnPage() {
             {isSaving ? 'Saving…' : 'Save Return'}
           </Button>
           <Button id="return-cancel-btn" variant="ghost" onClick={() => {
-            setSelectedAssetIds(new Set()); setReturnedToId(''); setPerformedBy('');
+            setSelectedAssetIds(new Set()); setReturnedToId('');
             setReason(''); setSubmitSuccessId(null); setSubmitError(null);
           }}>Cancel</Button>
         </div>
