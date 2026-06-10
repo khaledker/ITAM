@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { Plus, Trash2, User, CalendarClock, CheckCircle, XCircle, Upload, X } from 'lucide-react'
 import { Button, Input, Textarea, Table, type TableColumn, Select } from '@/components'
-import { assetsApi, employeesApi, locationsApi, suppliersApi, movementsApi, assetModelsApi } from '@/lib/api'
-import type { Employee, Location, Supplier, AssetModel } from '@/lib/api'
+import { assetsApi, locationsApi, suppliersApi, movementsApi, assetModelsApi } from '@/lib/api'
+import type { Location, Supplier, AssetModel } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ export default function ReceptionPage() {
   // ── Remote data ───────────────────────────────────────────────────────────
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [locations, setLocations] = useState<Location[]>([])
-  const [employees, setEmployees] = useState<Employee[]>([])
+
   const [models, setModels] = useState<AssetModel[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -45,13 +45,11 @@ export default function ReceptionPage() {
     Promise.all([
       suppliersApi.getAll(),
       locationsApi.getAll(),
-      employeesApi.getAll(),
       assetModelsApi.getAll()
     ])
-      .then(([s, l, e, m]) => {
+      .then(([s, l, m]) => {
         setSuppliers(s)
         setLocations(l)
-        setEmployees(e)
         setModels(m)
       })
       .catch(err => setLoadError(err instanceof Error ? err.message : 'Failed to load data.'))
@@ -63,7 +61,6 @@ export default function ReceptionPage() {
   const [brNumber, setBrNumber] = useState('')
   const [deliveryDate, setDeliveryDate] = useState('')
   const [destinationId, setDestinationId] = useState('')
-  const [performedBy, setPerformedBy] = useState('')
   const [observations, setObservations] = useState('')
 
   // ── Asset rows ────────────────────────────────────────────────────────────
@@ -201,9 +198,9 @@ export default function ReceptionPage() {
   } | null>(null)
 
   const handleSave = async () => {
-    const actorId = performedBy ? Number(performedBy) : user?.id
+    const actorId = user?.id
     if (!actorId || !deliveryDate) {
-      setFormError('Delivery date and performed-by employee are required.')
+      setFormError('Delivery date is required.')
       return
     }
     if (rows.length === 0) {
@@ -363,13 +360,12 @@ export default function ReceptionPage() {
         </div>
       )}
       {saveResult && (
-        <div className={`rounded-lg border p-4 text-sm space-y-3 ${
-          saveResult.failed.length === 0
+        <div className={`rounded-lg border p-4 text-sm space-y-3 ${saveResult.failed.length === 0
             ? 'border-green-200 bg-green-50'
             : saveResult.succeeded.length === 0
               ? 'border-red-200 bg-red-50'
               : 'border-amber-200 bg-amber-50'
-        }`}>
+          }`}>
           {/* Header */}
           <div className="flex items-center gap-2 font-semibold">
             {saveResult.succeeded.length > 0
@@ -457,13 +453,7 @@ export default function ReceptionPage() {
             </Select>
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="rec-by" className="block text-sm font-medium text-neutral-700">Performed By</label>
-            <Select id="rec-by" value={performedBy} onChange={e => setPerformedBy(e.target.value)}>
-              <option value="">— Defaults to you —</option>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
-            </Select>
-          </div>
+
 
           <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
             <label htmlFor="rec-obs" className="block text-sm font-medium text-neutral-700">Observations</label>
@@ -476,7 +466,7 @@ export default function ReceptionPage() {
         <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-neutral-200 pt-4">
           <div className="flex items-center gap-2 text-sm text-neutral-600">
             <User className="h-4 w-4" />
-            <span>Logged in as: <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
+            <span>Created by: <span className="font-medium text-neutral-700">{user?.full_name ?? '—'}</span></span>
           </div>
           <div className="flex items-center gap-2 text-sm text-neutral-600">
             <CalendarClock className="h-4 w-4" />
