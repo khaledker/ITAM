@@ -23,6 +23,9 @@ export { Badge, badgeVariants, type BadgeProps } from './Badge'
 // Tooltips
 export { Tooltip, type TooltipProps } from './Tooltip'
 
+// Combobox
+export { Combobox, type ComboboxOption } from './Combobox'
+
 // Data Display
 export {
   Table,

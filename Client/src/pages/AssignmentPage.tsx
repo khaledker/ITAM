@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { User, CalendarClock, CheckCircle, XCircle, Search } from 'lucide-react'
-import { Button, Input, Textarea, Table, type TableColumn, Select } from '@/components'
+import { Button, Input, Textarea, Table, type TableColumn, Select, Combobox, type ComboboxOption } from '@/components'
 import { assetsApi, employeesApi, locationsApi, movementsApi } from '@/lib/api'
 import type { Asset, Employee, Location } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -146,17 +146,12 @@ export default function AssignmentPage() {
             <label htmlFor="aff-employee" className="block text-sm font-medium text-neutral-700">
               Assign To <span className="text-red-500">*</span>
             </label>
-            <Select
-              id="aff-employee"
+            <Combobox
+              options={employees.map(e => ({ value: e.id, label: e.full_name }))}
               value={assignedTo}
-              onChange={e => setAssignedTo(e.target.value)}
-              required
-            >
-              <option value="">— Select employee —</option>
-              {employees.map(e => (
-                <option key={e.id} value={e.id}>{e.full_name}</option>
-              ))}
-            </Select>
+              onChange={setAssignedTo}
+              placeholder="— Select employee —"
+            />
           </div>
 
           {/* Source Location */}
@@ -164,16 +159,12 @@ export default function AssignmentPage() {
             <label htmlFor="aff-source" className="block text-sm font-medium text-neutral-700">
               Source Location
             </label>
-            <Select
-              id="aff-source"
+            <Combobox
+              options={locations.map(l => ({ value: l.id, label: l.label }))}
               value={sourceId}
-              onChange={e => setSourceId(e.target.value)}
-            >
-              <option value="">— Select location —</option>
-              {locations.map(l => (
-                <option key={l.id} value={l.id}>{l.label}</option>
-              ))}
-            </Select>
+              onChange={setSourceId}
+              placeholder="— Select location —"
+            />
           </div>
 
           {/* Observations */}

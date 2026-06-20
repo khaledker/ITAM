@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, RotateCcw, Building2, MapPin, Monitor, Users, FileText, Activity, Server } from 'lucide-react'
-import { Button, Input, Select, Checkbox, Table, type TableColumn, Badge } from '@/components'
-import { assetsApi, type Asset } from '@/lib/api'
+import { Button, Input, Select, Table, type TableColumn, Badge } from '@/components'
+import { assetsApi, locationsApi, assetModelsApi, departmentsApi, type Asset, type Location as AssetLocation, type AssetModel, type Department } from '@/lib/api'
 
 const SectionHeader = ({ icon: Icon, title }: { icon: any, title: string }) => (
   <div className="flex items-center gap-2 mb-4 border-b border-neutral-300 pb-2">
@@ -13,6 +13,12 @@ const SectionHeader = ({ icon: Icon, title }: { icon: any, title: string }) => (
 )
 
 export default function SearchPage() {
+  // ── Remote data ──
+  const [locations, setLocations] = useState<AssetLocation[]>([])
+  const [assetModels, setAssetModels] = useState<AssetModel[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
+
   const [isSearching, setIsSearching] = useState(false)
   const [results, setResults] = useState<Asset[] | null>(null)
 
@@ -20,8 +26,28 @@ export default function SearchPage() {
     tag: '',
     sn: '',
     user_name: '',
+    locality: '',
+    region: '',
+    type: '',
+    brand: '',
+    model: '',
+    category: '',
+    department_id: '',
+    site: '',
     status: 'all',
   })
+
+  useEffect(() => {
+    Promise.all([
+      locationsApi.getAll(),
+      assetModelsApi.getAll(),
+      departmentsApi.getAll(),
+    ]).then(([locs, mods, deps]) => {
+      setLocations(locs)
+      setAssetModels(mods)
+      setDepartments(deps)
+    }).catch(err => setLoadError(err instanceof Error ? err.message : 'Failed to load.'))
+  }, [])
 
   const updateFilter = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -29,12 +55,20 @@ export default function SearchPage() {
 
   const handleSearch = () => {
     setIsSearching(true)
-    
+
     // Build actual query params based on populated inputs
     const queryParams: Record<string, string> = {}
     if (filters.tag) queryParams.tag = filters.tag
     if (filters.sn) queryParams.sn = filters.sn
+    if (filters.locality) queryParams.location_id = filters.locality
+    if (filters.type) queryParams.type = filters.type
+    if (filters.region) queryParams.region = filters.region
+    if (filters.brand) queryParams.brand = filters.brand
+    if (filters.model) queryParams.name = filters.model
+    if (filters.category) queryParams.category = filters.category
     if (filters.user_name) queryParams.user_name = filters.user_name
+    if (filters.department_id) queryParams.department_id = filters.department_id
+    if (filters.site) queryParams.site = filters.site
     if (filters.status && filters.status !== 'all') {
       const matchStatus = {
         'available': 'Available',
@@ -58,7 +92,7 @@ export default function SearchPage() {
     setIsSearching(false)
     setResults(null)
   }
-  
+
   const columns: TableColumn<Asset>[] = [
     { key: 'tag', label: 'Tag', render: (v) => <span className="font-mono text-sm text-neutral-600">{v}</span> },
     { key: 'serial', label: 'S/N', render: (_, r) => r.serial_number || '—' },
@@ -90,28 +124,6 @@ export default function SearchPage() {
       </div>
 
       <div className="rounded-xl border border-neutral-300 bg-white shadow-lg p-6 space-y-8">
-        
-        {/* Team Selection */}
-        <section>
-          <SectionHeader icon={Users} title="Team Selection" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div>
-              <label className="text-sm font-medium text-neutral-700">Team</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
-                <option value="it">IT Support</option>
-                <option value="hr">Human Resources</option>
-                <option value="finance">Finance</option>
-              </Select>
-            </div>
-            <div className="flex items-center gap-3 mt-6">
-              <Checkbox id="include-unapproved" />
-              <label htmlFor="include-unapproved" className="text-sm text-neutral-700 cursor-pointer">
-                Include unapproved CIs
-              </label>
-            </div>
-          </div>
-        </section>
 
         {/* Basic Information */}
         <section>
@@ -138,36 +150,49 @@ export default function SearchPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label className="text-sm font-medium text-neutral-700">Region</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
+              <Select
+                value={filters.region}
+                onChange={e => updateFilter('region', e.target.value)}
+              >
+                <option value="">(All)</option>
+                {[...new Set(locations.map(l => l.region).filter(Boolean))].map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-neutral-700">Site</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
+              <Select value={filters.site} onChange={e => updateFilter('site', e.target.value)}>
+                <option value="">(All)</option>
+                {[...new Set(locations.map(l => l.site).filter(Boolean))].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-neutral-700">Type</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
+              <Select
+                value={filters.type}
+                onChange={e => updateFilter('type', e.target.value)}
+              >
+                <option value="">(All)</option>
+                {[...new Set(locations.map(l => l.type).filter(Boolean))].map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-neutral-700">Locality</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
+              <Select value={filters.locality}
+                onChange={e => updateFilter('locality', e.target.value)}>
+                <option value="">(All)</option>
+
+                {locations.map(l => (
+                  <option key={l.id} value={l.id}>{l.label}</option>
+                ))}
               </Select>
             </div>
-            <div>
-              <label className="text-sm font-medium text-neutral-700">Floor</label>
-              <Input placeholder="e.g. 3rd Floor" />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-neutral-700">Room</label>
-              <Input placeholder="e.g. 301" />
-            </div>
+
           </div>
         </section>
 
@@ -177,20 +202,30 @@ export default function SearchPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="text-sm font-medium text-neutral-700">Brand</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
+              <Select value={filters.brand} onChange={e => updateFilter('brand', e.target.value)}>
+                <option value="">(All)</option>
+                {[...new Set(assetModels.map(m => m.brand).filter(Boolean))].map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-neutral-700">Category</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
+              <Select value={filters.category} onChange={e => updateFilter('category', e.target.value)}>
+                <option value="">(All)</option>
+                {[...new Set(assetModels.map(m => m.category).filter(Boolean))].map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </Select>
+
             </div>
             <div>
               <label className="text-sm font-medium text-neutral-700">Model</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
+              <Select value={filters.model} onChange={e => updateFilter('model', e.target.value)}>
+                <option value=""> (All)</option>
+                {[...new Set(assetModels.map(m => m.name).filter(Boolean))].map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
               </Select>
             </div>
           </div>
@@ -199,17 +234,14 @@ export default function SearchPage() {
         {/* User Selection */}
         <section>
           <SectionHeader icon={Users} title="User Selection" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="text-sm font-medium text-neutral-700">Sector</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
-              </Select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-sm font-medium text-neutral-700">Department</label>
-              <Select defaultValue="all">
-                <option value="all">(All)</option>
+              <Select value={filters.department_id} onChange={e => updateFilter('department_id', e.target.value)}>
+                <option value="">(All)</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.libelle}</option>
+                ))}
               </Select>
             </div>
             <div>
@@ -298,19 +330,19 @@ export default function SearchPage() {
 
       {results && (
         <div className="border border-neutral-300 bg-white shadow-lg overflow-hidden mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <div className="border-b border-neutral-300 bg-neutral-50 px-6 py-4 flex items-center justify-between">
-             <div className="flex items-center gap-2">
-               <Server className="h-5 w-5 text-neutral-600" />
-               <h2 className="text-lg font-semibold text-neutral-900">Search Results</h2>
-             </div>
-             <Badge variant="active">{results.length} asset{results.length !== 1 ? 's' : ''} found</Badge>
-           </div>
-           
-           {results.length === 0 ? (
-             <div className="p-10 text-center text-sm text-neutral-600">No assets match your complex criteria.</div>
-           ) : (
-             <Table<Asset> columns={columns} rows={results} rowKey="id" hoverable striped className="border-none rounded-none" />
-           )}
+          <div className="border-b border-neutral-300 bg-neutral-50 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Server className="h-5 w-5 text-neutral-600" />
+              <h2 className="text-lg font-semibold text-neutral-900">Search Results</h2>
+            </div>
+            <Badge variant="active">{results.length} asset{results.length !== 1 ? 's' : ''} found</Badge>
+          </div>
+
+          {results.length === 0 ? (
+            <div className="p-10 text-center text-sm text-neutral-600">No assets match your complex criteria.</div>
+          ) : (
+            <Table<Asset> columns={columns} rows={results} rowKey="id" hoverable striped className="border-none rounded-none" />
+          )}
         </div>
       )}
     </div>

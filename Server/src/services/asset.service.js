@@ -16,32 +16,32 @@ const BASE_SELECT = `
 
 // ── Format asset response to match UI schema (French/Specific naming) ──────────────
 const formatAsset = (row) => ({
-  id:      row.id,
-  tag:     row.tag,
+  id: row.id,
+  tag: row.tag,
   partNum: row.part_number || '—',
-  etat:    row.status || 'Available',
+  etat: row.status || 'Available',
   createdAt: row.date_acq,
   modele: {
-    nom:       row.model_name,
-    marque:    row.brand,
+    nom: row.model_name,
+    marque: row.brand,
     categorie: row.category,
   },
   // Keep original fields for logic if needed
   serial_number: row.serial_number,
-  status:        row.status,
+  status: row.status,
   location: row.location_id ? {
-    id:    row.location_id,
-    code:  row.location_code,
+    id: row.location_id,
+    code: row.location_code,
     label: row.location_label,
-    type:  row.location_type,
+    type: row.location_type,
   } : null,
   employee: row.employee_id ? {
-    id:        row.employee_id,
+    id: row.employee_id,
     full_name: row.employee_name,
   } : null,
 });
 
-const findAll = async ({ status, category, location_id, employee_id, tag, sn, user_name, region, site, brand, supplier_id, scopeLocationIds } = {}) => {
+const findAll = async ({ status, category, name, location_id, employee_id, tag, sn, user_name, type, region, site, brand, supplier_id, department_id, scopeLocationIds } = {}) => {
   let query = BASE_SELECT + ' WHERE 1=1';
   const params = [];
 
@@ -50,7 +50,7 @@ const findAll = async ({ status, category, location_id, employee_id, tag, sn, us
     query += ' AND a.location_id IN (?)';
     params.push(scopeLocationIds);
   }
-  
+
   if (status) { query += ' AND a.status = ?'; params.push(status); }
   if (category) { query += ' AND am.category = ?'; params.push(category); }
   if (location_id) { query += ' AND a.location_id = ?'; params.push(location_id); }
@@ -61,9 +61,12 @@ const findAll = async ({ status, category, location_id, employee_id, tag, sn, us
   if (region) { query += ' AND l.region = ?'; params.push(region); }
   if (site) { query += ' AND l.site = ?'; params.push(site); }
   if (brand) { query += ' AND am.brand = ?'; params.push(brand); }
-  
+  if (type) { query += ' AND l.type = ?'; params.push(type); }
+  if (name) { query += ' AND am.name = ?'; params.push(name); }
+  if (department_id) { query += ' AND emp.department_id = ?'; params.push(department_id); }
+
   // Note: Supplier join is missing for direct asset link, but keeping this extensible for now
-  
+
   query += ' ORDER BY a.tag';
   const [rows] = await db.query(query, params);
   return rows.map(formatAsset);
@@ -169,11 +172,11 @@ const getStats = async ({ scopeLocationIds } = {}) => {
 //   inMaintenance      → Available      (issue resolved)
 //   Available/Assigned → retired        (decommissioned)
 const ALLOWED_TRANSITIONS = {
-  'Available':     ['inMaintenance', 'retired'],
-  'Assigned':      ['inMaintenance', 'retired'],
+  'Available': ['inMaintenance', 'retired'],
+  'Assigned': ['inMaintenance', 'retired'],
   'inMaintenance': ['Available'],
-  'InTransit':     [],   // Only movement system controls this
-  'retired':       [],   // Terminal state
+  'InTransit': [],   // Only movement system controls this
+  'retired': [],   // Terminal state
 };
 
 const updateStatus = async (id, newStatus) => {
