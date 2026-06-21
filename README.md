@@ -15,7 +15,7 @@
   <br/>
 
   <!-- Screenshot placeholder — replace with your actual screenshots -->
-  <img src="https://via.placeholder.com/900x500/1e293b/E3001B?text=ITAM+Dashboard+Preview" alt="Dashboard Preview" width="90%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"/>
+  <img src="screenshots/dashboard.png" alt="Dashboard Preview" width="90%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"/>
 
   <br/><br/>
   <sub><i>Replace the placeholder image with actual screenshots of your app</i></sub>
@@ -246,16 +246,16 @@ npm run dev                    # Starts on http://localhost:5173
 <div align="center">
 
 ### Dashboard
-<img src="https://via.placeholder.com/800x450/1e293b/E3001B?text=Dashboard" width="80%" style="border-radius: 8px;"/>
+<img src="screenshots/dashboard.png" width="80%" style="border-radius: 8px;"/>
 
 ### Asset List
-<img src="https://via.placeholder.com/800x450/1e293b/E3001B?text=Assets+Page" width="80%" style="border-radius: 8px;"/>
+<img src="screenshots/assets.png" width="80%" style="border-radius: 8px;"/>
 
 ### Telemetry Monitoring
-<img src="https://via.placeholder.com/800x450/1e293b/E3001B?text=Monitoring" width="80%" style="border-radius: 8px;"/>
+<img src="screenshots/monitoring.png" width="80%" style="border-radius: 8px;"/>
 
 ### Asset Movement Timeline
-<img src="https://via.placeholder.com/800x450/1e293b/E3001B?text=Movement+History" width="80%" style="border-radius: 8px;"/>
+<img src="screenshots/movements.png" width="80%" style="border-radius: 8px;"/>
 
 </div>
 </details>
